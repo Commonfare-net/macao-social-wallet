@@ -124,3 +124,9 @@
               ))
 
       )
+
+(fact "Checking higher level key api"
+      (fact "check (unlock (create))"
+            (ssss/unlock skeys) => (:key skeys)
+            )
+      )

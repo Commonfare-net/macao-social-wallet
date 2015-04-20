@@ -160,9 +160,16 @@
     :shares-hi (split conf (biginteger (second secnum)))
     :entropy-lo (float (rand/entropy (format "%d" (first secnum))))
     :entropy-hi (float (rand/entropy (format "%d" (second secnum))))
+    ;; comment this one to avoid saving the secret key
     :key (format "%dFXC%d" (first secnum) (second secnum))
     }
    )
-  
+
   )
 
+(defn unlock
+  [secret]
+  (let [lo (combine (:shares-lo secret))
+        hi (combine (:shares-hi secret))]
+    (format "%dFXC%d" lo hi)
+    ))
