@@ -31,7 +31,10 @@
    [java.math]
    )
   (:require
-   [freecoin.random :as rand])
+   [freecoin.random :as rand]
+   [hashids.core :as hash]
+   )
+
   )
 
 (defn prime384 []
@@ -152,11 +155,30 @@
       (.combine (SecretShare. pi) (vec shares)))))
   )
 
+
+
 (defn create
   ([conf]
-   {
-    :keys
-    (split conf { :origin (biginteger (rand/create 16 3.1)) })
-    }
+   (let [secnum (biginteger (rand/create 16 3.1))]
+     (create conf secnum)
+   ))
+
+  ([conf secnum]
+   (let [skeys {:shares (split conf (biginteger secnum))
+                :entropy (float (rand/entropy (format "%d" secnum)))
+                :hashes {}
+                }]
+     
+;;      (doseq [sk (:shares skeys)]
+;; ;;       (doseq [s sk]
+;; ;;       (into s { :hash (str (hash/encode conf (:share s)))})
+;; ;;       (assoc s :hash (str (hash/encode conf (:share s))))
+;;        (update-in skeys [:hashes]
+;;                   (str (hash/encode conf (:share sk))))
+;;        )
+     skeys
+                    ;;   (pp/pprint (str (hash/encode conf (:share s))))
+       ;;       (merge s { :hash }
+     )
    )
   )

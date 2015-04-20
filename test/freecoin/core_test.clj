@@ -50,28 +50,22 @@
           :description "test freecoin ssss"
           }))
 
-; (def secret (ssss/create conf))
-;; (pp/pprint (:keys secret))
+;; we save our secret here to be able to check
+(def secret (rand/create 16 3.1))
+;; creates a keys structure with all shares
+(def skeys (ssss/create conf secret))
+;; (pp/pprint skeys)
 
-(def secret-pieces
-   (ssss/split conf secret))
-(pp/pprint secret-pieces)
-
-(println (format "Shannon entropy => %s"
-                 (rand/entropy (format "%d" (:plain conf) ))))
-
-(def first-secret (first secret-pieces))
+(println (format "Shannon entropy => %f" (:entropy skeys)))
 
 (pp/pprint
- (map :share secret-pieces))
-
-(def first-share (:share first-secret))
-
+ (map :share (:shares skeys)))
 
 ;; print out public information to console
 (pp/pprint (str (format "total %d quorum %d"
                         (:total conf) (:quorum conf)
                         )))
+;; pretty print some more
 (doseq [[k v] conf]
   (if-not
       (some #{k} '( :plain :prime :quorum :total))
@@ -82,6 +76,8 @@
 (doseq [s secret-pieces]
   (pp/pprint (str (hash/encode conf (:share s))))
   )
+;; (pp/pprint skeys)
+;; (pp/pprint (map :hash (:hashes skeys)))
 
 (fact "Testing secureshare number splitting"
 
@@ -92,7 +88,14 @@
               => secret
               )
 
-      (doseq [s (map :share secret-pieces)]
+      (fact "checking secret number combine with only 4 elements"
+             (ssss/combine
+              (shuffle
+               (take-nth 2 (ssss/split conf secret))))
+              => secret
+              )
+
+      (doseq [s (map :share (:shares skeys))]
         (fact "check hashid number encoding"
               (hash/decode conf (str (hash/encode conf s)))
               => [ s ]
