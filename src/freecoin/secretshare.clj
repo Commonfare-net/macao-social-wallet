@@ -67,18 +67,7 @@
    :salt "La gatta sul tetto che scotta"
 })
 
-(def secret
-  {
-   ;; 18 digits is an optimal size for Shamir's secret sharing
-   ;; to match hashids maximum capacity. 3.1 is the Shannon
-   ;; entropy measurement minimum to accept the number.
-   :plain (biginteger (rand/create 16 3.1))
-
-   :keys []
-
-   }
-)
-
+;; obsolete
 (defn secret-conf
 
   ([ n k m description]
@@ -159,26 +148,21 @@
 
 (defn create
   ([conf]
-   (let [secnum (biginteger (rand/create 16 3.1))]
+   (let [secnum [(biginteger (rand/create 16 3.1))
+                 (biginteger (rand/create 16 3.1))]]
      (create conf secnum)
    ))
 
+  ;; keys are tuples (hi+lo) to match the entropy needed by
+  ;; NXT passphrases
   ([conf secnum]
-   (let [skeys {:shares (split conf (biginteger secnum))
-                :entropy (float (rand/entropy (format "%d" secnum)))
-                :hashes {}
-                }]
-     
-;;      (doseq [sk (:shares skeys)]
-;; ;;       (doseq [s sk]
-;; ;;       (into s { :hash (str (hash/encode conf (:share s)))})
-;; ;;       (assoc s :hash (str (hash/encode conf (:share s))))
-;;        (update-in skeys [:hashes]
-;;                   (str (hash/encode conf (:share sk))))
-;;        )
-     skeys
-                    ;;   (pp/pprint (str (hash/encode conf (:share s))))
-       ;;       (merge s { :hash }
-     )
+   {:shares-lo (split conf (biginteger (first secnum)))
+    :shares-hi (split conf (biginteger (second secnum)))
+    :entropy-lo (float (rand/entropy (format "%d" (first secnum))))
+    :entropy-hi (float (rand/entropy (format "%d" (second secnum))))
+    :key (format "%dFXC%d" (first secnum) (second secnum))
+    }
    )
+  
   )
+

@@ -29,8 +29,6 @@
   (:import [java.math])
 
   (:require
-;   [freecoin.core :refer :all]
-
    [freecoin.secretshare :as ssss]
    [freecoin.random :as rand]
 
@@ -51,16 +49,13 @@
           }))
 
 ;; we save our secret here to be able to check
-(def secret (rand/create 16 3.1))
+(def secret [(rand/create 16 3.1)
+             (rand/create 16 3.1)])
 ;; creates a keys structure with all shares
 (def skeys (ssss/create conf secret))
 ;; (pp/pprint skeys)
 
-(println (format "Shannon entropy => %f" (:entropy skeys)))
-
-(pp/pprint
- (map :share (:shares skeys)))
-
+(pp/pprint (:key skeys))
 ;; print out public information to console
 (pp/pprint (str (format "total %d quorum %d"
                         (:total conf) (:quorum conf)
@@ -72,32 +67,60 @@
     (pp/pprint [k v]))
   )
 
-(pp/pprint "Encoding using hashids (weak encryption)")
-(doseq [s secret-pieces]
-  (pp/pprint (str (hash/encode conf (:share s))))
+(println (format "Shannon entropy => %f - %f"
+                 (:entropy-lo skeys)
+                 (:entropy-hi skeys)
+                 ))
+
+(loop [x 0]
+  (when (< x (:total conf))
+    (pp/pprint (format "%d  %s  %s"
+                       (:index (nth (:shares-lo skeys) x))
+                       (:share (nth (:shares-lo skeys) x))
+                       (:share (nth (:shares-hi skeys) x))
+                       ))
+    (recur (inc x)))
   )
-;; (pp/pprint skeys)
-;; (pp/pprint (map :hash (:hashes skeys)))
+
+
+(pp/pprint "Encoding using hashids (weak encryption)")
+(loop [x 0]
+  (when (< x (:total conf))
+    (pp/pprint
+     (format "%d  %s  %s"
+             (:index (nth (:shares-lo skeys) x))
+             (str (hash/encode conf (:share (nth (:shares-lo skeys) x))))
+             (str (hash/encode conf (:share (nth (:shares-hi skeys) x))))
+             ))
+    (recur (inc x)))
+  )
 
 (fact "Testing secureshare number splitting"
 
+      (def singlesec (rand/create 16 3.1))
       (fact "checking secret number after (combine (shuffle (split)))"
-             (ssss/combine
-              (shuffle
-               (ssss/split conf secret)))
-              => secret
-              )
+            (ssss/combine
+             (shuffle
+              (ssss/split conf singlesec)))
+            => singlesec
+            )
 
       (fact "checking secret number combine with only 4 elements"
-             (ssss/combine
-              (shuffle
-               (take-nth 2 (ssss/split conf secret))))
-              => secret
-              )
+            (ssss/combine
+             (shuffle
+              (take-nth 2 (ssss/split conf singlesec))))
+            => singlesec
+            )
 
-      (doseq [s (map :share (:shares skeys))]
-        (fact "check hashid number encoding"
+      (doseq [s (map :share (:shares-lo skeys))]
+        (fact "check hashid number encoding (lo)"
               (hash/decode conf (str (hash/encode conf s)))
               => [ s ]
               ))
+      (doseq [s (map :share (:shares-hi skeys))]
+        (fact "check hashid number encoding (hi)"
+              (hash/decode conf (str (hash/encode conf s)))
+              => [ s ]
+              ))
+
       )
