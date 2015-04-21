@@ -24,26 +24,26 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.random
+  (:use midje.sweet)
   (:gen-class)
   (:import  [java.security.SecureRandom])
   (:require [clojure.string :only (join split) :as s])
   )
 
 ;; generate a single random digit in the range of 0-9
-(defn digit []
-   (.nextInt (java.security.SecureRandom.) 10) ; max
-  )
+(defn digit [max]
+  (.nextInt (java.security.SecureRandom.) max))
+
 
 ;; generate a string chaining digits up to length
 (defn intchain [length]
-  (def res "")
-  (loop [x length]
-    (when (> x 0)
-      (def res (str res (format "%d" (digit))))
-      (recur (dec x))
-      )
-    )
-  res
+  (loop [x    length
+         ; make sure the first digit is not a zero
+         res (+ 1 (digit 9))]
+    (if (> x 1)
+      (recur (dec x) (str res (digit 10)))
+      res
+      ))
   )
 
 ;; measures (Shannon) the entropy of a string (returns a float)
@@ -58,6 +58,8 @@
 ;; creates a random biginteger of specified length and entropy above
 ;; the specified minimum 
 (defn create [length min-entropy]
+  "returns a random integer of length with a shannon entropy level above the minimum
+   as map { :integer :string :entropy }"
   (def res-str "")
   (loop [ent 0.0]
     (when (< ent min-entropy)
@@ -65,5 +67,14 @@
       (recur (float (entropy res-str)))
       )
     )
-  (biginteger res-str)
+  {:integer (biginteger res-str)
+   :string (str res-str)
+   :entropy (entropy res-str)
+   }
+
   )
+
+(fact "Checking random generator"
+      (fact "proper size returned"
+            (.length (:string (create 20 3.0))) => 20)
+      )

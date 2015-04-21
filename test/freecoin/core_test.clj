@@ -74,11 +74,12 @@
 
 (loop [x 0]
   (when (< x (:total conf))
-    (pp/pprint (format "%d  %s  %s"
-                       (:index (nth (:shares-lo skeys) x))
-                       (:share (nth (:shares-lo skeys) x))
-                       (:share (nth (:shares-hi skeys) x))
-                       ))
+    (pp/pprint
+     [(:index (nth (:shares-lo skeys) x))
+      (:share (nth (:shares-lo skeys) x))
+      (:share (nth (:shares-hi skeys) x))
+      ]
+     )
     (recur (inc x)))
   )
 
@@ -87,11 +88,11 @@
 (loop [x 0]
   (when (< x (:total conf))
     (pp/pprint
-     (format "%d  %s  %s"
-             (:index (nth (:shares-lo skeys) x))
-             (str (hash/encode conf (:share (nth (:shares-lo skeys) x))))
-             (str (hash/encode conf (:share (nth (:shares-hi skeys) x))))
-             ))
+     [(:index (nth (:shares-lo skeys) x))
+      (str (hash/encode conf (:share (nth (:shares-lo skeys) x))))
+      (str (hash/encode conf (:share (nth (:shares-hi skeys) x))))
+      ]
+     )
     (recur (inc x)))
   )
 
@@ -101,15 +102,15 @@
       (fact "checking secret number after (combine (shuffle (split)))"
             (ssss/combine
              (shuffle
-              (ssss/split conf singlesec)))
-            => singlesec
+              (ssss/split conf (:integer singlesec))))
+            => (:integer singlesec)
             )
 
       (fact "checking secret number combine with only 4 elements"
             (ssss/combine
              (shuffle
-              (take-nth 2 (ssss/split conf singlesec))))
-            => singlesec
+              (take-nth 2 (ssss/split conf (:integer singlesec)))))
+            => (:integer singlesec)
             )
 
       (doseq [s (map :share (:shares-lo skeys))]
@@ -127,6 +128,6 @@
 
 (fact "Checking higher level key api"
       (fact "check (unlock (create))"
-            (ssss/unlock skeys) => (:key skeys)
+            (ssss/unlock conf skeys) => (:key skeys)
             )
       )

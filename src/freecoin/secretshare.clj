@@ -33,6 +33,8 @@
   (:require
    [freecoin.random :as rand]
    [hashids.core :as hash]
+
+   [clojure.pprint :as pp]
    )
 
   )
@@ -49,6 +51,7 @@
 ;; defaults
 (def config
   {
+   :version 1
    :total 8
    :quorum 4
 
@@ -56,14 +59,12 @@
 
    :description "Freecoin 0.2"
 
-   ;;;; hash_opts for hashid
-
    ;; this alphabet excludes ambiguous chars:
    ;; 1,0,I,O can be confused on some screens
    :alphabet "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
    ;; the salt should be a secret shared password
-   ;; known to all possessors of a the key pieces
+   ;; known to all possessors of the key pieces
    :salt "La gatta sul tetto che scotta"
 })
 
@@ -119,22 +120,12 @@
     (:description m))))
 
 (defn split
-
   ([conf data]
    (map conf2map
         (.getShareInfos
          (.split (ss conf) data))))
-
-  ([conf]
-   (def res
-     (map conf2map
-          (.getShareInfos
-           (.split
-            (ss conf)
-            (:plain conf)))))
-   res
-   )
   )
+
 
 (defn combine
   ([shares]
@@ -148,28 +139,40 @@
 
 (defn create
   ([conf]
-   (let [secnum [(biginteger (rand/create 16 3.1))
-                 (biginteger (rand/create 16 3.1))]]
+   (let [secnum
+         [(rand/create 16 3.1)
+          (rand/create 16 3.1)]]
      (create conf secnum)
    ))
 
   ;; keys are tuples (hi+lo) to match the entropy needed by
   ;; NXT passphrases
   ([conf secnum]
-   {:shares-lo (split conf (biginteger (first secnum)))
-    :shares-hi (split conf (biginteger (second secnum)))
-    :entropy-lo (float (rand/entropy (format "%d" (first secnum))))
-    :entropy-hi (float (rand/entropy (format "%d" (second secnum))))
+   {:pre  [(contains? conf :version)]
+    :post [(> (:entropy-lo %) 0)
+           (> (:entropy-hi %) 0)]
+    }
+
+   (pp/pprint secnum)
+
+   {:shares-lo (split conf (:integer (first secnum)))
+    :shares-hi (split conf (:integer (second secnum)))
+    :entropy-lo (:entropy (first secnum))
+    :entropy-hi (:entropy (second secnum))
     ;; comment this one to avoid saving the secret key
-    :key (format "%dFXC%d" (first secnum) (second secnum))
+    :key (format "%s FXC %s"
+                 (hash/encode conf (:integer (first secnum)))
+                 (hash/encode conf (:integer (second secnum))))
     }
    )
 
   )
 
 (defn unlock
-  [secret]
+  [conf secret]
   (let [lo (combine (:shares-lo secret))
         hi (combine (:shares-hi secret))]
-    (format "%dFXC%d" lo hi)
-    ))
+    (format "%s FXC %s"
+            (hash/encode conf lo)
+            (hash/encode conf hi)
+            )))

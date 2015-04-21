@@ -4,7 +4,12 @@
   :license {:name "GNU GPL Affero v3 and "
             :url "http://www.d-centproject.eu"}
 
-  :profiles {:dev {:dependencies [[midje "1.6.3"]]}}
+  :profiles {:dev
+             {:dependencies
+              [
+               [midje "1.6.3"]
+               [org.clojure/tools.trace "0.7.8"]
+               ]}}
 
   :plugins [
             [lein-ring "0.9.3"]
@@ -51,10 +56,11 @@
 
                  ;; configuration
                  [environ "0.5.0"]
+
+
+
                  ]
   :env [
         [:base-url "http://localhost:3000"]
         ]
   )
-
-  
