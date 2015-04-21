@@ -1,7 +1,7 @@
 ;; Freecoin - digital social currency toolkit
 
 ;; part of Decentralized Citizen Engagement Technologies (D-CENT)
-;; R&D funded by the European Commission (FP7/CAPS 610349) 
+;; R&D funded by the European Commission (FP7/CAPS 610349)
 
 ;; Copyright (C) 2015 Dyne.org foundation
 ;; Copyright (C) 2015 Thoughtworks, Inc.
@@ -26,17 +26,58 @@
 (ns freecoin.routes
   (:require
    [liberator.core :refer [resource defresource]]
+   [liberator.representation :refer [as-response]]
    [compojure.core :refer [defroutes ANY]]
 
    [environ.core :refer [env]]
 
    [freecoin.pages       :as pages]
-   [freecoin.secretshare :as ssss]
    )
   )
 
 (def posts (ref []))
+(def cookie "TEST=CULOCULOCULO")
+(defn set-cookie [d ctx]
+  (if-not (empty? cookie)
+    (-> (as-response d ctx)
+        (assoc-in [:headers "Set-Cookie:"] cookie))
+    (-> (as-response d ctx)) ))
 
+;; resources
+(declare secret-api)
+(declare version)
+
+;; routes
+(defroutes app
+
+  (ANY "/version" {cookies :cookies}  (version cookies))
+  (ANY "/secret/:ver/:cmd" [ver cmd] (secret-api ver cmd))
+
+  ) ; end of routes
+
+
+
+
+
+
+(defresource version [cookies]
+  :available-media-types ["text/plain" "text/html"]
+  :as-response (fn [d ctx] (#'set-cookie d ctx))
+
+  :handle-ok
+  #(let [media-type
+         (get-in % [:representation :media-type])]
+     (condp = media-type
+       "text/plain" (pages/version {:type "txt"
+                                    :cookies cookies } )
+       "text/html"  (pages/version {:type "html"
+                                    :cookies cookies })
+       {:message "You requested a media type"
+        :media-type media-type}
+       )
+     )
+  :handle-not-acceptable "Can't hook that handle!"
+  )
 
 
 (defresource secret-api [ver cmd]
@@ -79,28 +120,3 @@
     )
 
   ) ; end of secret/1 api
-
-
-
-(defroutes app
-
-  (ANY "/version" [] (resource
-                      :available-media-types ["text/plain" "text/html"]
-                      :handle-ok
-                      #(let [media-type
-                             (get-in % [:representation :media-type])]
-                         (condp = media-type
-                           "text/plain" (pages/version "txt")
-                           "text/html"  (pages/version "html")
-                           {:message "You requested a media type"
-                            :media-type media-type}
-                           )
-                         )
-                      :handle-not-acceptable
-                      "Can't hook that handle!"
-                      )
-       )
-
-  (ANY "/secret/:ver/:cmd" [ver cmd] (secret-api ver cmd))
-
-  ) ; end of routes

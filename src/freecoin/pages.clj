@@ -1,7 +1,7 @@
 ;; Freecoin - digital social currency toolkit
 
 ;; part of Decentralized Citizen Engagement Technologies (D-CENT)
-;; R&D funded by the European Commission (FP7/CAPS 610349) 
+;; R&D funded by the European Commission (FP7/CAPS 610349)
 
 ;; Copyright (C) 2015 Dyne.org foundation
 ;; Copyright (C) 2015 Thoughtworks, Inc.
@@ -31,20 +31,23 @@
   "get the version of the running system"
   [md]
   ;; two mediatypes, just testing the possibility to filter
-  (condp = md
+  (condp = (:type md)
     "html"
-    (str "<html><h1>Freecoin 0.1 running on "
+    (str "<html><h1>Freecoin 0.2 running on "
          (.. System getProperties (get "os.name"))
          " version "
          (.. System getProperties (get "os.version"))
          " (" (.. System getProperties (get "os.arch")) ")</h1>"
+
+         "<h2>Cookies</h2>"
+         (:cookies md)
 
          "<h2>Host machine details</h2>"
          ;; blablabla
          (clojure.string/replace
           (slurp (java.io.FileReader. "/proc/cpuinfo"))
           "\n" "<br>")
-          "</html>"
+         "</html>"
          )
 
     "txt"
@@ -54,6 +57,5 @@
          (.. System getProperties (get "os.version"))
          " (" (.. System getProperties (get "os.arch")) ")"
          )
-
     )
   )

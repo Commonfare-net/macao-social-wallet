@@ -1,7 +1,7 @@
 ;; Freecoin - digital social currency toolkit
 
 ;; part of Decentralized Citizen Engagement Technologies (D-CENT)
-;; R&D funded by the European Commission (FP7/CAPS 610349) 
+;; R&D funded by the European Commission (FP7/CAPS 610349)
 
 ;; Copyright (C) 2015 Dyne.org foundation
 ;; Copyright (C) 2015 Thoughtworks, Inc.
@@ -29,10 +29,11 @@
 
    ;; comment the following to deactivate debug
    [liberator.dev]
-   
+
+   [ring.middleware.cookies        :refer [wrap-cookies]]
+   [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]
    [compojure.core :refer [defroutes ANY]]
-
    [freecoin.routes :as routes]
    )
   ;; (:gen-class)
@@ -40,8 +41,10 @@
 
 
 (def handler
-  (-> routes/app
-      wrap-params
+  (-> #'routes/app
       ;; comment the following to deactivate debug
-      (liberator.dev/wrap-trace :header :ui))
+      (liberator.dev/wrap-trace :header :ui)
+      wrap-cookies
+      wrap-keyword-params
+      wrap-params)
 )

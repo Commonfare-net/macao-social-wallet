@@ -16,7 +16,8 @@
             [lein-environ "1.0.0"]
             ]
 
-  :ring {:handler freecoin.core/handler}
+  :ring {:handler freecoin.core/handler
+         :port 8000}
 
   :source-paths ["src"]
 
