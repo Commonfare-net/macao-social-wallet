@@ -34,6 +34,7 @@
    [freecoin.random :as rand]
    [hashids.core :as hash]
 
+   [clojure.string :only (join split) :as str]
    [clojure.pprint :as pp]
    )
 
@@ -119,7 +120,7 @@
     (:prime m)
     (:description m))))
 
-(defn split
+(defn tiemens-split
   ([conf data]
    (map conf2map
         (.getShareInfos
@@ -127,7 +128,7 @@
   )
 
 
-(defn combine
+(defn tiemens-combine
   ([shares]
    (let [shares (map map2conf shares)
          pi     (.getPublicInfo (first shares))]
@@ -135,14 +136,63 @@
       (.combine (SecretShare. pi) (vec shares)))))
   )
 
+(defn hash-encode [conf num]
+  {:pre  [(integer? num)]
+   :post [(string? %)]}
+  (str (hash/encode conf num))
+  )
 
+(defn hash-decode [conf str]
+  {:pre  [(string? str)]
+   :post [(integer? %)]}
+  (biginteger
+   (first
+    (hash/decode conf str)))
+  )
 
-(defn create
+(defn create-single
   ([conf]
    (let [secnum
          [(rand/create 16 3.1)
           (rand/create 16 3.1)]]
-     (create conf secnum)
+     (create-single conf secnum)
+     ))
+  
+  ([conf secnum]
+   {:pre  [(contains? conf :version)]
+    :post [(> (:entropy-lo %) 0)
+           (> (:entropy-hi %) 0)]
+    }
+   "Creates a single key set"
+
+   {
+    :entropy-lo (:entropy (first secnum))
+    :entropy-hi (:entropy (second secnum))
+    ;; comment this one to avoid saving the secret key
+    :key (format "%s FXC %s"
+                 (hash-encode conf (:integer (first secnum)))
+                 (hash-encode conf (:integer (second secnum))))
+    }
+   
+   )
+  )
+
+(defn split [conf secret]
+  {:pre [(string? secret)]}
+  (let [keys (str/split secret #" ")]
+    {:shares-lo (tiemens-split conf (hash-decode conf (get keys 0)))
+     :shares-hi (tiemens-split conf (hash-decode conf (get keys 2)))
+     }
+    )
+  )
+
+;; TODO: call create-single in here to avoid duplicate code
+(defn create-shared
+  ([conf]
+   (let [secnum
+         [(rand/create 16 3.1)
+          (rand/create 16 3.1)]]
+     (create-shared conf secnum)
    ))
 
   ;; keys are tuples (hi+lo) to match the entropy needed by
@@ -152,17 +202,16 @@
     :post [(> (:entropy-lo %) 0)
            (> (:entropy-hi %) 0)]
     }
+   "Creates a shared key set"
 
-   (pp/pprint secnum)
-
-   {:shares-lo (split conf (:integer (first secnum)))
-    :shares-hi (split conf (:integer (second secnum)))
+   {:shares-lo (tiemens-split conf (:integer (first secnum)))
+    :shares-hi (tiemens-split conf (:integer (second secnum)))
     :entropy-lo (:entropy (first secnum))
     :entropy-hi (:entropy (second secnum))
     ;; comment this one to avoid saving the secret key
     :key (format "%s FXC %s"
-                 (hash/encode conf (:integer (first secnum)))
-                 (hash/encode conf (:integer (second secnum))))
+                 (hash-encode conf (:integer (first secnum)))
+                 (hash-encode conf (:integer (second secnum))))
     }
    )
 
@@ -170,9 +219,9 @@
 
 (defn unlock
   [conf secret]
-  (let [lo (combine (:shares-lo secret))
-        hi (combine (:shares-hi secret))]
+  (let [lo (tiemens-combine (:shares-lo secret))
+        hi (tiemens-combine (:shares-hi secret))]
     (format "%s FXC %s"
-            (hash/encode conf lo)
-            (hash/encode conf hi)
+            (hash-encode conf lo)
+            (hash-encode conf hi)
             )))

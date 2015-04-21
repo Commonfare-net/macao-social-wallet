@@ -51,9 +51,10 @@
 ;; we save our secret here to be able to check
 (def secret [(rand/create 16 3.1)
              (rand/create 16 3.1)])
+
 ;; creates a keys structure with all shares
-(def skeys (ssss/create conf secret))
-;; (pp/pprint skeys)
+(def skeys (ssss/create-shared conf secret))
+
 
 (pp/pprint (:key skeys))
 ;; print out public information to console
@@ -100,16 +101,16 @@
 
       (def singlesec (rand/create 16 3.1))
       (fact "checking secret number after (combine (shuffle (split)))"
-            (ssss/combine
+            (ssss/tiemens-combine
              (shuffle
-              (ssss/split conf (:integer singlesec))))
+              (ssss/tiemens-split conf (:integer singlesec))))
             => (:integer singlesec)
             )
 
       (fact "checking secret number combine with only 4 elements"
-            (ssss/combine
+            (ssss/tiemens-combine
              (shuffle
-              (take-nth 2 (ssss/split conf (:integer singlesec)))))
+              (take (:quorum conf) (ssss/tiemens-split conf (:integer singlesec)))))
             => (:integer singlesec)
             )
 
