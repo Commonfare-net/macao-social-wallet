@@ -120,7 +120,7 @@
     (:prime m)
     (:description m))))
 
-(defn tiemens-split
+(defn shamir-split
   ([conf data]
    (map conf2map
         (.getShareInfos
@@ -128,7 +128,7 @@
   )
 
 
-(defn tiemens-combine
+(defn shamir-combine
   ([shares]
    (let [shares (map map2conf shares)
          pi     (.getPublicInfo (first shares))]
@@ -177,12 +177,15 @@
    )
   )
 
+
 (defn split [conf secret]
   {:pre [(string? secret)]}
-  (let [keys (str/split secret #" ")]
-    {:shares-lo (tiemens-split conf (hash-decode conf (get keys 0)))
-     :shares-hi (tiemens-split conf (hash-decode conf (get keys 2)))
-     }
+  (let [keys (str/split secret #" ")
+        lo (shamir-split conf (hash-decode conf (get keys 0)))
+        hi (shamir-split conf (hash-decode conf (get keys 2)))]
+    {:uuid (:uuid (first lo))
+     :shares [ (map (partial hash-encode config) (map :share lo))
+               (map (partial hash-encode config) (map :share hi)) ]}
     )
   )
 
@@ -204,23 +207,24 @@
     }
    "Creates a shared key set"
 
-   {:shares-lo (tiemens-split conf (:integer (first secnum)))
-    :shares-hi (tiemens-split conf (:integer (second secnum)))
+   (let [lo (shamir-split conf (:integer (first secnum)))
+         hi (shamir-split conf (:integer (second secnum)))]
+   {:shares-lo lo
+    :shares-hi hi
     :entropy-lo (:entropy (first secnum))
     :entropy-hi (:entropy (second secnum))
     ;; comment this one to avoid saving the secret key
     :key (format "%s FXC %s"
                  (hash-encode conf (:integer (first secnum)))
                  (hash-encode conf (:integer (second secnum))))
-    }
-   )
+    }))
 
   )
 
 (defn unlock
   [conf secret]
-  (let [lo (tiemens-combine (:shares-lo secret))
-        hi (tiemens-combine (:shares-hi secret))]
+  (let [lo (shamir-combine (:shares-lo secret))
+        hi (shamir-combine (:shares-hi secret))]
     (format "%s FXC %s"
             (hash-encode conf lo)
             (hash-encode conf hi)

@@ -1,0 +1,18 @@
+
+* Create new accounts
+
+One way to generate Nxt accounts for web site users
+
+In order to integrate Nxt into sites where deposits and withdrawals are used and balances must be maintained, you may have to programmatically generate Nxt account numbers automatically. This method has been tried on a few gaming sites and has proved useful. Please test this method carefully if you plan to implement it:
+
+Generate a random, unique password for the user
+
+Send this API call using the generated password: http://localhost:7876/nxt?requestType=getAccountId&secretPhrase=PASSPHRASE
+
+Check to see if the generated account is a collision with an existing account by issuing this API call: http://localhost:7876/nxt?requestType=getAccountPublicKey&account=GENERATED_ACCOUNT_NUMBER
+
+If the account does not yet exist, this call should return error code 5, "unknown account", in a JSON object.
+
+You could also verify the account is not a collision by checking to see if any transactions exist on the blockchain for the generated account number: http://localhost:7876/nxt?requestType=getAccountTransactionIds&account=ACCOUNT&timestamp=0
+
+Store the generated password and account number securely, and associate them with the the site user's local userID.

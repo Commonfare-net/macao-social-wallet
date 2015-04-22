@@ -25,98 +25,151 @@
 
 (ns freecoin.routes
   (:require
+   [clojure.pprint :as pp]
+   [liberator.dev]
    [liberator.core :refer [resource defresource]]
    [liberator.representation :refer [as-response]]
    [compojure.core :refer [defroutes ANY]]
 
    [environ.core :refer [env]]
 
-   [freecoin.pages       :as pages]
+   [freecoin.secretshare :as ssss]
+   [freecoin.pages :as pages]
+   [freecoin.auth :as auth]
+   
    )
   )
 
-(def posts (ref []))
-(def cookie "TEST=CULOCULOCULO")
-(defn set-cookie [d ctx]
+(defn trace []
+  (format "<a href=\"%s\">Trace</a>"
+          (liberator.dev/current-trace-url))
+  )
+
+(def cookie "")
+
+(defn cookie-response [d ctx]
   (if-not (empty? cookie)
     (-> (as-response d ctx)
         (assoc-in [:headers "Set-Cookie:"] cookie))
     (-> (as-response d ctx)) ))
 
+(defn post-response [ctx]
+  (dosync 
+   (let [body (slurp (get-in ctx [:request :body]))]
+     (liberator.core/log! "post-response" body)
+     )
+   true
+   )
+  )
+(defn set-cookie [cooked]
+  (def cookie (format "%s; path=/; HttpOnly" cooked))
+  ;; Secure flag to be set in production to enforce cookie only over SSL)
+  )
+
+(defn get-cookie [req] (get (:headers req) "cookie"))
+
+(defn render-cookie [keys]
+  (set-cookie (format "FXC.%s=%s.FXC.%s" (:uuid keys)
+                      (first (first  (:shares keys)))
+                      (first (second (:shares keys))) 
+                      ))
+  )
+
+(defn redirect-home [_]
+  (def cookie "")
+  (liberator.representation/ring-response
+   {:body "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/\"></head></html>"
+    :headers {"Location" "/"}})
+  )
+
+
 ;; resources
-(declare secret-api)
+(declare serve)
+(declare serve-auth)
 (declare version)
+(declare login)
+(declare signup)
+
 
 ;; routes
 (defroutes app
 
-  (ANY "/version" {cookies :cookies}  (version cookies))
-  (ANY "/secret/:ver/:cmd" [ver cmd] (secret-api ver cmd))
+  (ANY "/"        [request] (serve        request  "Welcome!"))
+  (ANY "/wallet"  [request] (serve-auth   request  "I know you."))
 
+  (ANY "/signup"  [request] (signup       request))
+  
+  (ANY "/version" [request] (serve    request
+                                      (str "Freecoin 0.2 running on "
+                                           (.. System getProperties (get "os.name"))
+                                           " version "
+                                           (.. System getProperties (get "os.version"))
+                                           " (" (.. System getProperties (get "os.arch")) ")")
+                                      )
+       )
+       
   ) ; end of routes
 
+(defresource serve [request content]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+;  :as-response (fn [d ctx] (#'cookie-response d ctx))
+  :handle-ok (pages/template {:header (trace)
+                              :body content
+                              :id (let [x (auth/parse-secret (get-cookie request))]
+                                       (:uid auth/token))
+                              })
+  )
 
+(defresource serve-auth [request content]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+;  :as-response (fn [d ctx] (#'cookie-response d ctx))
 
+  :authorized? (auth/parse-secret (get-cookie request))
 
-
-
-(defresource version [cookies]
-  :available-media-types ["text/plain" "text/html"]
-  :as-response (fn [d ctx] (#'set-cookie d ctx))
-
-  :handle-ok
-  #(let [media-type
-         (get-in % [:representation :media-type])]
-     (condp = media-type
-       "text/plain" (pages/version {:type "txt"
-                                    :cookies cookies } )
-       "text/html"  (pages/version {:type "html"
-                                    :cookies cookies })
-       {:message "You requested a media type"
-        :media-type media-type}
-       )
-     )
-  :handle-not-acceptable "Can't hook that handle!"
+  :handle-ok (pages/template {:header (trace)
+                              :body content
+                              :id (:uid auth/token)
+                              })
+  
+  :handle-unauthorized redirect-home
+  
   )
 
 
-(defresource secret-api [ver cmd]
-  :allowed-methods [:post :get]
+(defresource signup [request]
+  :allowed-methods [:get]
   :available-media-types ["text/html"]
 
-  :available-media-types ["text/plain"
-                          "text/html"
-                          "application/json"]
-  :handle-ok (fn [ctx]
-               (liberator.core/log!
-                (format "GET: secret %s %s" ver cmd))
-               (format  (str "<html>Post text/plain to this resource.<br>\n"
-                                      "There are %d posts at the moment.")
-                                 (count @posts))
+  :authorized? (not (auth/parse-secret (get-cookie request)))
+
+  :handle-unauthorized redirect-home
+
+  :handle-ok (let [secret (ssss/create-single ssss/config)]
+               (def cookie "")
+               ;; debug to console
+               (pp/pprint "signup cookies:")
+               (pp/pprint (get-cookie request))
+               
+               (let [keys (ssss/split ssss/config (:key secret))]
+                 (render-cookie keys)
+                 (liberator.core/log! "Signup" "cookie" cookie)
+                 )
+               
+               (auth/parse-secret cookie)
+               
+               (pages/signup {:header (trace)
+                              :body "Welcome to Freecoin"
+                              :id (:uid auth/token)
+                              })
+               
                )
+  :as-response (fn [d ctx] (#'cookie-response d ctx))
 
-  :post! (fn [ctx]
-           (dosync
+  ;; :handle-not-acceptable "Can't hook that handle!"
+  ;; :post! (fn [ctx] (#'post-response ctx))
+  ;; :post-redirect? true
+  ;; :location "http://localhost:8000/login"
+  )
 
-            (let [body (slurp (get-in ctx [:request :body]))
-                  id   (count (alter posts conj body))]
-              {::id id}))
-
-           (liberator.core/log!
-            (format "POST: secret %s %s (%d) " ver cmd (count @posts)))
-           (format "secret %s %s (%d) " ver cmd (count @posts))
-
-          )
-
-  ;; actually http requires absolute urls for redirect but let's
-  ;; keep things simple.
-  :post-redirect?
-  (fn [ctx] {
-             :location (format "http://localhost:3000/version")
-             }
-    ;; anything executed here invalidates the redirect
-    ;; (liberator.core/log!
-    ;;  (format "POST: redirect %s" (::request ctx)))
-    )
-
-  ) ; end of secret/1 api

@@ -42,8 +42,7 @@
 (def conf
   ;; see secretshare/config for full options
   (merge ssss/config
-         {
-          :total 8
+         {:total 8
           :quorum 4
           :description "test freecoin ssss"
           }))
@@ -101,16 +100,16 @@
 
       (def singlesec (rand/create 16 3.1))
       (fact "checking secret number after (combine (shuffle (split)))"
-            (ssss/tiemens-combine
+            (ssss/shamir-combine
              (shuffle
-              (ssss/tiemens-split conf (:integer singlesec))))
+              (ssss/shamir-split conf (:integer singlesec))))
             => (:integer singlesec)
             )
 
       (fact "checking secret number combine with only 4 elements"
-            (ssss/tiemens-combine
+            (ssss/shamir-combine
              (shuffle
-              (take (:quorum conf) (ssss/tiemens-split conf (:integer singlesec)))))
+              (take (:quorum conf) (ssss/shamir-split conf (:integer singlesec)))))
             => (:integer singlesec)
             )
 

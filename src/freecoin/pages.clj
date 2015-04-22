@@ -25,37 +25,66 @@
 
 (ns freecoin.pages
   (:gen-class)
+  (:require
+   [clojure.pprint :as pp]
+   [liberator.dev]
+   [net.cgrand.enlive-html :as html]
+   )
   )
 
-(defn version
-  "get the version of the running system"
-  [md]
-  ;; two mediatypes, just testing the possibility to filter
-  (condp = (:type md)
-    "html"
-    (str "<html><h1>Freecoin 0.2 running on "
-         (.. System getProperties (get "os.name"))
-         " version "
-         (.. System getProperties (get "os.version"))
-         " (" (.. System getProperties (get "os.arch")) ")</h1>"
-
-         "<h2>Cookies</h2>"
-         (:cookies md)
-
-         "<h2>Host machine details</h2>"
-         ;; blablabla
-         (clojure.string/replace
-          (slurp (java.io.FileReader. "/proc/cpuinfo"))
-          "\n" "<br>")
-         "</html>"
-         )
-
-    "txt"
-    (str "Freecoin 0.1 running on "
-         (.. System getProperties (get "os.name"))
-         " version "
-         (.. System getProperties (get "os.version"))
-         " (" (.. System getProperties (get "os.arch")) ")"
-         )
-    )
+(html/deftemplate generic "templates/content.html"
+  [content]
+  [:head :title] (html/content "Freecoin")
+  [:h2]          (html/html-content (:header content))
+  [:h3]          (html/content      (:id     content))
+  [:div#body]    (html/content      (:body   content))
   )
+
+(html/deftemplate signup-template "templates/signup.html"
+  [content]
+  [:head :title] (html/content "Freecoin")
+  [:h2]          (html/html-content (:header content))
+  [:h3]          (html/content      (:id     content))
+  [:div#body]    (html/content      (:body   content))
+  )
+
+(defn template [content] (reduce str (generic content)) )
+
+(defn signup [content] (reduce str (signup-template content)) )
+                       
+
+
+
+
+
+;; (defn version
+;;   "get the version of the running system"
+;;   [md]
+;;   ;; two mediatypes, just testing the possibility to filter
+;;   (condp = (:type md)
+;;     "html"
+;;     (template {:header "Version"
+;;                :body (str "Freecoin 0.2 running on "
+;;                           (.. System getProperties (get "os.name"))
+;;                           " version "
+;;                           (.. System getProperties (get "os.version"))
+;;                           " (" (.. System getProperties (get "os.arch")) ")"                          
+;;                           "<h2>Cookies</h2>"
+;;                           (:cookies md)
+;;                           "<h2>Host machine details</h2>"
+;;                           ;; blablabla
+;;                           (clojure.string/replace
+;;                            (slurp (java.io.FileReader. "/proc/cpuinfo"))
+;;                            "\n" "<br>")
+;;                           "</html>"
+;;                           )})
+
+;;     "txt"
+;;     (str "Freecoin 0.1 running on "
+;;          (.. System getProperties (get "os.name"))
+;;          " version "
+;;          (.. System getProperties (get "os.version"))
+;;          " (" (.. System getProperties (get "os.arch")) ")"
+;;          )
+;;     )
+;;   )

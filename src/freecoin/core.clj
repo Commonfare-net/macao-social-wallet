@@ -35,10 +35,10 @@
    [ring.middleware.params :refer [wrap-params]]
    [compojure.core :refer [defroutes ANY]]
    [freecoin.routes :as routes]
+   [freecoin.secretshare :as ssss]
    )
   ;; (:gen-class)
   )
-
 
 (def handler
   (-> #'routes/app
