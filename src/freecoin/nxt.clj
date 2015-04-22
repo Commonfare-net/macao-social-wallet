@@ -1,7 +1,33 @@
-(ns freecoin.apiclient
-  (:use [freecoin.core])
+;; Freecoin - digital social currency toolkit
+
+;; part of Decentralized Citizen Engagement Technologies (D-CENT)
+;; R&D funded by the European Commission (FP7/CAPS 610349)
+
+;; Copyright (C) 2015 Dyne.org foundation
+;; Copyright (C) 2015 Thoughtworks, Inc.
+
+;; Sourcecode designed, written and maintained by
+;; Denis Roio <jaromil@dyne.org>
+;; Gareth Rogers <grogers@thoughtworks.com>
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(ns freecoin.nxt
+;  (:use [freecoin.core])
   (:require
    [freecoin.secretshare :as ssss]
+   [freecoin.utils :as util]
 
    [cheshire.core :refer :all :as jj]
    [clojure.pprint :as pp]
@@ -30,16 +56,15 @@
 
 ;; synchronous
 (defn call [arguments]
-  {:pre [  (contains? arguments :query-params) ] }
-  (pp/pprint (type arguments))
+  {:pre [ (contains? arguments :query-params) ] }
+  
   (let [{:keys [status headers body error] :as resp}
         (http/post (:url conf) (merge conf arguments))]
-    (if error
-      (println "Failed, exception: " error)
-      (println "HTTP POST success: " status))
+    (if (contains? @resp :error)
+      (util/log! "Error" "nxt/call" (:error @resp)))
     ;; just debug for now
     ;;    (pp/pprint (:body @resp))
-    (pp/pprint (jj/parse-string (:body @resp))) ; {:pretty true})
+    (jj/parse-string (:body @resp) true) ; {:pretty true})
     )
   )
 
@@ -78,7 +103,46 @@ requestProcessingTime (N) is the API request processing time (in millisec)"
   (call {:query-params {"requestType" "blacklistPeer"
                         "peer" (str peer)}})
   )
-  
+
+
+(defn getAccountId[args]
+  "*Request:*
+
+* _requestType_ is _getAccountId_
+* _secretPhrase_ is the secret passphrase of the account (optional)
+* _publicKey_ is the public key of the account (optional if
+_secretPhrase_ provided)
+
+*Response:*
+
+* _accountRS_ (S) is the Reed-Solomon address of the account
+* _publicKey_ (S) is the public key of the account
+* _requestProcessingTime_ (N) is the API request processing time (in
+millisec)
+* _account_ (S) is the account number"
+  (call {:query-params
+         { "requestType" "getAccountId"
+           "secretPhrase" (:secret args) }})
+  )
+
+(defn getAccountPublicKey[args]
+  "*Request:*
+
+* _requestType_ is _getAccountPublicKey_
+* _account_ is the accountRS representation
+
+*Response:*
+
+* _publicKey_ (S) is the 32-byte public key associated with the account,
+returned as a hex string
+* _requestProcessingTime_ (N) is the API request processing time (in
+millisec)"
+  (util/log! 'ACK 'getAccountPublicKey (:accountRS args))
+  (call {:query-params
+         { "requestType" "getAccountPublicKey"
+           "account" (:accountRS args) }})
+  )
+
 (defn getBalance[account]
   "getBalance(accountid)
 Request:

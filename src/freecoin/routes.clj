@@ -34,9 +34,11 @@
    [environ.core :refer [env]]
 
    [freecoin.secretshare :as ssss]
+   [freecoin.actions :as actions]
    [freecoin.pages :as pages]
    [freecoin.auth :as auth]
-   
+   [freecoin.db :as db]
+
    )
   )
 
@@ -54,7 +56,7 @@
     (-> (as-response d ctx)) ))
 
 (defn post-response [ctx]
-  (dosync 
+  (dosync
    (let [body (slurp (get-in ctx [:request :body]))]
      (liberator.core/log! "post-response" body)
      )
@@ -69,9 +71,9 @@
 (defn get-cookie [req] (get (:headers req) "cookie"))
 
 (defn render-cookie [keys]
-  (set-cookie (format "FXC.%s=%s.FXC.%s" (:uuid keys)
+  (set-cookie (format "FXC_%s=%s_FXC_%s" (:uuid keys)
                       (first (first  (:shares keys)))
-                      (first (second (:shares keys))) 
+                      (first (second (:shares keys)))
                       ))
   )
 
@@ -86,19 +88,18 @@
 ;; resources
 (declare serve)
 (declare serve-auth)
-(declare version)
-(declare login)
 (declare signup)
-
+(declare fake-signup)
 
 ;; routes
 (defroutes app
 
   (ANY "/"        [request] (serve        request  "Welcome!"))
-  (ANY "/wallet"  [request] (serve-auth   request  "I know you."))
+  (ANY "/wallet"  [request] (serve-auth   request  "I know you." actions/get-balance))
 
   (ANY "/signup"  [request] (signup       request))
-  
+  (ANY "/fake"    [request] (fake-signup  request))
+
   (ANY "/version" [request] (serve    request
                                       (str "Freecoin 0.2 running on "
                                            (.. System getProperties (get "os.name"))
@@ -107,7 +108,7 @@
                                            " (" (.. System getProperties (get "os.arch")) ")")
                                       )
        )
-       
+
   ) ; end of routes
 
 (defresource serve [request content]
@@ -121,20 +122,36 @@
                               })
   )
 
-(defresource serve-auth [request content]
+(defresource serve-auth [request content action]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 ;  :as-response (fn [d ctx] (#'cookie-response d ctx))
 
   :authorized? (auth/parse-secret (get-cookie request))
-
-  :handle-ok (pages/template {:header (trace)
-                              :body content
-                              :id (:uid auth/token)
-                              })
-  
   :handle-unauthorized redirect-home
-  
+
+  :handle-ok (let [conn (db/connect)
+                   found (db/find-one { :_id (:uid auth/token) } )]
+
+               (db/disconnect)
+
+               (if (nil? found)
+                 (pages/template {:header (trace)
+                                  :body "I can't remember you, sorry."
+                                  })
+                 ;; else
+                 (let [response (if-not (nil? action) (action found) nil)]
+                      (pages/template {:header (trace)
+                                       :body response
+                                       :id (:uid auth/token)
+                                       })
+                      )
+
+                 )
+
+               )
+
+
   )
 
 
@@ -143,33 +160,68 @@
   :available-media-types ["text/html"]
 
   :authorized? (not (auth/parse-secret (get-cookie request)))
-
   :handle-unauthorized redirect-home
 
   :handle-ok (let [secret (ssss/create-single ssss/config)]
                (def cookie "")
                ;; debug to console
-               (pp/pprint "signup cookies:")
-               (pp/pprint (get-cookie request))
-               
+               ;; (pp/pprint "signup cookies:")
+               ;; (pp/pprint (get-cookie request))
+
                (let [keys (ssss/split ssss/config (:key secret))]
                  (render-cookie keys)
+                 (auth/parse-secret cookie)
                  (liberator.core/log! "Signup" "cookie" cookie)
+
+                 (db/connect)
+                 (db/insert {:_id (:uid auth/token)
+                             :shares-lo (first  (:shares keys))
+                             :shares-hi (second (:shares keys))
+                             })
+                 (db/disconnect)
+
+                 (pages/signup {:header (trace)
+                                :body "Welcome to Freecoin"
+                                :id (:uid auth/token)
+                                })
                  )
-               
-               (auth/parse-secret cookie)
-               
-               (pages/signup {:header (trace)
-                              :body "Welcome to Freecoin"
-                              :id (:uid auth/token)
-                              })
-               
                )
+
   :as-response (fn [d ctx] (#'cookie-response d ctx))
+  )
+
+
+(defresource fake-signup [request]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+
+  :handle-ok (let [secret (ssss/create-single ssss/config)]
+
+               (auth/parse-secret (get-cookie request))
+
+               (let [keys (ssss/split ssss/config (:key secret))]
+                 (render-cookie keys)
+                 (auth/parse-secret cookie)
+                 (liberator.core/log! "Signup" "cookie" cookie)
+
+                 (db/connect)
+                 (db/insert {:_id (:uid auth/token)
+                             :shares-lo (first  (:shares keys))
+                             :shares-hi (second (:shares keys))
+                             })
+                 (db/disconnect)
+
+                 (pages/signup {:header (trace)
+                                :body cookie
+                                :id keys
+                                })
+
+                 )
+               )
+
 
   ;; :handle-not-acceptable "Can't hook that handle!"
   ;; :post! (fn [ctx] (#'post-response ctx))
   ;; :post-redirect? true
   ;; :location "http://localhost:8000/login"
   )
-

@@ -169,7 +169,7 @@
     :entropy-lo (:entropy (first secnum))
     :entropy-hi (:entropy (second secnum))
     ;; comment this one to avoid saving the secret key
-    :key (format "%s FXC %s"
+    :key (format "%s_FXC_%s"
                  (hash-encode conf (:integer (first secnum)))
                  (hash-encode conf (:integer (second secnum))))
     }
@@ -177,10 +177,9 @@
    )
   )
 
-
 (defn split [conf secret]
   {:pre [(string? secret)]}
-  (let [keys (str/split secret #" ")
+  (let [keys (str/split secret #"_")
         lo (shamir-split conf (hash-decode conf (get keys 0)))
         hi (shamir-split conf (hash-decode conf (get keys 2)))]
     {:uuid (:uuid (first lo))
@@ -188,6 +187,15 @@
                (map (partial hash-encode config) (map :share hi)) ]}
     )
   )
+
+;; (defn compose [conf secret]
+;;   {:pre [(string? secret)]}
+;;   ;; in auth the format of the token is defined as map { :uid :val }
+;;   (let [token (str/split (:val secret) #"_")
+;;         uid (:uid secret)]
+;;     ;; retrieve 
+  
+
 
 ;; TODO: call create-single in here to avoid duplicate code
 (defn create-shared
@@ -214,7 +222,7 @@
     :entropy-lo (:entropy (first secnum))
     :entropy-hi (:entropy (second secnum))
     ;; comment this one to avoid saving the secret key
-    :key (format "%s FXC %s"
+    :key (format "%s_FXC_%s"
                  (hash-encode conf (:integer (first secnum)))
                  (hash-encode conf (:integer (second secnum))))
     }))
@@ -225,7 +233,7 @@
   [conf secret]
   (let [lo (shamir-combine (:shares-lo secret))
         hi (shamir-combine (:shares-hi secret))]
-    (format "%s FXC %s"
+    (format "%s_FXC_%s"
             (hash-encode conf lo)
             (hash-encode conf hi)
             )))
