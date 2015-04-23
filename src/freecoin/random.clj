@@ -24,11 +24,9 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.random
-  (:use midje.sweet)
   (:gen-class)
   (:import  [java.security.SecureRandom])
-  (:require [clojure.string :only (join split) :as s])
-  )
+  (:require [clojure.string :only (join split) :as s]))
 
 ;; generate a single random digit in the range of 0-9
 (defn digit [max]
@@ -74,7 +72,3 @@
 
   )
 
-(fact "Checking random generator"
-      (fact "proper size returned"
-            (.length (:string (create 20 3.0))) => 20)
-      )
