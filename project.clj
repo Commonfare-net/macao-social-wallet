@@ -9,7 +9,9 @@
               [
                [midje "1.6.3"]
 ;               [org.clojure/tools.trace "0.7.8"]
-               ]}}
+               ]
+              :plugins [[lein-midje "3.1.3"]]
+              }}
 
   :plugins [
             [lein-ring "0.9.3"]

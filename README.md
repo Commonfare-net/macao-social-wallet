@@ -11,6 +11,13 @@ user=> (start) ;; starts the server
 user=> (stop) ;; stops the server
 ```
 
+## Running the tests
+
+```
+$ ./go.sh ;; convenience script for running all tests
+```
+See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced testing features.
+
 ## Usage
 
 FIXME
