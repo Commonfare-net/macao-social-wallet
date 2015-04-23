@@ -1,5 +1,16 @@
 # Freecoin - digital social currency toolkit
 
+## Running the app from the repl
+
+The server can be started and stopped from the repl by doing the following
+
+```
+$ lein repl
+user=> (use 'freecoin.core)
+user=> (start) ;; starts the server
+user=> (stop) ;; stops the server
+```
+
 ## Usage
 
 FIXME

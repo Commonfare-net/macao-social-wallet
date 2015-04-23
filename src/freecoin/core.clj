@@ -25,6 +25,7 @@
 
 (ns freecoin.core
   (:require
+   [org.httpkit.server :as server]
    [liberator.core :refer [resource defresource]]
 
    ;; comment the following to deactivate debug
@@ -48,3 +49,12 @@
       wrap-keyword-params
       wrap-params)
 )
+
+(def the-server (atom nil))
+
+(defn start []
+  (reset! the-server (server/run-server handler {:port 8000})))
+
+(defn stop []
+  (when @the-server (@the-server)))
+
