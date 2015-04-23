@@ -24,6 +24,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.routes
+  (:use midje.sweet)
   (:require
    [clojure.pprint :as pp]
    [liberator.dev]
@@ -36,6 +37,7 @@
    [freecoin.secretshare :as ssss]
    [freecoin.actions :as actions]
    [freecoin.pages :as pages]
+   [freecoin.utils :as util]
    [freecoin.auth :as auth]
    [freecoin.db :as db]
 
@@ -70,12 +72,6 @@
 
 (defn get-cookie [req] (get (:headers req) "cookie"))
 
-(defn render-cookie [keys]
-  (set-cookie (format "FXC_%s=%s_FXC_%s" (:uuid keys)
-                      (first (first  (:shares keys)))
-                      (first (second (:shares keys)))
-                      ))
-  )
 
 (defn redirect-home [_]
   (def cookie "")
@@ -162,16 +158,13 @@
   :authorized? (not (auth/parse-secret (get-cookie request)))
   :handle-unauthorized redirect-home
 
-  :handle-ok (let [secret (ssss/create-single ssss/config)]
-               (def cookie "")
+  :handle-ok (let [secrets (ssss/new-tuple ssss/config)]
                ;; debug to console
                ;; (pp/pprint "signup cookies:")
                ;; (pp/pprint (get-cookie request))
-
-               (let [keys (ssss/split ssss/config (:key secret))]
-                 (render-cookie keys)
-                 (auth/parse-secret cookie)
-                 (liberator.core/log! "Signup" "cookie" cookie)
+               (render-slice secrets [1])
+               (auth/parse-secret cookie)
+               (liberator.core/log! "Signup" "cookie" cookie)
 
                  (db/connect)
                  (db/insert {:_id (:uid auth/token)
@@ -185,7 +178,7 @@
                                 :id (:uid auth/token)
                                 })
                  )
-               )
+               
 
   :as-response (fn [d ctx] (#'cookie-response d ctx))
   )
@@ -195,30 +188,26 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 
-  :handle-ok (let [secret (ssss/create-single ssss/config)]
-
+  :handle-ok (let [secret (ssss/new-tuple ssss/config)]
+               
                (auth/parse-secret (get-cookie request))
-
-               (let [keys (ssss/split ssss/config (:key secret))]
-                 (render-cookie keys)
-                 (auth/parse-secret cookie)
-                 (liberator.core/log! "Signup" "cookie" cookie)
-
-                 (db/connect)
-                 (db/insert {:_id (:uid auth/token)
-                             :shares-lo (first  (:shares keys))
-                             :shares-hi (second (:shares keys))
-                             })
-                 (db/disconnect)
-
-                 (pages/signup {:header (trace)
-                                :body cookie
-                                :id keys
-                                })
-
-                 )
+               (auth/render-slice secret [1])
+               (auth/parse-secret cookie)
+               (liberator.core/log! "Signup" "cookie" cookie)
+               
+               ;; (db/connect)
+               ;; (db/insert {:_id (:uid auth/token)
+               ;;             :shares-lo (first  (:shares keys))
+               ;;             :shares-hi (second (:shares keys))
+               ;;             })
+               ;; (db/disconnect)
+               
+               (pages/signup {:header (trace)
+                              :body cookie
+                              :id keys
+                              })
+               
                )
-
 
   ;; :handle-not-acceptable "Can't hook that handle!"
   ;; :post! (fn [ctx] (#'post-response ctx))

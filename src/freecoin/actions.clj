@@ -41,7 +41,7 @@
 ;; this is perhaps a good place to plug in more backends in the future
 ;; we only use NXT for now (the monetary system API)
 
-(defn create-account [auth options]
+(defn create-account [auth]
   (let [acct (nxt/getAccountId auth)]
     (if (contains? acct :errorCode)
       (util/log! 'Error 'create-account/getAccountId (:errorDescription acct))      
@@ -59,7 +59,7 @@
     )
   )
 
-(defn get-balance [auth options]
+(defn get-balance [auth]
   (pp/pprint ["get-balance" auth])
   (nxt/getBalance (:_id auth))
   )

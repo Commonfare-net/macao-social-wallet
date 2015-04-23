@@ -32,11 +32,13 @@
    )
   (:require
    [freecoin.random :as rand]
+   [freecoin.utils :as util]
    [hashids.core :as hash]
 
    [clojure.string :only (join split) :as str]
    [clojure.pprint :as pp]
    )
+  (:use midje.sweet)
 
   )
 
@@ -49,14 +51,18 @@
 (defn prime4096 []
   (SecretShare/getPrimeUsedFor4096bigSecretPayload))
 
+(defn get-prime [sym]
+  ;;  (util/log! "ACK" "get-prime" #(str))
+  (ns-resolve *ns* (symbol (str "freecoin.secretshare/" sym))))
+
 ;; defaults
 (def config
   {
    :version 1
-   :total 8
-   :quorum 4
+   :total 9
+   :quorum 5
 
-   :prime (prime4096)
+   :prime 'prime4096
 
    :description "Freecoin 0.2"
 
@@ -67,173 +73,213 @@
    ;; the salt should be a secret shared password
    ;; known to all possessors of the key pieces
    :salt "La gatta sul tetto che scotta"
+
+   ;; random number generator settings
+   :length 15
+   :entropy 3.1
 })
 
-;; obsolete
-(defn secret-conf
 
-  ([ n k m description]
-   (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
-    (int n) k m description)
-   )
-
-  ([ sec ]
-   (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
-    (int (:total sec))
-    (:quorum sec)
-    (:prime sec)
-    (:description sec)
+(defn shamir-set-header [head]
+  (let [res
+        (SecretShare.
+         (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
+          (int (:total head))
+          (:quorum head)
+          ((get-prime (:prime head)))
+          (:description head)
+          )
+         )]
+    res
     )
-   )
-
   )
 
-(defn ss
-  ([pi]
-   (SecretShare.
-    (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
-     (int (:total pi))
-     (:quorum pi)
-     (:prime pi)
-     (:description pi)
-     )
-    )))
-
-(defn conf2map [si]
-  "Convert a secretshare configuration structure into a clojure map"
-  (let [pi (.getPublicInfo si)]
-    {:index (.getIndex si)
-     :share (.getShare si)
-     :quorum (.getN pi)
-     :total (.getK pi)
-     :prime (.getPrimeModulus pi)
+(defn shamir-get-header [share]
+  (let [pi (.getPublicInfo share)]
+    {:quorum (.getK pi)
+     :total (.getN pi)
+     :prime (condp = (.getPrimeModulus pi)
+              (prime192) 'prime192
+              (prime384) 'prime384
+              (prime4096) 'prime4096
+              (str "UNKNOWN"))
      :uuid (.getUuid pi)
-     :description (.getDescription pi)}))
+     :description (.getDescription pi)
+     })
+  )
 
-(defn map2conf [m]
-  "Convert a clojure map into a secretshare configuration structure"
-  (com.tiemens.secretshare.engine.SecretShare$ShareInfo.
-   (:index m) (:share m)
-   (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
-    (:quorum m)
-    (:total m)
-    (:prime m)
-    (:description m))))
+(defn shamir-get-shares [si]
+  (map (fn [_] (.getShare _)) si))
 
 (defn shamir-split
-  ([conf data]
-   (map conf2map
-        (.getShareInfos
-         (.split (ss conf) data))))
+  "split an integer into shares according to conf
+  return a structure { :header { :quorum :total :prime :description}
+                       :shares [ integer vector of :total length] }"
+  [conf secnum]
+  (let [si (.getShareInfos (.split (shamir-set-header conf) (:integer secnum)))
+        header (shamir-get-header (first si))
+        shares (shamir-get-shares si)]
+
+    ;; (util/log! "ACK" "shamir-split" [header shares])
+
+    {:header header
+     :shares (map biginteger shares)})
   )
 
+(defn shamir-create-new
+  ([conf]
+   (let [secnum (rand/create (:length conf) (:entropy conf))]
+     (shamir-create-new conf secnum)
+     ))
 
-(defn shamir-combine
-  ([shares]
-   (let [shares (map map2conf shares)
-         pi     (.getPublicInfo (first shares))]
-     (.getSecret
-      (.combine (SecretShare. pi) (vec shares)))))
+  ([conf secnum]
+   ; checks
+   {:pre  [(contains? conf :version)]
+    ;;    :post [(> (:entropy %) 1)]}
+    :post [(= (count (:shares %)) (:total conf))]}
+   (shamir-split conf secnum)
+
+   )
   )
 
-(defn hash-encode [conf num]
+(fact "Create Shamir's secret split into shares"
+      (util/log! 'FACT 'shamir-split 'START)
+      (type  (shamir-create-new config)) => clojure.lang.PersistentArrayMap
+      (count (:shares (shamir-create-new config))) => (:total config)
+      ((get-prime (:prime (:header (shamir-create-new config))))) => ((get-prime (:prime config)))
+      ;; shamir is not deterministic
+      (let [r (rand/create (:length config) (:entropy config))]
+        (shamir-create-new config r) =not=> (shamir-create-new config r)
+        (util/log! 'ACK 'shamir-create-new (shamir-create-new config r))
+        )
+
+      (util/log! 'FACT 'shamir-split 'END)
+      )
+
+(defn shamir-combine [secret]
+  {:pre [(contains? secret :header)
+         (contains? secret :shares)]
+   :post [(integer? %)]}
+  (let [header (:header secret)
+        shares (:shares secret)]
+    ;;    (util/log! "ACK" 'shamir-combine  (.combine (SecretShare. header) (vec shares)))
+    (loop [s (first shares)
+           res []
+           c 1]
+      (if (< c (count shares))
+        (recur (nth shares c)
+               (merge res (com.tiemens.secretshare.engine.SecretShare$ShareInfo.
+                           c  s (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
+                                 (:total header) (:quorum header)
+                                 ((get-prime (:prime header)))
+                                 (:description header))))
+               (inc c))
+      ;; return
+        (.getSecret (.combine (shamir-set-header header) res))
+        ))
+    )
+  )
+
+(fact "Combine Shamir's shares into the secret"
+      (util/log! 'FACT 'shamir-combine 'START)
+      (let [secnum (rand/create (:length config) (:entropy config))
+            secret (shamir-create-new config secnum)]
+        (shamir-combine secret) => (:integer secnum)
+        )
+      (util/log! 'FACT 'shamir-combine 'END)
+      )
+
+(defn hash-encode-num [conf num]
   {:pre  [(integer? num)]
    :post [(string? %)]}
   (str (hash/encode conf num))
   )
 
-(defn hash-decode [conf str]
+(defn hash-decode-str [conf str]
   {:pre  [(string? str)]
    :post [(integer? %)]}
-  (biginteger
-   (first
-    (hash/decode conf str)))
+  ;; (util/log! 'ACK 'decoding-type (type str))
+  ;; (util/log! 'ACK 'decoded-type (type (hash/decode conf str)))
+  (biginteger (first (hash/decode conf str)))
   )
 
-(defn create-single
-  ([conf]
-   (let [secnum
-         [(rand/create 16 3.1)
-          (rand/create 16 3.1)]]
-     (create-single conf secnum)
-     ))
-  
-  ([conf secnum]
-   {:pre  [(contains? conf :version)]
-    :post [(> (:entropy-lo %) 0)
-           (> (:entropy-hi %) 0)]
-    }
-   "Creates a single key set"
+(defn hash-encode-secret [conf secret]
+  {:pre [(contains? secret :header)
+         (contains? conf :alphabet)
+         (contains? conf :salt)
+         (contains? secret :shares)
+         (= (count (:shares secret)) (:total (:header secret)))]
+   :post (= (count (:shares secret)) (count %))}
+  (loop [c 1
+         s (first (:shares secret))
+         res [] ]
 
-   {
-    :entropy-lo (:entropy (first secnum))
-    :entropy-hi (:entropy (second secnum))
-    ;; comment this one to avoid saving the secret key
-    :key (format "%s_FXC_%s"
-                 (hash-encode conf (:integer (first secnum)))
-                 (hash-encode conf (:integer (second secnum))))
-    }
-   
-   )
-  )
-
-(defn split [conf secret]
-  {:pre [(string? secret)]}
-  (let [keys (str/split secret #"_")
-        lo (shamir-split conf (hash-decode conf (get keys 0)))
-        hi (shamir-split conf (hash-decode conf (get keys 2)))]
-    {:uuid (:uuid (first lo))
-     :shares [ (map (partial hash-encode config) (map :share lo))
-               (map (partial hash-encode config) (map :share hi)) ]}
+    (if (< c (count (:shares secret)))
+      (recur (inc c) (biginteger (nth (:shares secret) c))
+             (merge res (hash-encode-num conf s)))
+      ;; return
+      (merge res (hash-encode-num conf s)))
     )
   )
 
-;; (defn compose [conf secret]
-;;   {:pre [(string? secret)]}
-;;   ;; in auth the format of the token is defined as map { :uid :val }
-;;   (let [token (str/split (:val secret) #"_")
-;;         uid (:uid secret)]
-;;     ;; retrieve 
-  
+(defn hash-decode-hashes [conf hashes]
+  {:pre [(contains? conf :salt)
+         (coll? hashes)
+         (string? (first hashes))]
+   :post [(coll? %)
+          (integer? (first %))
+          (= (count hashes) (count %))]}
 
+  (loop [c 1
+         s (first hashes)
+         res [] ]
 
-;; TODO: call create-single in here to avoid duplicate code
-(defn create-shared
-  ([conf]
-   (let [secnum
-         [(rand/create 16 3.1)
-          (rand/create 16 3.1)]]
-     (create-shared conf secnum)
-   ))
-
-  ;; keys are tuples (hi+lo) to match the entropy needed by
-  ;; NXT passphrases
-  ([conf secnum]
-   {:pre  [(contains? conf :version)]
-    :post [(> (:entropy-lo %) 0)
-           (> (:entropy-hi %) 0)]
-    }
-   "Creates a shared key set"
-
-   (let [lo (shamir-split conf (:integer (first secnum)))
-         hi (shamir-split conf (:integer (second secnum)))]
-   {:shares-lo lo
-    :shares-hi hi
-    :entropy-lo (:entropy (first secnum))
-    :entropy-hi (:entropy (second secnum))
-    ;; comment this one to avoid saving the secret key
-    :key (format "%s_FXC_%s"
-                 (hash-encode conf (:integer (first secnum)))
-                 (hash-encode conf (:integer (second secnum))))
-    }))
-
+    (if (< c (count hashes))
+      (recur (inc c) (str (nth hashes c))
+             (merge res (biginteger (hash-decode-str conf s))))
+      ;; return
+      (merge res (biginteger (hash-decode-str conf s))))
+    )
   )
 
-(defn unlock
-  [conf secret]
-  (let [lo (shamir-combine (:shares-lo secret))
-        hi (shamir-combine (:shares-hi secret))]
-    (format "%s_FXC_%s"
-            (hash-encode conf lo)
-            (hash-encode conf hi)
-            )))
+(fact "Hashid codec"
+      (util/log! 'FACT 'hashid-codec 'START)
+      (let [r (rand/create (:length config) (:entropy config))
+            secret (shamir-create-new config r)
+            hashes (hash-encode-secret config secret)
+            hasdec (hash-decode-hashes config hashes)
+            secnum (first (:shares secret))
+            ]
+        hasdec => (:shares secret)
+        ;; (util/log! 'ACK 'shamir-create-new secret)
+        ;; (util/log! 'ACK 'hash-encode-secret hashes)
+        ;; (util/log! 'ACK 'hash-decode-hashes hasdec)
+
+
+
+        (hash-decode-str config (hash-encode-num config secnum)) => secnum
+        (let [enc (hash-encode-num config secnum)
+              dec (hash-decode-str config enc)
+              rec (hash-encode-num config dec)]
+          secnum => dec
+          enc => rec
+          (util/log! 'ACK 'hash-codec [(type enc) enc (type dec) dec (type rec) rec]))
+        )
+
+      (util/log! 'FACT 'hashid-codec 'END)
+      )
+
+
+(defn new-tuple [conf]
+  {:pre  [(contains? conf :version)]}
+;   :post [(= (count %) (:total conf))]}
+  {
+   :header conf
+   :lo (hash-encode-secret conf (shamir-create-new conf))
+   :hi (hash-encode-secret conf (shamir-create-new conf))
+   }
+  )
+
+(fact "Tuple generator"
+      (util/log! 'ACK 'new-tuple (new-tuple config))
+      )
