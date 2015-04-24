@@ -1,4 +1,16 @@
 
+TOTAL    QUORUM
+  9   /    5
+
+3 -> user (*1 used as ID and semi/public)
+3 -> server
+3 -> friends/server (optional drop from server)
+
+provide reference C code to find the secret offline
+
+
+
+
 * Create new accounts
 
 One way to generate Nxt accounts for web site users

@@ -162,7 +162,7 @@
                ;; debug to console
                ;; (pp/pprint "signup cookies:")
                ;; (pp/pprint (get-cookie request))
-               (render-slice secrets [1])
+               (auth/render-slice secrets [1])
                (auth/parse-secret cookie)
                (liberator.core/log! "Signup" "cookie" cookie)
 
@@ -178,7 +178,7 @@
                                 :id (:uid auth/token)
                                 })
                  )
-               
+
 
   :as-response (fn [d ctx] (#'cookie-response d ctx))
   )
@@ -189,24 +189,24 @@
   :available-media-types ["text/html"]
 
   :handle-ok (let [secret (ssss/new-tuple ssss/config)]
-               
+
                (auth/parse-secret (get-cookie request))
                (auth/render-slice secret [1])
                (auth/parse-secret cookie)
                (liberator.core/log! "Signup" "cookie" cookie)
-               
+
                ;; (db/connect)
                ;; (db/insert {:_id (:uid auth/token)
                ;;             :shares-lo (first  (:shares keys))
                ;;             :shares-hi (second (:shares keys))
                ;;             })
                ;; (db/disconnect)
-               
+
                (pages/signup {:header (trace)
                               :body cookie
                               :id keys
                               })
-               
+
                )
 
   ;; :handle-not-acceptable "Can't hook that handle!"

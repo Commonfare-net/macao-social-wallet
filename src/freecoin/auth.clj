@@ -5,7 +5,7 @@
    [clojure.string :as str]
    [liberator.core :refer [resource defresource]]
    [liberator.dev]
-;   [freecoin.secretshare :as ssss]
+   [freecoin.secretshare :as ssss]
    [freecoin.db :as db]
    [freecoin.utils :as util]
 
@@ -38,6 +38,7 @@ extracts the slices at `which` height, return a new vector"
                                   (format "FXC1_%s_FXC_%s" lo hi)))))
     )
   )
+
 (fact "Slicing the secret bread"
       (util/log! 'ACK 'render-slice (render-slice (ssss/new-tuple ssss/config) [1 3 5]))
       )
@@ -45,42 +46,42 @@ extracts the slices at `which` height, return a new vector"
 (defn parse-secret [in]
   (try
 
-    (def token {})
-
     (if (empty? in)
       (throw (Exception. "Empty auth token"))
-
       (let [token (str/split (trunc in 128) #";")]
-
-        (if-not (= (subs (first token) 0 3) "FXC")
+        (if-not (= (subs (first token) 0 4) "FXC_")
           (throw (Exception.
-                  (format "Invalid auth token: %s" (first token))
-                  ))
-
+                  (format "Invalid auth token: %s" (first token))))
           (let [part (str/split (first token) #"=")]
-
             (if (empty? (second part))
               (throw (Exception. "Missing value in auth token"))
-
-              (def token {:uid (trunc (first part)  64)
-                          :val (trunc (second part) 64)})
-              )
+              {:_id (trunc (first part)  64)
+               :secret (trunc (second part) 64)
+               :valid true})
             )
           )
         )
       )
 
-
     (catch Exception e
       (let [error (.getMessage e)]
-        (liberator.core/log! "Error" "(auth/parse-secret)" error)
+        (util/log! 'ERR 'auth/parse-secret error)
         ))
 
     (finally
-      (if (empty? (:val token))
-        (let [] (liberator.core/log! "Auth" "parse-secret" false) false)
-        (let [] (liberator.core/log! "Auth" "parse-secret" true)  true)
-        )
+      (util/log! 'Auth 'parse-secret in)
       )
+
     )
   )
+
+(fact "Parsing secrets"
+      (let [good-ex "FXC_38ea0686-9d36-416f-ae08-8f763c31f22f=FXC1_MLM7EWG7NV7JL_FXC_898589G3LR3KE;"
+            bad-ex "FXC_38ea0686-9d36-416f-ae08-8f763c31f22f="]
+        (parse-secret good-ex) => {:_id "FXC_38ea0686-9d36-416f-ae08-8f763c31f22f"
+                                   :secret "FXC1_MLM7EWG7NV7JL_FXC_898589G3LR3KE"
+                                   :valid true}
+        (parse-secret bad-ex) => nil
+
+        )
+      )

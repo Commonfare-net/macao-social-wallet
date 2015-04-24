@@ -96,14 +96,15 @@
 
 (defn shamir-get-header [share]
   (let [pi (.getPublicInfo share)]
-    {:quorum (.getK pi)
+    {:_id (.getUuid pi)
+     :quorum (.getK pi)
      :total (.getN pi)
      :prime (condp = (.getPrimeModulus pi)
               (prime192) 'prime192
               (prime384) 'prime384
               (prime4096) 'prime4096
               (str "UNKNOWN"))
-     :uuid (.getUuid pi)
+
      :description (.getDescription pi)
      })
   )
@@ -121,8 +122,8 @@
         shares (shamir-get-shares si)]
 
     ;; (util/log! "ACK" "shamir-split" [header shares])
-
-    {:header header
+    {
+     :header header
      :shares (map biginteger shares)})
   )
 
@@ -271,13 +272,21 @@
 
 
 (defn new-tuple [conf]
-  {:pre  [(contains? conf :version)]}
-;   :post [(= (count %) (:total conf))]}
-  {
-   :header conf
-   :lo (hash-encode-secret conf (shamir-create-new conf))
-   :hi (hash-encode-secret conf (shamir-create-new conf))
-   }
+  {:pre  [(contains? conf :version)]
+   :post [(= (count (:lo %)) (:total conf))]}
+
+  (let [lo (shamir-create-new conf)
+        hi (shamir-create-new conf)
+        id (:_id (:header lo))]
+    {
+     :_id id
+     :header conf
+     :lo_id (:_id (:header lo))
+     :lo (hash-encode-secret conf lo)
+     :hi_id (:_id (:header hi))
+     :hi (hash-encode-secret conf hi)
+     }
+    )
   )
 
 (fact "Tuple generator"
