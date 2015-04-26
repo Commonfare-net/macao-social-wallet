@@ -1,4 +1,4 @@
-(ns freecoin.random_test
+(ns freecoin.random-test
   (:use midje.sweet)
   (:require [freecoin.random :as random]))
 

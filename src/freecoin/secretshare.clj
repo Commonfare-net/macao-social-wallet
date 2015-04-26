@@ -3,7 +3,7 @@
 ;; part of Decentralized Citizen Engagement Technologies (D-CENT)
 ;; R&D funded by the European Commission (FP7/CAPS 610349)
 
-;; Wrapper based on Secret Share Java implementation by Tim Tiemens
+;; Based on Secret Share Java implementation by Tim Tiemens
 ;; Copyright (C) 2015 Denis Roio <jaromil@dyne.org>
 
 ;; Shamir's Secret Sharing algorithm was invented by Adi Shamir
@@ -143,20 +143,6 @@
    )
   )
 
-(fact "Create Shamir's secret split into shares"
-      (util/log! 'FACT 'shamir-split 'START)
-      (type  (shamir-create-new config)) => clojure.lang.PersistentArrayMap
-      (count (:shares (shamir-create-new config))) => (:total config)
-      ((get-prime (:prime (:header (shamir-create-new config))))) => ((get-prime (:prime config)))
-      ;; shamir is not deterministic
-      (let [r (rand/create (:length config) (:entropy config))]
-        (shamir-create-new config r) =not=> (shamir-create-new config r)
-        (util/log! 'ACK 'shamir-create-new (shamir-create-new config r))
-        )
-
-      (util/log! 'FACT 'shamir-split 'END)
-      )
-
 (defn shamir-combine [secret]
   {:pre [(contains? secret :header)
          (contains? secret :shares)]
@@ -180,15 +166,6 @@
         ))
     )
   )
-
-(fact "Combine Shamir's shares into the secret"
-      (util/log! 'FACT 'shamir-combine 'START)
-      (let [secnum (rand/create (:length config) (:entropy config))
-            secret (shamir-create-new config secnum)]
-        (shamir-combine secret) => (:integer secnum)
-        )
-      (util/log! 'FACT 'shamir-combine 'END)
-      )
 
 (defn hash-encode-num [conf num]
   {:pre  [(integer? num)]
@@ -243,33 +220,6 @@
     )
   )
 
-(fact "Hashid codec"
-      (util/log! 'FACT 'hashid-codec 'START)
-      (let [r (rand/create (:length config) (:entropy config))
-            secret (shamir-create-new config r)
-            hashes (hash-encode-secret config secret)
-            hasdec (hash-decode-hashes config hashes)
-            secnum (first (:shares secret))
-            ]
-        hasdec => (:shares secret)
-        ;; (util/log! 'ACK 'shamir-create-new secret)
-        ;; (util/log! 'ACK 'hash-encode-secret hashes)
-        ;; (util/log! 'ACK 'hash-decode-hashes hasdec)
-
-
-
-        (hash-decode-str config (hash-encode-num config secnum)) => secnum
-        (let [enc (hash-encode-num config secnum)
-              dec (hash-decode-str config enc)
-              rec (hash-encode-num config dec)]
-          secnum => dec
-          enc => rec
-          (util/log! 'ACK 'hash-codec [(type enc) enc (type dec) dec (type rec) rec]))
-        )
-
-      (util/log! 'FACT 'hashid-codec 'END)
-      )
-
 
 (defn new-tuple [conf]
   {:pre  [(contains? conf :version)]
@@ -288,7 +238,3 @@
      }
     )
   )
-
-(fact "Tuple generator"
-      (util/log! 'ACK 'new-tuple (new-tuple config))
-      )
