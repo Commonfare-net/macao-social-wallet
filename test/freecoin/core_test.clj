@@ -1,8 +1,9 @@
 (ns freecoin.core-test
   (:use midje.sweet)
   (:require
-   [freecoin.secretshare-test :as ssss]
-   [freecoin.random-test :as rand]
+   [freecoin.secretshare-test]
+   [freecoin.random-test]
+   [freecoin.auth-test]
    [freecoin.utils :as util]
 
 )

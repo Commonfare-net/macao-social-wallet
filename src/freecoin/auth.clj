@@ -1,5 +1,4 @@
-(ns freecoin.auth
-  (:use midje.sweet)
+2(ns freecoin.auth
   (:require
    [clojure.pprint :as pp]
    [clojure.string :as str]
@@ -39,10 +38,6 @@ extracts the slices at `which` height, return a new vector"
     )
   )
 
-(fact "Slicing the secret bread"
-      (util/log! 'ACK 'render-slice (render-slice (ssss/new-tuple ssss/config) [1 3 5]))
-      )
-
 (defn parse-secret [in]
   (try
 
@@ -69,19 +64,8 @@ extracts the slices at `which` height, return a new vector"
         ))
 
     (finally
-      (util/log! 'Auth 'parse-secret in)
+      ;;  (util/log! 'Auth 'parse-secret in)
       )
 
     )
   )
-
-(fact "Parsing secrets"
-      (let [good-ex "FXC_38ea0686-9d36-416f-ae08-8f763c31f22f=FXC1_MLM7EWG7NV7JL_FXC_898589G3LR3KE;"
-            bad-ex "FXC_38ea0686-9d36-416f-ae08-8f763c31f22f="]
-        (parse-secret good-ex) => {:_id "FXC_38ea0686-9d36-416f-ae08-8f763c31f22f"
-                                   :secret "FXC1_MLM7EWG7NV7JL_FXC_898589G3LR3KE"
-                                   :valid true}
-        (parse-secret bad-ex) => nil
-
-        )
-      )
