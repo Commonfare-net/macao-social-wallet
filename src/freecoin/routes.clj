@@ -29,7 +29,7 @@
    [clojure.pprint :as pp]
    [liberator.dev]
    [liberator.core :refer [resource defresource]]
-   [liberator.representation :refer [as-response]]
+   [liberator.representation :refer [as-response ring-response]]
    [compojure.core :refer [defroutes ANY]]
 
    [environ.core :refer [env]]
@@ -86,11 +86,16 @@
 (declare serve-auth)
 (declare signup)
 (declare fake-signup)
+(declare simple-resource)
+(declare tag-session)
+
 
 ;; routes
 (defroutes app
 
   (ANY "/"        [request] (serve        request  "Welcome!"))
+  (ANY "/simple-resource" [request] (simple-resource request))
+  (ANY "/tag-session" [request] (tag-session request))
   (ANY "/wallet"  [request] (serve-auth   request  "I know you." actions/get-balance))
 
   (ANY "/signup"  [request] (signup       request))
@@ -106,6 +111,22 @@
        )
 
   ) ; end of routes
+
+(defresource simple-resource [request]
+  :allowed-methods [:get]
+  :available-media-types ["text/plain"]
+  :handle-ok (fn [{:keys [request] :as ctx}]
+               (ring-response (as-response (format "The session is: %s" (:session request) )
+                                           ctx))))
+
+(defresource tag-session [request]
+  :allowed-methods [:get]
+  :available-media-types ["text/plain"]
+  :exists? (fn [{:keys [request] :as ctx}]
+             {::new-dates (cons (java.util.Date.) (get-in request [:session :dates]))})
+  :handle-ok (fn [ctx]
+               (ring-response (assoc-in (as-response "Session updated." ctx)
+                                        [:session :dates] (::new-dates ctx)))))
 
 (defresource serve [request content]
   :allowed-methods [:get]

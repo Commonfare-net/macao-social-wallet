@@ -32,11 +32,13 @@
    [liberator.dev]
 
    [ring.middleware.cookies        :refer [wrap-cookies]]
+   [ring.middleware.session :refer [wrap-session]]
    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]
    [compojure.core :refer [defroutes ANY]]
    [freecoin.routes :as routes]
    [freecoin.secretshare :as ssss]
+   [freecoin.example-cookie-store :as ecs]
    )
   ;; (:gen-class)
   )
@@ -46,6 +48,7 @@
       ;; comment the following to deactivate debug
       (liberator.dev/wrap-trace :header :ui)
       wrap-cookies
+      (wrap-session {:store (ecs/new-example-store "megakey")})
       wrap-keyword-params
       wrap-params)
 )
