@@ -12,3 +12,6 @@
       (let [store (new-example-store my-super-secret-key)]
         (.read-session store "encrypted-with-foo:{:some-key \"some-value\"}") => {:some-key "some-value"}))
 
+(fact "Data can be empty when reading"
+      (let [store (new-example-store my-super-secret-key)]
+        (.read-session store nil) => {}))

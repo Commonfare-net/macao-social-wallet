@@ -21,7 +21,9 @@
 (defn -example-read
   "Unencryptes a string and returns it as a data structure"
   [data k]
-  (fake-unencryption k data))
+  (if data
+    (fake-unencryption k data)
+    {}))
 
 (defn -example-delete
   "Replaces data with an empty map"
