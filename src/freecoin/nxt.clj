@@ -24,10 +24,10 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.nxt
-;  (:use [freecoin.core])
   (:require
    [freecoin.secretshare :as ssss]
    [freecoin.utils :as util]
+   [freecoin.fxc :as fxc]
 
    [cheshire.core :refer :all :as jj]
    [clojure.pprint :as pp]

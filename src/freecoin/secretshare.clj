@@ -10,19 +10,18 @@
 ;; Shamir, Adi (1979), "How to share a secret", Communications of the ACM 22 (11): 612–613
 ;; Knuth, D. E. (1997), The Art of Computer Programming, II: Seminumerical Algorithms: 505
 
-;; This library is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU Lesser General Public
-;; License as published by the Free Software Foundation; either
-;; version 3 of the License, or (at your option) any later version.
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This library is distributed in the hope that it will be useful,
+;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; Lesser General Public License for more details.
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
 
-;; You should have received a copy of the GNU Lesser General Public
-;; License along with this library; if not, write to the Free Software
-;; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.secretshare
   (:gen-class)
@@ -38,8 +37,6 @@
    [clojure.string :only (join split) :as str]
    [clojure.pprint :as pp]
    )
-  (:use midje.sweet)
-
   )
 
 (defn prime384 []
@@ -66,6 +63,9 @@
 
    :description "Freecoin 0.2"
 
+   ;; versioning every secret
+   :prefix "FXC1"
+
    ;; this alphabet excludes ambiguous chars:
    ;; 1,0,I,O can be confused on some screens
    :alphabet "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -81,6 +81,7 @@
 
 
 (defn shamir-set-header [head]
+  "Takes an header and sets it into Tiemen's structure"
   (let [res
         (SecretShare.
          (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
@@ -95,6 +96,7 @@
   )
 
 (defn shamir-get-header [share]
+  "Takes Tiemen's share and extracts a header"
   (let [pi (.getPublicInfo share)]
     {:_id (.getUuid pi)
      :quorum (.getK pi)
@@ -110,6 +112,7 @@
   )
 
 (defn shamir-get-shares [si]
+  "Takes Tiemen's share and extract a collection of shares"
   (map (fn [_] (.getShare _)) si))
 
 (defn shamir-split
@@ -117,17 +120,24 @@
   return a structure { :header { :quorum :total :prime :description}
                        :shares [ integer vector of :total length] }"
   [conf secnum]
-  (let [si (.getShareInfos (.split (shamir-set-header conf) (:integer secnum)))
+  (let [si (.getShareInfos (.split (shamir-set-header conf) secnum))
         header (shamir-get-header (first si))
         shares (shamir-get-shares si)]
 
     ;; (util/log! "ACK" "shamir-split" [header shares])
     {
      :header header
-     :shares (map biginteger shares)})
+     :shares (map biginteger shares)
+     }
+    )
   )
 
 (defn shamir-create-new
+  "Create a new random number and split it, takes a configuration
+  structure indicating the way to split it, return a secret:
+  { :header { :quorum :total :prime :description}
+              :shares [ integer vector of :total length] }"
+
   ([conf]
    (let [secnum (rand/create (:length conf) (:entropy conf))]
      (shamir-create-new conf secnum)
@@ -138,28 +148,37 @@
    {:pre  [(contains? conf :version)]
     ;;    :post [(> (:entropy %) 1)]}
     :post [(= (count (:shares %)) (:total conf))]}
-   (shamir-split conf secnum)
+   (shamir-split conf (:integer secnum))
 
    )
   )
 
 (defn shamir-combine [secret]
   {:pre [(contains? secret :header)
-         (contains? secret :shares)]
+         (contains? secret :shares)
+         (coll? (:shares secret))]
    :post [(integer? %)]}
+  "Takes a secret (header and collection of integers) and returns the
+  unlocked big integer"
+
   (let [header (:header secret)
         shares (:shares secret)]
-    ;;    (util/log! "ACK" 'shamir-combine  (.combine (SecretShare. header) (vec shares)))
+    (util/log! "ACK" 'shamir-combine [ header shares ])
     (loop [s (first shares)
            res []
            c 1]
+;;      (util/log! "ACK" 'shamir-combine [ s res ])
+
+      ;; TODO: check off-by-one on this one
+      
       (if (< c (count shares))
         (recur (nth shares c)
-               (merge res (com.tiemens.secretshare.engine.SecretShare$ShareInfo.
+               (conj res (com.tiemens.secretshare.engine.SecretShare$ShareInfo.
                            c  s (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
                                  (:total header) (:quorum header)
                                  ((get-prime (:prime header)))
-                                 (:description header))))
+                                 (:description header))
+                           ))
                (inc c))
       ;; return
         (.getSecret (.combine (shamir-set-header header) res))

@@ -6,5 +6,5 @@
    [freecoin.auth-test]
    [freecoin.utils :as util]
 
-)
+   )
   )

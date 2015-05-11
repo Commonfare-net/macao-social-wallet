@@ -34,50 +34,52 @@
   )
 
 (fact "Create Shamir's secret split into shares"
-
-      (type  (ssss/shamir-create-new ssss/config)) => clojure.lang.PersistentArrayMap
-      (count (:shares (ssss/shamir-create-new ssss/config))) => (:total ssss/config)
-      ((ssss/get-prime (:prime (:header (ssss/shamir-create-new ssss/config))))) => ((ssss/get-prime (:prime ssss/config)))
-      ;; shamir is not deterministic
-      (let [r (rand/create (:length ssss/config) (:entropy ssss/config))]
-        (ssss/shamir-create-new ssss/config r) =not=> (ssss/shamir-create-new ssss/config r)
-        (util/log! 'ACK 'shamir-create-new (ssss/shamir-create-new ssss/config r))
-        )
+  
+  (type  (ssss/shamir-create-new ssss/config)) => clojure.lang.PersistentArrayMap
+  (count (:shares (ssss/shamir-create-new ssss/config))) => (:total ssss/config)
+  ((ssss/get-prime (:prime (:header (ssss/shamir-create-new ssss/config))))) => ((ssss/get-prime (:prime ssss/config)))
+  (fact "Shamir is not deterministic"
+    (let [r (rand/create (:length ssss/config) (:entropy ssss/config))]
+      (ssss/shamir-create-new ssss/config r) =not=> (ssss/shamir-create-new ssss/config r)
+;;      (util/log! 'ACK 'shamir-create-new (ssss/shamir-create-new ssss/config r))
       )
+    )
+  )
 
 
 (fact "Combine Shamir's shares into the secret"
-      (util/log! 'FACT 'shamir-combine 'START)
-      (let [secnum (rand/create (:length ssss/config) (:entropy ssss/config))
-            secret (ssss/shamir-create-new ssss/config secnum)]
-        (ssss/shamir-combine secret) => (:integer secnum)
-        )
-      (util/log! 'FACT 'shamir-combine 'END)
-      )
+;;  (util/log! 'FACT 'shamir-combine 'START)
+  (let [secnum (rand/create (:length ssss/config) (:entropy ssss/config))
+        secret (ssss/shamir-create-new ssss/config secnum)]
+    (ssss/shamir-combine secret) => (:integer secnum)
+    )
+;;  (util/log! 'FACT 'shamir-combine 'END)
+  )
 
 
 (fact "Hashid codec"
-      (util/log! 'FACT 'hashid-codec 'START)
-      (let [r (rand/create (:length ssss/config) (:entropy ssss/config))
-            secret (ssss/shamir-create-new ssss/config r)
-            hashes (ssss/hash-encode-secret ssss/config secret)
-            hasdec (ssss/hash-decode-hashes ssss/config hashes)
-            secnum (first (:shares secret))
-            ]
-        hasdec => (:shares secret)
-
-        (ssss/hash-decode-str ssss/config (ssss/hash-encode-num ssss/config secnum)) => secnum
-        (let [enc (ssss/hash-encode-num ssss/config secnum)
-              dec (ssss/hash-decode-str ssss/config enc)
-              rec (ssss/hash-encode-num ssss/config dec)]
-          secnum => dec
-          enc => rec
-          (util/log! 'ACK 'hash-codec [(type enc) enc (type dec) dec (type rec) rec]))
-        )
-
-      (util/log! 'FACT 'hashid-codec 'END)
+;;  (util/log! 'FACT 'hashid-codec 'START)
+  (let [r (rand/create (:length ssss/config) (:entropy ssss/config))
+        secret (ssss/shamir-create-new ssss/config r)
+        hashes (ssss/hash-encode-secret ssss/config secret)
+        hasdec (ssss/hash-decode-hashes ssss/config hashes)
+        secnum (first (:shares secret))
+        ]
+    hasdec => (:shares secret)
+    
+    (ssss/hash-decode-str ssss/config (ssss/hash-encode-num ssss/config secnum)) => secnum
+    (let [enc (ssss/hash-encode-num ssss/config secnum)
+          dec (ssss/hash-decode-str ssss/config enc)
+          rec (ssss/hash-encode-num ssss/config dec)]
+      secnum => dec
+      enc => rec
+      ;;      (util/log! 'ACK 'hash-codec [(type enc) enc (type dec) dec (type rec) rec])
       )
+    )
+  
+;;  (util/log! 'FACT 'hashid-codec 'END)
+  )
 
 (fact "Tuple generator"
-      (util/log! 'ACK 'new-tuple (ssss/new-tuple ssss/config))
-      )
+;;  (util/log! 'ACK 'new-tuple (ssss/new-tuple ssss/config))
+  )

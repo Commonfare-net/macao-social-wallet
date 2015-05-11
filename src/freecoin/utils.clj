@@ -30,7 +30,13 @@
    )
   )
 
+
+(defn trunc [s n]
+  "Truncate string at length"
+  (subs s 0 (min (count s) n)))
+
 (defn compress [coll]
+  "Compress a collection removing empty elements"
   (clojure.walk/postwalk #(if (coll? %) (into (empty %) (remove nil? %)) %) coll))
 
 (defmacro bench
