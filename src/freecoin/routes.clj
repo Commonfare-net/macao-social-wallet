@@ -41,6 +41,7 @@
    [freecoin.auth :as auth]
    [freecoin.db :as db]
 
+   [freecoin.fxc :as fxc]
    )
   )
 
@@ -88,6 +89,8 @@
 (declare fake-signup)
 (declare simple-resource)
 (declare tag-session)
+(declare secret)
+(declare secrets)
 
 
 ;; routes
@@ -109,6 +112,8 @@
                                            " (" (.. System getProperties (get "os.arch")) ")")
                                       )
        )
+  (ANY "/secrets" [request] (secrets request))
+  (ANY "/secrets/:secret-id" [secret-id :as request] (secret request secret-id))
 
   ) ; end of routes
 
@@ -127,6 +132,27 @@
   :handle-ok (fn [ctx]
                (ring-response (assoc-in (as-response "Session updated." ctx)
                                         [:session :dates] (::new-dates ctx)))))
+
+(def secrets-store (atom {}))
+
+(defresource secrets [request]
+  :allowed-methods [:get :post]
+  :available-media-types ["text/plain"]
+  :handle-ok (fn [ctx] (str "secrets"))
+  :post! (fn [ctx]
+           (let [secret (fxc/create-secret ssss/config)
+                 id (:_id secret)]
+             (swap! secrets-store assoc id secret)
+             {::id id}))
+  :post-redirect? (fn [ctx] {:location (format "/secrets/%s" (::id ctx))}))
+
+(defresource secret [request secret-id]
+  :allowed-methods [:get]
+  :available-media-types ["text/plain"]
+  :exists? (fn [ctx]
+             (when-let [the-secret (get @secrets-store secret-id)]
+               {::data the-secret}))
+  :handle-ok (fn [ctx] (str (::data ctx))))
 
 (defresource serve [request content]
   :allowed-methods [:get]
