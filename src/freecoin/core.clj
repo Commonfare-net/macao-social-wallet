@@ -31,33 +31,51 @@
    ;; comment the following to deactivate debug
    [liberator.dev]
 
-   [ring.middleware.cookies        :refer [wrap-cookies]]
+   [ring.middleware.cookies :refer [wrap-cookies]]
    [ring.middleware.session :refer [wrap-session]]
    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]
    [compojure.core :refer [defroutes ANY]]
    [freecoin.routes :as routes]
+   [freecoin.storage :as storage]
    [freecoin.secretshare :as ssss]
-   [freecoin.example-cookie-store :as ecs]
-   )
+   [freecoin.example-cookie-store :as ecs])
   ;; (:gen-class)
   )
 
-(def handler
+(defn configure-application [params]
+  {:db-connection (storage/connect (:db-config params))})
+
+(defn wrap-config [handler app-config]
+  (fn [request]
+    (handler (assoc request :config app-config))))
+
+(defn handler [app-config]
   (-> #'routes/app
       ;; comment the following to deactivate debug
       (liberator.dev/wrap-trace :header :ui)
+      (wrap-config app-config)
       wrap-cookies
       (wrap-session {:store (ecs/new-example-store "megakey")})
       wrap-keyword-params
-      wrap-params)
-)
+      wrap-params))
 
-(def the-server (atom nil))
+(def app-state (atom nil))
+
+(def params
+ {:db-config {:host "localhost"
+              :port 27017
+              :db-name "freecoin"}})
 
 (defn start []
-  (reset! the-server (server/run-server handler {:port 8000})))
+  (let [config (configure-application params)
+        server (server/run-server (handler config) {:port 8000})]
+    (reset! app-state {:config config
+                       :server server})))
 
 (defn stop []
-  (when @the-server (@the-server)))
-
+  (let [server (:server @app-state)
+        config (:config @app-state)]
+    (when server
+      (storage/disconnect (:db-connection config))
+      (server))))

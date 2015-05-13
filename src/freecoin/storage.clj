@@ -1,0 +1,18 @@
+(ns freecoin.storage
+  (:require [monger.core :as mg]
+            [monger.collection :as mc]))
+
+(defn connect [{:keys [host port db-name] :as db-config}]
+  (let [conn (mg/connect {:host host :port port})
+        db (mg/get-db conn db-name)]
+    {:conn conn
+     :db db}))
+
+(defn disconnect [{:keys [conn] :as db-connection}]
+  (mg/disconnect conn))
+
+(defn insert [connection coll doc]
+  (mc/insert-and-return (:db connection) coll doc))
+
+(defn find-by-id [connection coll id]
+  (mc/find-map-by-id (:db connection) coll id))

@@ -40,6 +40,7 @@
    [freecoin.utils :as util]
    [freecoin.auth :as auth]
    [freecoin.db :as db]
+   [freecoin.storage :as storage]
 
    [freecoin.fxc :as fxc]
    )
@@ -141,8 +142,7 @@
   :handle-ok (fn [ctx] (str "secrets"))
   :post! (fn [ctx]
            (let [secret (fxc/create-secret ssss/config)
-                 id (:_id secret)]
-             (swap! secrets-store assoc id secret)
+                 {id :_id} (storage/insert (get-in request [:config :db-connection]) "secrets" secret)]
              {::id id}))
   :post-redirect? (fn [ctx] {:location (format "/secrets/%s" (::id ctx))}))
 
@@ -150,7 +150,7 @@
   :allowed-methods [:get]
   :available-media-types ["text/plain"]
   :exists? (fn [ctx]
-             (when-let [the-secret (get @secrets-store secret-id)]
+             (when-let [the-secret (storage/find-by-id (get-in request [:config :db-connection]) "secrets" secret-id)]
                {::data the-secret}))
   :handle-ok (fn [ctx] (str (::data ctx))))
 
@@ -196,7 +196,6 @@
 
 
   )
-
 
 (defresource signup [request]
   :allowed-methods [:get]
