@@ -1,4 +1,4 @@
-2(ns freecoin.auth
+(ns freecoin.auth
   (:require
    [clojure.pprint :as pp]
    [clojure.string :as str]
@@ -22,17 +22,18 @@
          (contains? tuple :lo)
          (coll? which)]
    :post [(= (count which) (count %))]}
-  "takes a double vector from secretshare's `new-tuple`
-extracts the slices at `which` height, return a new vector"
+  "takes a double vector from secretshare's `new-tuple` extracts the slices at `which` height (collection of numbers indicating positions, then return a new vector"
 
   (loop [c 1
          lo (first (:lo tuple))
          hi (first (:hi tuple))
          res [] ]
     (if (< c (count (:lo tuple)))
+
       (recur (inc c) (nth (:lo tuple) c) (nth (:hi tuple) c)
              (merge res (if (= c (some #{c} which))
                           (format "FXC1_%s_FXC_%s" lo hi))))
+
       (util/compress (merge res (if (= c (some #{c} which))
                                   (format "FXC1_%s_FXC_%s" lo hi)))))
     )
@@ -44,7 +45,7 @@ extracts the slices at `which` height, return a new vector"
     (if (empty? in)
       (throw (Exception. "Empty auth token"))
       (let [token (str/split (trunc in 128) #";")]
-        (if-not (= (subs (first token) 0 4) "FXC_")
+        (if-not (= (subs (first token) 0 4) "FXC1_")
           (throw (Exception.
                   (format "Invalid auth token: %s" (first token))))
           (let [part (str/split (first token) #"=")]
