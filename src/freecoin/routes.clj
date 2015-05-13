@@ -134,8 +134,6 @@
                (ring-response (assoc-in (as-response "Session updated." ctx)
                                         [:session :dates] (::new-dates ctx)))))
 
-(def secrets-store (atom {}))
-
 (defresource secrets [request]
   :allowed-methods [:get :post]
   :available-media-types ["text/plain"]
