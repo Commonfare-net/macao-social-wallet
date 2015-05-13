@@ -24,7 +24,6 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.routes
-  (:use midje.sweet)
   (:require
    [clojure.pprint :as pp]
    [liberator.dev]
@@ -140,9 +139,15 @@
   :handle-ok (fn [ctx] (str "secrets"))
   :post! (fn [ctx]
            (let [secret (fxc/create-secret ssss/config)
-                 {id :_id} (storage/insert (get-in request [:config :db-connection]) "secrets" secret)]
-             {::id id}))
-  :post-redirect? (fn [ctx] {:location (format "/secrets/%s" (::id ctx))}))
+                 cookie-data (:cookie secret)
+                 secret-without-cookie (dissoc secret :cookie)
+                 {id :_id} (storage/insert (get-in request [:config :db-connection]) "secrets" secret-without-cookie)]
+             {::id id
+              ::cookie-data cookie-data}))
+  :post-redirect? (fn [ctx] {:location (format "/secrets/%s" (::id ctx))})
+  :handle-see-other (fn [ctx]
+                      (ring-response {:headers {"Location" (ctx :location)}
+                                      :session {:cookie-data (::cookie-data ctx)}})))
 
 (defresource secret [request secret-id]
   :allowed-methods [:get]
@@ -150,7 +155,8 @@
   :exists? (fn [ctx]
              (when-let [the-secret (storage/find-by-id (get-in request [:config :db-connection]) "secrets" secret-id)]
                {::data the-secret}))
-  :handle-ok (fn [ctx] (str (::data ctx))))
+  :handle-ok (fn [ctx] (str "DATA: " (::data ctx) "\n"
+                            "COOKIE: " (:session request))))
 
 (defresource serve [request content]
   :allowed-methods [:get]
@@ -195,6 +201,7 @@
 
   )
 
+
 (defresource signup [request]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
@@ -226,6 +233,7 @@
 
   :as-response (fn [d ctx] (#'cookie-response d ctx))
   )
+
 
 
 (defresource fake-signup [request]

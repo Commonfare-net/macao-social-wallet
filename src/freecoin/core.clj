@@ -33,6 +33,7 @@
 
    [ring.middleware.cookies :refer [wrap-cookies]]
    [ring.middleware.session :refer [wrap-session]]
+   [ring.middleware.session.cookie :refer [cookie-store]]
    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]
    [compojure.core :refer [defroutes ANY]]
@@ -44,28 +45,33 @@
   )
 
 (defn configure-application [params]
-  {:db-connection (storage/connect (:db-config params))})
+  {:db-connection (storage/connect (:db-config params))
+   :config-params params})
 
-(defn wrap-config [handler app-config]
+(defn wrap-db [handler db-connection]
   (fn [request]
-    (handler (assoc request :config app-config))))
+    (handler (assoc-in request [:config :db-connection] db-connection))))
 
 (defn handler [app-config]
   (-> #'routes/app
       ;; comment the following to deactivate debug
       (liberator.dev/wrap-trace :header :ui)
-      (wrap-config app-config)
+      (wrap-db (:db-connection app-config))
       wrap-cookies
-      (wrap-session {:store (ecs/new-example-store "megakey")})
+      (wrap-session {:cookie-attrs (get-in app-config [:config-params :cookie-config])
+                     :store (cookie-store {:key "my sixteen bytes"})})
       wrap-keyword-params
       wrap-params))
 
 (def app-state (atom nil))
 
 (def params
- {:db-config {:host "localhost"
-              :port 27017
-              :db-name "freecoin"}})
+  {:db-config {:host "localhost"
+               :port 27017
+               :db-name "freecoin"}
+   :cookie-config {;; see: https://github.com/ring-clojure/ring/wiki/Cookies
+                   :secure false ;restrict the cookie to HTTPS URLs if true
+                   :http-only true}})
 
 (defn start []
   (let [config (configure-application params)
