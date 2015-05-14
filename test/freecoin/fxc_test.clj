@@ -29,6 +29,7 @@
   (:require
    [freecoin.fxc :as fxc]
    [freecoin.random :as rand]
+   [freecoin.params :as param]
    [freecoin.secretshare :as ssss]
 
    [freecoin.utils :as util]
@@ -43,12 +44,12 @@
 
   ;; manual creation of an nxt address to intercept it in clear
   (def fake {:ah (:integer (rand/create (:length ssss/config)
-                                        (:entropy ssss/config)))
-             :al (:integer (rand/create (:length ssss/config)
-                                        (:entropy ssss/config)))
+                                        (:entropy param/encryption)))
+             :al (:integer (rand/create (:length param/encryption)
+                                        (:entropy param/encryption)))
              })
-  (def nxtpass (fxc/render-slice ssss/config (:ah fake) (:al fake) 0))
-  (def secret (fxc/create-secret ssss/config (:ah fake) (:al fake)))
+  (def nxtpass (fxc/render-slice param/encryption (:ah fake) (:al fake) 0))
+  (def secret (fxc/create-secret param/encryption (:ah fake) (:al fake)))
   
   (pp/pprint nxtpass)
   
@@ -57,25 +58,25 @@
   (fact "cookie is first slice" (first (:slices secret)) => (:cookie secret))
 
   (fact "reversable extraction / hash / conversion for AH"
-    (fxc/extract-ahal ssss/config (:cookie secret) "ah")
+    (fxc/extract-ahal param/encryption (:cookie secret) "ah")
     =>
-    (ssss/hash-encode-num ssss/config
-                          (fxc/extract-int ssss/config (first (:slices secret)) "ah"))
+    (ssss/hash-encode-num param/encryption
+                          (fxc/extract-int param/encryption (first (:slices secret)) "ah"))
     )
   (fact "reversable extraction / hash / conversion for AL"
-    (fxc/extract-ahal ssss/config (:cookie secret) "al")
+    (fxc/extract-ahal param/encryption (:cookie secret) "al")
     =>
-    (ssss/hash-encode-num ssss/config
-                          (fxc/extract-int ssss/config (first (:slices secret)) "al"))
+    (ssss/hash-encode-num param/encryption
+                          (fxc/extract-int param/encryption (first (:slices secret)) "al"))
     )
 
   (fact "unlocking secret"
-    (let [quorum (fxc/extract-quorum ssss/config secret (:cookie secret))
+    (let [quorum (fxc/extract-quorum param/encryption secret (:cookie secret))
           ah (ssss/shamir-combine (:ah quorum))
           al (ssss/shamir-combine (:al quorum))]
       ah => (:ah fake)
       al => (:al fake)
-      (fxc/render-slice ssss/config ah al 0) => nxtpass
+      (fxc/render-slice param/encryption ah al 0) => nxtpass
       (util/log! 'ACK 'unlocking-secret-test
                  ["Quorum size: " (count (get-in quorum [:ah :shares]))
                   "expected: " (get-in quorum [:ah :header :quorum])]

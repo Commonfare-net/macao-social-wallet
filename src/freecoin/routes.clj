@@ -26,8 +26,10 @@
 (ns freecoin.routes
   (:require
    [clojure.pprint :as pp]
+   [clojure.string :as str]
    [liberator.dev]
    [liberator.core :refer [resource defresource]]
+
    [liberator.representation :refer [as-response ring-response]]
    [compojure.core :refer [defroutes ANY]]
 
@@ -35,6 +37,7 @@
 
    [freecoin.secretshare :as ssss]
    [freecoin.actions :as actions]
+   [freecoin.params :as param]
    [freecoin.pages :as pages]
    [freecoin.utils :as util]
    [freecoin.auth :as auth]
@@ -50,32 +53,8 @@
           (liberator.dev/current-trace-url))
   )
 
-(def cookie "")
-
-(defn cookie-response [d ctx]
-  (if-not (empty? cookie)
-    (-> (as-response d ctx)
-        (assoc-in [:headers "Set-Cookie:"] cookie))
-    (-> (as-response d ctx)) ))
-
-(defn post-response [ctx]
-  (dosync
-   (let [body (slurp (get-in ctx [:request :body]))]
-     (liberator.core/log! "post-response" body)
-     )
-   true
-   )
-  )
-(defn set-cookie [cooked]
-  (def cookie (format "%s; path=/; HttpOnly" cooked))
-  ;; Secure flag to be set in production to enforce cookie only over SSL)
-  )
-
-(defn get-cookie [req] (get (:headers req) "cookie"))
-
 
 (defn redirect-home [_]
-  (def cookie "")
   (liberator.representation/ring-response
    {:body "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/\"></head></html>"
     :headers {"Location" "/"}})
@@ -84,26 +63,14 @@
 
 ;; resources
 (declare serve)
-(declare serve-auth)
-(declare signup)
-(declare fake-signup)
-(declare simple-resource)
-(declare tag-session)
-(declare secret)
-(declare secrets)
+(declare create)
+(declare open)
 
 
 ;; routes
 (defroutes app
 
   (ANY "/"        [request] (serve        request  "Welcome!"))
-  (ANY "/simple-resource" [request] (simple-resource request))
-  (ANY "/tag-session" [request] (tag-session request))
-  (ANY "/wallet"  [request] (serve-auth   request  "I know you." actions/get-balance))
-
-  (ANY "/signup"  [request] (signup       request))
-  (ANY "/fake"    [request] (fake-signup  request))
-
   (ANY "/version" [request] (serve    request
                                       (str "Freecoin 0.2 running on "
                                            (.. System getProperties (get "os.name"))
@@ -112,59 +79,62 @@
                                            " (" (.. System getProperties (get "os.arch")) ")")
                                       )
        )
-  (ANY "/secrets" [request] (secrets request))
-  (ANY "/secrets/:secret-id" [secret-id :as request] (secret request secret-id))
+  (ANY "/create" [request] (create request))
+  (ANY "/open/:secret-id" [secret-id :as request] (open request secret-id))
 
   ) ; end of routes
 
-(defresource simple-resource [request]
-  :allowed-methods [:get]
-  :available-media-types ["text/plain"]
-  :handle-ok (fn [{:keys [request] :as ctx}]
-               (ring-response (as-response (format "The session is: %s" (:session request) )
-                                           ctx))))
-
-(defresource tag-session [request]
-  :allowed-methods [:get]
-  :available-media-types ["text/plain"]
-  :exists? (fn [{:keys [request] :as ctx}]
-             {::new-dates (cons (java.util.Date.) (get-in request [:session :dates]))})
-  :handle-ok (fn [ctx]
-               (ring-response (assoc-in (as-response "Session updated." ctx)
-                                        [:session :dates] (::new-dates ctx)))))
-
-(defresource secrets [request]
+(defresource create [request]
   :allowed-methods [:get :post]
   :available-media-types ["text/plain" "text/html"]
   :handle-ok (fn [ctx] (str "secrets"))
   :post! (fn [ctx]
-           (let [secret (fxc/create-secret ssss/config)
-                 cookie-data (:cookie secret)
+           (let [secret (fxc/create-secret param/encryption)
+                 cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
                  secret-without-cookie (dissoc secret :cookie)
                  {id :_id} (storage/insert (get-in request [:config :db-connection]) "secrets" secret-without-cookie)]
              {::id id
               ::cookie-data cookie-data}))
-  :post-redirect? (fn [ctx] {:location (format "/secrets/%s" (::id ctx))})
+  :post-redirect? (fn [ctx] {:location (format "/open/%s" (::id ctx))})
   :handle-see-other (fn [ctx]
                       (ring-response {:headers {"Location" (ctx :location)}
                                       :session {:cookie-data (::cookie-data ctx)}})))
 
-(defresource secret [request secret-id]
+(defresource open [request secret-id]
   :allowed-methods [:get]
   :available-media-types ["text/plain" "text/html"]
   :exists? (fn [ctx]
-             (when-let [the-secret (storage/find-by-id (get-in request [:config :db-connection]) "secrets" secret-id)]
+             (when-let [the-secret (storage/find-by-id
+                                    (get-in request [:config :db-connection])
+                                    "secrets" secret-id)]
                {::data the-secret}))
-  :handle-ok (fn [ctx] (str "DATA: " (::data ctx) "\n"
-                            "COOKIE: " (:session request))))
+  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])
+                             slice (first (str/split cookie #"::"))
+                             id (second (str/split cookie #"::"))
+                             known (::data ctx)
+                             quorum (fxc/extract-quorum param/encryption known slice)
+                             ah (ssss/shamir-combine (:ah quorum))
+                             al (ssss/shamir-combine (:al quorum))
+                             nxtpass (fxc/render-slice param/encryption ah al 0)
+                             ]
+                          (pages/template {:header (trace)
+                                           :body (str "DATA: " (::data ctx))
+                                           :id (str "NXTPASS: " nxtpass)})
+;;                                           :id (str "COOKIE: " (:session request))})
+                          )))
 
 (defresource serve [request content]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 ;  :as-response (fn [d ctx] (#'cookie-response d ctx))
-  :handle-ok (pages/template {:header (trace)
-                              :body content
+  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])
+                             slice (first (str/split cookie #"::"))
+                             id (second (str/split cookie #"::"))]
+
+                         (pages/template {:header (trace)
+                                          :body (str content " " id)
+                                          :id (str "SLICE: " slice)
                               ;; :id (let [x (auth/parse-secret (get-cookie request))]
                               ;;          (:uid auth/token))
-                              })
-  )
+                              }))
+                ))

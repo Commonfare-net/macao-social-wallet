@@ -38,6 +38,7 @@
    [ring.middleware.params :refer [wrap-params]]
    [compojure.core :refer [defroutes ANY]]
    [freecoin.routes :as routes]
+   [freecoin.params :as param]
    [freecoin.storage :as storage]
    [freecoin.secretshare :as ssss]
    [freecoin.example-cookie-store :as ecs])
@@ -59,22 +60,15 @@
       (wrap-db (:db-connection app-config))
       wrap-cookies
       (wrap-session {:cookie-attrs (get-in app-config [:config-params :cookie-config])
-                     :store (cookie-store {:key "my sixteen bytes"})})
+                     :store (cookie-store {:key "sCWg45lZNFNESvPv"})})
       wrap-keyword-params
       wrap-params))
 
 (def app-state (atom nil))
 
-(def params
-  {:db-config {:host "localhost"
-               :port 27017
-               :db-name "fxctest1"}
-   :cookie-config {;; see: https://github.com/ring-clojure/ring/wiki/Cookies
-                   :secure false ;restrict the cookie to HTTPS URLs if true
-                   :http-only true}})
 
 (defn start []
-  (let [config (configure-application params)
+  (let [config (configure-application param/webapp)
         server (server/run-server (handler config) {:port 8000})]
     (reset! app-state {:config config
                        :server server})))

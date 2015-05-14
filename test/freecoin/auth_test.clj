@@ -4,6 +4,5 @@
    [freecoin.secretshare :as ssss]
    [freecoin.utils :as util]
    [freecoin.auth :as auth]
-   [freecoin.db :as db]
    )
   )

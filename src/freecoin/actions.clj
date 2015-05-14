@@ -34,7 +34,6 @@
    [freecoin.pages :as pages]
    [freecoin.utils :as util]
    [freecoin.nxt :as nxt]
-   [freecoin.db :as db]
    )
   )
 

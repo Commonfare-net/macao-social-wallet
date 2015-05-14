@@ -5,7 +5,6 @@
    [liberator.core :refer [resource defresource]]
    [liberator.dev]
    [freecoin.secretshare :as ssss]
-   [freecoin.db :as db]
    [freecoin.utils :as util]
 
    )
