@@ -49,7 +49,6 @@
   (SecretShare/getPrimeUsedFor4096bigSecretPayload))
 
 (defn get-prime [sym]
-  ;;  (util/log! "ACK" "get-prime" #(str))
   (ns-resolve *ns* (symbol (str "freecoin.secretshare/" sym))))
 
 ;; defaults
@@ -124,33 +123,11 @@
         header (shamir-get-header (first si))
         shares (shamir-get-shares si)]
 
-    ;; (util/log! "ACK" "shamir-split" [header shares])
     {
      :header header
      :shares (map biginteger shares)
      }
     )
-  )
-
-(defn shamir-create-new
-  "Create a new random number and split it, takes a configuration
-  structure indicating the way to split it, return a secret:
-  { :header { :quorum :total :prime :description}
-              :shares [ integer vector of :total length] }"
-
-  ([conf]
-   (let [secnum (rand/create (:length conf) (:entropy conf))]
-     (shamir-create-new conf secnum)
-     ))
-
-  ([conf secnum]
-   ; checks
-   {:pre  [(contains? conf :version)]
-    ;;    :post [(> (:entropy %) 1)]}
-    :post [(= (count (:shares %)) (:total conf))]}
-   (shamir-split conf (:integer secnum))
-
-   )
   )
 
 (defn shamir-combine [secret]
@@ -167,7 +144,6 @@
     (loop [s (first shares)
            res []
            c 1]
-;;      (util/log! "ACK" 'shamir-combine [ s res ])
 
       ;; TODO: check off-by-one on this one
       
@@ -180,7 +156,7 @@
                                  (:description header))
                            ))
                (inc c))
-      ;; return
+        ;; return
         (.getSecret (.combine (shamir-set-header header) res))
         ))
     )
@@ -239,21 +215,3 @@
     )
   )
 
-
-(defn new-tuple [conf]
-  {:pre  [(contains? conf :version)]
-   :post [(= (count (:lo %)) (:total conf))]}
-
-  (let [lo (shamir-create-new conf)
-        hi (shamir-create-new conf)
-        id (:_id (:header lo))]
-    {
-     :_id id
-     :header conf
-     :lo_id (:_id (:header lo))
-     :lo (hash-encode-secret conf lo)
-     :hi_id (:_id (:header hi))
-     :hi (hash-encode-secret conf hi)
-     }
-    )
-  )

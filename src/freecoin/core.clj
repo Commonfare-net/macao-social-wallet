@@ -68,7 +68,7 @@
 (def params
   {:db-config {:host "localhost"
                :port 27017
-               :db-name "freecoin"}
+               :db-name "fxctest1"}
    :cookie-config {;; see: https://github.com/ring-clojure/ring/wiki/Cookies
                    :secure false ;restrict the cookie to HTTPS URLs if true
                    :http-only true}})

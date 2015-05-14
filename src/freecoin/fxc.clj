@@ -36,28 +36,6 @@
    )
   )
 
-;; API: 
-
-;; create_wallet => FXC1_%s_FXC_%s
-
-;; extract-hilo => hash
-;; extract-int => biginteger
-
-;; split-passphrase => tuple
-
-;;   (let [lo (shamir-create-new conf)
-;;         hi (shamir-create-new conf)
-;;         id (:_id (:header lo))]
-;;     {
-;;      :_id id
-;;      :header conf
-;;      :lo_id (:_id (:header lo))
-;;      :lo (hash-encode-secret conf lo)
-;;      :hi_id (:_id (:header hi))
-;;      :hi (hash-encode-secret conf hi)
-;;      }
-;;     )
-
 (declare render-slice)
 (declare extract-ahal)
 (declare extract-int)
@@ -66,27 +44,28 @@
   "Takes a configuration and optionally two integers, creates a wallet
   address, returned as a string"
 
-  ([conf]   
+  ([conf]
    (let [ah (:integer (rand/create (:length conf) (:entropy conf)))
          al (:integer (rand/create (:length conf) (:entropy conf)))]
      (create-secret conf ah al)
      ))
   
   ([conf hi lo]
-   {:pre [(contains? conf :version)]
+   {:pre  [(contains? conf :version)
+           (contains? conf :length)
+           (contains? conf :entropy)]
     :post [(= (:total conf) (count (:slices %)))]}
 
-   (let [ah (ssss/shamir-split ssss/config hi)
-         al (ssss/shamir-split ssss/config lo)]
+   (let [ah  (ssss/shamir-split ssss/config hi)
+         al  (ssss/shamir-split ssss/config lo)]
 
      ;; wallet rendering
-     ;; shares: collection of integers forming the secret (temporary)
-     ;; slices: collection of rendered string addresses
+     ;; slices: collection of rendered string slices for ssss
      {:_id (format "%s_%s_FXC_%s" (:prefix conf)
                    (get-in ah [:header :_id])
                    (get-in al [:header :_id]))
       :config conf
-;;      :shares {:ah (:shares ah) :al (:shares al)}
+
       :slices (loop [lah (first (:shares ah))
                      lal (first (:shares al))
                      res []
@@ -94,19 +73,20 @@
                 (if (< c (count (:shares ah)))
                   (recur (nth (:shares ah) c)
                          (nth (:shares al) c)
-                         (merge res (render-slice conf lah lal))
+                         (merge res (render-slice conf lah lal c))
                          (inc c))
-                  (merge res (render-slice conf lah lal))))
+                  (merge res (render-slice conf lah lal c))))
+
       :cookie (render-slice conf
                             (first (:shares ah))
-                            (first (:shares al)))
+                            (first (:shares al)) 1)
       }
      ))
   )
 
 (defn extract-quorum [conf secret slice]
   {:pre  [(contains? conf :quorum)]}
-;   :post [(= (count (:ah %)) (:quorum conf))]}
+;;   :post [(= (count (get-in % (:ah :shares))) (:quorum conf))]}
 
   "Takes a config, a secret and a slice and tries to combine the secret and the slice in a collection of integers ready for shamir-combine. Returns a map {:ah :al} with the collections."
 
@@ -161,11 +141,12 @@
   
  
 
-(defn render-slice [conf ah al]
-   (format "%s_%s_FXC_%s" (:prefix conf)
+(defn render-slice [conf ah al idx]
+   (format "%s_%s_FXC_%s_%d" (:prefix conf)
            (ssss/hash-encode-num conf ah)
            (ssss/hash-encode-num conf al)
-           ))
+           idx)
+   )
 
 (defn extract-ahal [conf addr ah-or-al]
   "extract the lower integer in an fxc address"

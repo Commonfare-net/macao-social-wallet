@@ -31,6 +31,8 @@
    [freecoin.random :as rand]
    [freecoin.secretshare :as ssss]
 
+   [freecoin.utils :as util]
+
    [clojure.pprint :as pp]
 
    )
@@ -45,7 +47,7 @@
              :al (:integer (rand/create (:length ssss/config)
                                         (:entropy ssss/config)))
              })
-  (def nxtpass (fxc/render-slice ssss/config (:ah fake) (:al fake)))
+  (def nxtpass (fxc/render-slice ssss/config (:ah fake) (:al fake) 0))
   (def secret (fxc/create-secret ssss/config (:ah fake) (:al fake)))
   
   (pp/pprint nxtpass)
@@ -73,7 +75,11 @@
           al (ssss/shamir-combine (:al quorum))]
       ah => (:ah fake)
       al => (:al fake)
-      (fxc/render-slice ssss/config ah al) => nxtpass
+      (fxc/render-slice ssss/config ah al 0) => nxtpass
+      (util/log! 'ACK 'unlocking-secret-test
+                 ["Quorum size: " (count (get-in quorum [:ah :shares]))
+                  "expected: " (get-in quorum [:ah :header :quorum])]
+                 )
       )
     )
-)
+  )

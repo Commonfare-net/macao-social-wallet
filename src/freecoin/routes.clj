@@ -135,7 +135,7 @@
 
 (defresource secrets [request]
   :allowed-methods [:get :post]
-  :available-media-types ["text/plain"]
+  :available-media-types ["text/plain" "text/html"]
   :handle-ok (fn [ctx] (str "secrets"))
   :post! (fn [ctx]
            (let [secret (fxc/create-secret ssss/config)
@@ -151,7 +151,7 @@
 
 (defresource secret [request secret-id]
   :allowed-methods [:get]
-  :available-media-types ["text/plain"]
+  :available-media-types ["text/plain" "text/html"]
   :exists? (fn [ctx]
              (when-let [the-secret (storage/find-by-id (get-in request [:config :db-connection]) "secrets" secret-id)]
                {::data the-secret}))
@@ -164,105 +164,7 @@
 ;  :as-response (fn [d ctx] (#'cookie-response d ctx))
   :handle-ok (pages/template {:header (trace)
                               :body content
-                              :id (let [x (auth/parse-secret (get-cookie request))]
-                                       (:uid auth/token))
+                              ;; :id (let [x (auth/parse-secret (get-cookie request))]
+                              ;;          (:uid auth/token))
                               })
-  )
-
-(defresource serve-auth [request content action]
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-;  :as-response (fn [d ctx] (#'cookie-response d ctx))
-
-  :authorized? (auth/parse-secret (get-cookie request))
-  :handle-unauthorized redirect-home
-
-  :handle-ok (let [conn (db/connect)
-                   found (db/find-one { :_id (:uid auth/token) } )]
-
-               (db/disconnect)
-
-               (if (nil? found)
-                 (pages/template {:header (trace)
-                                  :body "I can't remember you, sorry."
-                                  })
-                 ;; else
-                 (let [response (if-not (nil? action) (action found) nil)]
-                      (pages/template {:header (trace)
-                                       :body response
-                                       :id (:uid auth/token)
-                                       })
-                      )
-
-                 )
-
-               )
-
-
-  )
-
-
-(defresource signup [request]
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-
-  :authorized? (not (auth/parse-secret (get-cookie request)))
-  :handle-unauthorized redirect-home
-
-  :handle-ok (let [secrets (ssss/new-tuple ssss/config)]
-               ;; debug to console
-               ;; (pp/pprint "signup cookies:")
-               ;; (pp/pprint (get-cookie request))
-               (auth/render-slice secrets [1])
-               (auth/parse-secret cookie)
-               (liberator.core/log! "Signup" "cookie" cookie)
-
-                 (db/connect)
-                 (db/insert {:_id (:uid auth/token)
-                             :shares-lo (first  (:shares keys))
-                             :shares-hi (second (:shares keys))
-                             })
-                 (db/disconnect)
-
-                 (pages/signup {:header (trace)
-                                :body "Welcome to Freecoin"
-                                :id (:uid auth/token)
-                                })
-                 )
-
-
-  :as-response (fn [d ctx] (#'cookie-response d ctx))
-  )
-
-
-
-(defresource fake-signup [request]
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-
-  :handle-ok (let [secret (ssss/new-tuple ssss/config)]
-
-               (auth/parse-secret (get-cookie request))
-               (auth/render-slice secret [1])
-               (auth/parse-secret cookie)
-               (liberator.core/log! "Signup" "cookie" cookie)
-
-               ;; (db/connect)
-               ;; (db/insert {:_id (:uid auth/token)
-               ;;             :shares-lo (first  (:shares keys))
-               ;;             :shares-hi (second (:shares keys))
-               ;;             })
-               ;; (db/disconnect)
-
-               (pages/signup {:header (trace)
-                              :body cookie
-                              :id keys
-                              })
-
-               )
-
-  ;; :handle-not-acceptable "Can't hook that handle!"
-  ;; :post! (fn [ctx] (#'post-response ctx))
-  ;; :post-redirect? true
-  ;; :location "http://localhost:8000/login"
   )
