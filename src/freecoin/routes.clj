@@ -38,7 +38,7 @@
    [freecoin.pages :as pages]
    [freecoin.utils :as util]
    [freecoin.auth :as auth]
-   [freecoin.db :as db]
+
    [freecoin.storage :as storage]
 
    [freecoin.fxc :as fxc]
