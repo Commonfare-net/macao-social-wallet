@@ -37,7 +37,7 @@ Check nick existance and send email confirmation
         "email": "luther@dyne.org"
     }
 
-## GET /wallet/create/`confirmation`
+## GET /wallet/create/:confirmation
 
 Check if email `confirmation` code is correct (and the cookie is set?), then proceed creating the wallet
 
@@ -72,11 +72,11 @@ Sending among participants is optional and depends from the monetary system sett
 
 Ask for an amount to send and a destinatary, then POST /send
 
-## GET /send/`participant`
+## GET /send/:participant
 
 Ask for an amount to send to `participant` then POST /send
 
-## GET /send/`participant`/`amount`
+## GET /send/:participant/:amount
 
 Ask confirmation to send `amount` to `participant`, then POST /send
 
@@ -102,9 +102,16 @@ Do send `amount` to `participant`
 
 A stash is a pre-defined amount that can be transferred off-line using a secret code or image (qrcode)
 
+Using stashes is possible to make intuitive a POS transaction:
+
+1. participant scans the price to be paid, link to /stash/create url
+2. wallet respond with a QRcode that is a /stash/claim/:stash-id url
+3. participant offers the QRcode to the vendor for scanning
+4. vendor scans the /stash/claim url and confirms payment
+
 ## GET /stash/create/:amount
 
-Create a signed stash of :amount ready to be given
+Create a signed stash of `amount` ready to be given
 
 ## GET /stash/claim
 
@@ -130,9 +137,13 @@ Objective8, YourPriorities, DemocracyOS, Mutual_Credit
 
 Vendor value transactions must be customized ad-hoc for pilots: transport companies, tax departments, service providers.
 
-## GET /vendor/send/:participant/:amount/:vendor
+## GET /vendor/send/:amount/:vendor
 
-Send :amount to :vendor in exchange of service credit to :participant
+Send `amount` to `vendor` in exchange for service credit for self
+
+## GET /vendor/send/:amount/:vendor/:participant
+
+Send `amount` to `vendor` in exchange of service credit for `participant`
 
 
 # Encryption scheme
