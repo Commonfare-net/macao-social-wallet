@@ -24,9 +24,22 @@ Proceed asking nick and email, or offer link to recovery procedure
 
 Check nick existance and send email confirmation
 
-## GET /wallet/create/:confirmation
+#### example request
 
-Check if email confirmation is correct and the cookie is set, then proceed creating the wallet
+    curl http://nxt.dyne.org/wallet/create \
+        -F "nick=luther" \
+        -F "email=luther@dyne.org"
+
+#### example response
+
+    {
+        "success": "Check your email to confirm creation."
+        "email": "luther@dyne.org"
+    }
+
+## GET /wallet/create/`confirmation`
+
+Check if email `confirmation` code is correct (and the cookie is set?), then proceed creating the wallet
 
 ## GET /wallet/recover
 
@@ -36,24 +49,54 @@ Ask for the nick and/or email and the secret pins to recover
 
 If POST fields :nick or :email plus both :ah and :al pins are present, then restore a wallet
 
+#### example request
+
+    curl https://fxc.dyne.org/wallet/recover \
+        -F "email=luther@dyne.org" \
+        -F "ah=ASE33DEF5" \
+        -F "al=GT674GOP4"
+
+#### example response
+
+Will setup session cookies on device's browser and return success.
+
+    {
+        "success": "Access to wallet succesfully recovered."
+    }
 
 # Sending
 
 Sending among participants is optional and depends from the monetary system setting by the issuing organization. If allowed the send API will be available for a "free market" among participants, making them able to transfer amounts among themselves.
 
-
 ## GET /send
 
-Ask for an amount to send and a destinatary, then send
+Ask for an amount to send and a destinatary, then POST /send
 
-## GET /send/:participant
+## GET /send/`participant`
 
-Ask for an amount to send to :destination, then send
+Ask for an amount to send to `participant` then POST /send
 
-## GET /send/:participant/:amount
+## GET /send/`participant`/`amount`
 
-Send :amount to :destination, ask confirmation
+Ask confirmation to send `amount` to `participant`, then POST /send
 
+## POST /send
+
+Do send `amount` to `participant`
+
+#### example request
+
+    curl https://fxc.dyne.org/send \
+        -F "amount=100" \
+        -F "participant=luther"
+
+#### example response
+
+    {
+        "success": "Succesfully sent 100 to luther"
+        "amount": 100
+        "recipient": "luther"
+    }
 
 # Stashes
 
@@ -136,12 +179,12 @@ Example:
 
     FXC1_random_FXC_random_5 - O
     FXC1_random_FXC_random_6 - O
-    
+
     FXC1_random_FXC_random_7 - O & B } backup organization
-    
+
     FXC1_random_FXC_random_8 - B     } backup organization
     FXC1_random_FXC_random_9 - B     } backup organization
-    
+
 
 The random is a long integer encoded using hashid using an alphabet that is fine tuned to not include any ambiguous character and eventually be communicated between humans without the use of computers. The salt used to hashid encode is semi-secret and is communicated to all parties.
 
