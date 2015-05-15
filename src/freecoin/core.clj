@@ -45,37 +45,68 @@
   ;; (:gen-class)
   )
 
-(defn configure-application [params]
-  {:db-connection (storage/connect (:db-config params))
-   :config-params params})
-
 (defn wrap-db [handler db-connection]
   (fn [request]
     (handler (assoc-in request [:config :db-connection] db-connection))))
 
-(defn handler [app-config]
+(defn handler [app-state]
   (-> #'routes/app
       ;; comment the following to deactivate debug
       (liberator.dev/wrap-trace :header :ui)
-      (wrap-db (:db-connection app-config))
+      (wrap-db (:db-connection app-state))
       wrap-cookies
-      (wrap-session {:cookie-attrs (get-in app-config [:config-params :cookie-config])
+      (wrap-session {:cookie-attrs (get-in app-state [:config-params :cookie-config])
                      :store (cookie-store {:key "sCWg45lZNFNESvPv"})})
       wrap-keyword-params
       wrap-params))
 
-(def app-state (atom nil))
+(defonce app-state {})
 
+(defn connect-db [app-state]
+  (if (:db-connection app-state)
+    app-state
+    (let [db-config (-> app-state :config-params :db-config)
+          db-connection (storage/connect db-config)]
+      (assoc app-state :db-connection db-connection))))
 
+(defn disconnect-db [app-state]
+  (when (:db-connection app-state)
+    (storage/disconnect (:db-connection app-state)))
+  (dissoc app-state :db-connection))
+
+(defn start-server [app-state]
+  (if (:server app-state)
+    app-state
+    (let [server (server/run-server (handler app-state) {:port 8000})]
+      (assoc app-state :server server))))
+
+(defn stop-server [app-state]
+  (when-let [server (:server app-state)]
+    (server))
+  (dissoc app-state :server))
+
+(defn init
+  ([app-state] (init app-state param/webapp))
+
+  ([app-state params]
+   (assoc app-state :config-params params)))
+
+;; For running from the repl
 (defn start []
-  (let [config (configure-application param/webapp)
-        server (server/run-server (handler config) {:port 8000})]
-    (reset! app-state {:config config
-                       :server server})))
+  (alter-var-root #'app-state
+                  #(-> % init connect-db start-server)))
 
 (defn stop []
-  (let [server (:server @app-state)
-        config (:config @app-state)]
-    (when server
-      (storage/disconnect (:db-connection config))
-      (server))))
+  (alter-var-root #'app-state
+                  #(-> % stop-server disconnect-db)))
+
+;; For running using lein-ring server
+(defonce lein-ring-handler nil)
+
+(defn lein-ring-init []
+  (alter-var-root #'app-state #(-> % init connect-db))
+  (alter-var-root #'lein-ring-handler
+                  (fn [_] (handler app-state))))
+
+(defn lein-ring-stop []
+  (alter-var-root #'app-state disconnect-db))

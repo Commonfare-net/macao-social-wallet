@@ -18,7 +18,9 @@
             [lein-environ "1.0.0"]
             ]
 
-  :ring {:handler freecoin.core/handler
+  :ring {:init freecoin.core/lein-ring-init
+         :handler freecoin.core/lein-ring-handler
+         :destroy freecoin.core/lein-ring-stop
          :port 8000}
 
   :source-paths ["src"]
