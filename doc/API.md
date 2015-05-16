@@ -4,25 +4,51 @@ title: Freecoin API
 
 # Introduction
 
-This is work in progress
+The Freecoin API is not stateless, but stores the API KEY in a session cookie or `apikey` POST field for authenticating.
+
+The API KEY is obtained on wallet creation or restore, we may refer to it simply as "key". All other fields are highlighted `this way`.
+
+All GET operations presume to have the key in place as session cookie. If the global parameter `external-webapp-url` is set, then will POST the result to the configured url including the field `api-call`, `nick` and any other field specified.
+
+All failing operations may also return an error in the form:
+
+    {
+        "error": "Error description"
+        "class": "fatal" or "warning"
+        "call": "/api/call"
+    }
+
+As this is a work in progress, each section reports API completion with TODO and DONE sections.
 
 # Wallet
 
+ - TODO
+   - GET /wallet
+   - POST /wallet
+   - POST /wallet/create
+   - GET /wallet/create/:confirmation
+   - POST /wallet/recover
+   
 ## GET /wallet
 
-Open the wallet
+Open the wallet. Returns `balance`.
 
-If no cookie set, ask to create or recover
+## POST /wallet
 
-## GET /wallet/create
+Same as get, returns a JSON structure as:
 
-If a valid cookie is already set, then return "already created"
-
-Proceed asking nick and email, or offer link to recovery procedure
+    {
+        "nick": "nickname"
+        "email": "email@address"
+        "balance": float
+        "created": date of wallet creation
+    }
 
 ## POST /wallet/create
 
-Check nick existance and send email confirmation
+Check for duplicate nick and email in database, if available returns success with a `confirmation` hash to be used in a subsequent call to `/wallet/create/:confirmation`
+
+Field: `nick`, `email`
 
 #### example request
 
@@ -33,21 +59,18 @@ Check nick existance and send email confirmation
 #### example response
 
     {
-        "success": "Check your email to confirm creation."
+        "nick": "luther"
         "email": "luther@dyne.org"
+        "hash": "sL70fkl82fgtcoZY"
     }
 
 ## GET /wallet/create/:confirmation
 
-Check if email `confirmation` code is correct (and the cookie is set?), then proceed creating the wallet
-
-## GET /wallet/recover
-
-Ask for the nick and/or email and the secret pins to recover
+Check if the `confirmation` code is correct, then proceed creating the wallet. Returns the full wallet structure (design in progress).
 
 ## POST /wallet/recover
 
-If POST fields :nick or :email plus both :ah and :al pins are present, then restore a wallet
+Check for `email` in database, if found read and use `ah` and `al` pins to restore the wallet
 
 #### example request
 
@@ -58,44 +81,41 @@ If POST fields :nick or :email plus both :ah and :al pins are present, then rest
 
 #### example response
 
-Will setup session cookies on device's browser and return success.
+Will setup an url to have session cookies on a browser and return success.
 
     {
-        "success": "Access to wallet succesfully recovered."
+        "apikey": "6mHAzKHuLclviVAm"
     }
 
 # Sending
 
 Sending among participants is optional and depends from the monetary system setting by the issuing organization. If allowed the send API will be available for a "free market" among participants, making them able to transfer amounts among themselves.
 
-## GET /send
-
-Ask for an amount to send and a destinatary, then POST /send
-
-## GET /send/:participant
-
-Ask for an amount to send to `participant` then POST /send
-
+ - TODO
+   - GET /send/:participant/:amount
+   - POST /send
+   
 ## GET /send/:participant/:amount
 
-Ask confirmation to send `amount` to `participant`, then POST /send
+Send `amount` to `participant`, return a human readable response with a `txid` linking to the transaction, the `amount` and the recipient `participant`.
 
 ## POST /send
 
-Do send `amount` to `participant`
+Send `amount` to `participant`
 
 #### example request
 
     curl https://fxc.dyne.org/send \
+        -F "apikey=zvYiabC56wxta9B2" \
         -F "amount=100" \
         -F "participant=luther"
 
 #### example response
 
     {
-        "success": "Succesfully sent 100 to luther"
         "amount": 100
         "recipient": "luther"
+        "txid": "z5oJGVVKiWTLizpT"
     }
 
 # Stashes
@@ -109,17 +129,28 @@ Using stashes is possible to make intuitive a POS transaction:
 3. participant offers the QRcode to the vendor for scanning
 4. vendor scans the /stash/claim url and confirms payment
 
+- TODO
+  - API design
+  - GET /stash/create/:amount
+  - POST /stash/create
+  - GET /stash/claim/:stash-id
+  - POST /stash/claim
+  
 ## GET /stash/create/:amount
 
-Create a signed stash of `amount` ready to be given
+Create a signed stash of `amount` ready to be given, returns human readable stash-id and QR image.
 
-## GET /stash/claim
+## POST /stash/create
 
-Ask for the secret code of a stash to claim
+Same as GET, but with POST field `amount`
 
 ## GET /stash/claim/:stash-id
 
-Claim a stash of coins by url (direct link from qrcode)
+Claim a stash of coins by url (can also be a direct link from qrcode)
+
+## POST /stash/claim
+
+Same as GET, but with POST field `stash-id`
 
 
 
@@ -137,18 +168,29 @@ Objective8, YourPriorities, DemocracyOS, Mutual_Credit
 
 Vendor value transactions must be customized ad-hoc for pilots: transport companies, tax departments, service providers.
 
+- TODO
+  - API design
+  - GET /vendor/send/:amount/:vendor
+  - GET /vendor/send/:amount/:vendor/:participant
+  - POST /vendor/send
+  - vendor plugins
+
+
 ## GET /vendor/send/:amount/:vendor
 
-Send `amount` to `vendor` in exchange for service credit for self
+Send `amount` to `vendor` in exchange for service credit for self, returns human readable message, all accepted fields and `txid` linking to transaction.
 
 ## GET /vendor/send/:amount/:vendor/:participant
 
-Send `amount` to `vendor` in exchange of service credit for `participant`
+Send `amount` to `vendor` in exchange of service credit for another `participant`, returns human readable message, all accepted fields plus a `txid` linking to transaction.
 
+## POST /vendor/send
 
-# Encryption scheme
+Same as GET operations, with POST fields `amount` and `vendor`, optional field `participant`.
 
-SecretShare authentication in Freecoin is based on the Shamir Secret Sharing Scheme (SSSS).
+# Key encryption scheme
+
+Authentication in Freecoin is based on Shamir's Secret Sharing encryption scheme (SSSS).
 
 We envision a scenario where we have three actors:
 
@@ -163,7 +205,7 @@ We want a situation in which one of these actors alone is not able to access the
 
 The last case, Participant & Vendor, will likely not occur in normal situations, but is a warranty that the funds will exist even if the Organization disappears.
 
-## Implementation
+## FXC implementation
 
 This implementation is called "FXC protocol" and this is version 1.
 
@@ -234,21 +276,15 @@ O = Organization
 
 Signin:
 
-`O -> P :` create NXT pass, slice it in a tuple, save in db, give new cookie, redirect to new wallet
+`O -> P :` create NXT pass, slice it and delete the original. Save slices in db and backup, return apikey.
 
 Login:
 
-`O -> P :` get the slice from cookie, rebuild NXT pass, access wallet
+`O -> P :` get the apikey and retrieve slices from db, shamir-combine to rebuild the NXT pass, access NXT.
 
 Recover:
 
-`O <- P :` ask email
-
-`O      :` create unique secret url ready to set cookie
-
-`O -> P :` send secret url
-
-`O <- P :` access url, get cookie, redirect to wallet access
+`O <- P :` ask email, retrieve slices from db, verify apikey pins, return apikey
 
 
 
