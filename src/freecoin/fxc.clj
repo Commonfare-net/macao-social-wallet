@@ -91,6 +91,7 @@
 
   "Takes a config, a secret and a slice and tries to combine the secret and the slice in a collection of integers ready for shamir-combine. Returns a map {:ah :al} with the collections."
 
+  (let [ordered (sort-by last (:slices secret))]
   ;; reconstruct a collection of slices
   (loop [cah [(extract-int conf slice "ah")]
          cal [(extract-int conf slice "al")]
@@ -102,8 +103,8 @@
     (if (< (count cah) (:quorum conf))
 
       (recur
-       (conj cah (extract-int conf (nth (:slices secret) c) "ah"))
-       (conj cal (extract-int conf (nth (:slices secret) c) "al"))
+       (conj cah (extract-int conf (nth ordered c) "ah"))
+       (conj cal (extract-int conf (nth ordered c) "al"))
        (inc c))
 
       ;; return
@@ -122,7 +123,7 @@
        }
 
       ))
-  )
+  ))
 
 (defn render-slice [conf ah al idx]
    (format "%s_%s_FXC_%s_%d" (:prefix conf)
