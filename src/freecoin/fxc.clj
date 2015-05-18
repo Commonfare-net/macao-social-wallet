@@ -32,11 +32,12 @@
 
    [clojure.string :as str]
    [clojure.pprint :as pp]
-   
+
    )
   )
 
 (declare render-slice)
+(declare extract-quorum)
 (declare extract-ahal)
 (declare extract-int)
 
@@ -49,7 +50,7 @@
          al (:integer (rand/create (:length conf) (:entropy conf)))]
      (create-secret conf ah al)
      ))
-  
+
   ([conf hi lo]
    {:pre  [(contains? conf :version)
            (contains? conf :length)
@@ -77,12 +78,24 @@
                          (inc c))
                   (merge res (render-slice conf lah lal c))))
 
+      ;; to be deleted by http session
       :cookie (render-slice conf
                             (first (:shares ah))
                             (first (:shares al)) 1)
       }
      ))
   )
+
+(defn unlock-secret [conf secret slice]
+  "Takes a secret and a cookie, returns a ready to use NXT passphrase"
+  {:pre [(contains? conf :quorum)
+         (contains? secret :slices)]}
+  (let [quorum (extract-quorum conf secret slice)
+        ah (ssss/shamir-combine (:ah quorum))
+        al (ssss/shamir-combine (:al quorum))]
+    (render-slice conf ah al 0)))
+
+
 
 (defn extract-quorum [conf secret slice]
   {:pre  [(contains? conf :quorum)]}

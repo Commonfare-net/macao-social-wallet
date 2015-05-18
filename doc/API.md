@@ -101,7 +101,7 @@ Send `amount` to `participant`, return a human readable response with a `txid` l
 
 ## POST /send
 
-Send `amount` to `participant`
+Send `amount` to `participant`, return a machine readable json with the `txid`
 
 #### example request
 

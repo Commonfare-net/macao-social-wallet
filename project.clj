@@ -51,6 +51,9 @@
                  ;; json marshalling
                  [cheshire "5.4.0"]
 
+                 ;; json schema validation
+                 [prismatic/schema "0.4.2"]
+
                  ;; data storage
                  [com.novemberain/monger "2.0.0"]
 

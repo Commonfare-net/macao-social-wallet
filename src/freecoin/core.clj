@@ -8,7 +8,10 @@
 
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
+
+;; With contributions by
 ;; Gareth Rogers <grogers@thoughtworks.com>
+;; Duncan Mortimer <dmortime@thoughtworks.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by

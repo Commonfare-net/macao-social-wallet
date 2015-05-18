@@ -25,13 +25,20 @@
 
 (ns freecoin.utils
   (:require
+   [liberator.dev]
    [liberator.core :refer [resource defresource]]
-;   [clojure.pprint :as pp]
    )
   )
 
+(declare log!)
+
+(defn trace []
+  (format "<a href=\"%s\">Trace</a>"
+          (liberator.dev/current-trace-url))
+  )
 
 (defn trunc [s n]
+  {:pre (seq s)} ;; not empty
   "Truncate string at length"
   (subs s 0 (min (count s) n)))
 

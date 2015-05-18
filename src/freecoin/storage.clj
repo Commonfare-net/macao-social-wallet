@@ -1,6 +1,8 @@
 (ns freecoin.storage
   (:require [monger.core :as mg]
-            [monger.collection :as mc]))
+            [monger.collection :as mc]
+            [monger.conversion :refer [from-db-object]]
+            ))
 
 (defn connect [{:keys [host port db-name] :as db-config}]
   (let [conn (mg/connect {:host host :port port})
@@ -16,3 +18,12 @@
 
 (defn find-by-id [connection coll id]
   (mc/find-map-by-id (:db connection) coll id))
+
+(defn find-by-key [connection coll needle]
+  (mc/find-maps (:db connection) coll needle))
+
+(defn find-one [connection coll needle]
+  (mc/find-one-as-map (:db connection) coll needle))
+
+(defn remove-by-id [connection coll id]
+  (mc/remove-by-id (:db connection) coll id))

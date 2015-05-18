@@ -33,7 +33,7 @@
    [liberator.representation :refer [as-response ring-response]]
    [compojure.core :refer [defroutes ANY]]
 
-   [environ.core :refer [env]]
+   ;; [environ.core :refer [env]]
 
    [freecoin.secretshare :as ssss]
    [freecoin.actions :as actions]
@@ -45,13 +45,11 @@
    [freecoin.storage :as storage]
 
    [freecoin.fxc :as fxc]
+
+   [freecoin.wallet :as wallet]
    )
   )
 
-(defn trace []
-  (format "<a href=\"%s\">Trace</a>"
-          (liberator.dev/current-trace-url))
-  )
 
 
 (defn redirect-home [_]
@@ -70,7 +68,7 @@
 ;; routes
 (defroutes app
 
-  (ANY "/"        [request] (serve        request  "Welcome!"))
+  (ANY "/"        [request] (serve    request  "Welcome!"))
   (ANY "/version" [request] (serve    request
                                       (str "Freecoin 0.2 running on "
                                            (.. System getProperties (get "os.name"))
@@ -79,15 +77,23 @@
                                            " (" (.. System getProperties (get "os.arch")) ")")
                                       )
        )
-  (ANY "/create" [request] (create request))
-  (ANY "/open/:secret-id" [secret-id :as request] (open request secret-id))
+  (ANY "/wallet/create" [request] (wallet/create request))
+  (ANY "/wallet/create/:confirmation" [confirmation :as request]
+       (wallet/confirm_create request confirmation))
+  
+  (ANY "/open" [request] (wallet/open request))
 
   ) ; end of routes
 
 (defresource create [request]
   :allowed-methods [:get :post]
   :available-media-types ["text/plain" "text/html"]
-  :handle-ok (fn [ctx] (str "secrets"))
+  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])
+                             slice (first (str/split cookie #"::"))
+                             id (second (str/split cookie #"::"))]
+                         (pages/template {:header (util/trace)
+                                          :body "Create is post only, see API docs"
+                                          :id (str "ID: " id)})))
   :post! (fn [ctx]
            (let [secret (fxc/create-secret param/encryption)
                  cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
@@ -95,7 +101,7 @@
                  {id :_id} (storage/insert (get-in request [:config :db-connection]) "secrets" secret-without-cookie)]
              {::id id
               ::cookie-data cookie-data}))
-  :post-redirect? (fn [ctx] {:location (format "/open/%s" (::id ctx))})
+  :post-redirect? (fn [ctx] (freecoin.response/redirect  (format "/open/%s" (::id ctx))))
   :handle-see-other (fn [ctx]
                       (ring-response {:headers {"Location" (ctx :location)}
                                       :session {:cookie-data (::cookie-data ctx)}})))
@@ -117,7 +123,7 @@
                              al (ssss/shamir-combine (:al quorum))
                              nxtpass (fxc/render-slice param/encryption ah al 0)
                              ]
-                          (pages/template {:header (trace)
+                          (pages/template {:header (util/trace)
                                            :body (str "DATA: " (::data ctx))
                                            :id (str "NXTPASS: " nxtpass)})
 ;;                                           :id (str "COOKIE: " (:session request))})
@@ -127,14 +133,17 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 ;  :as-response (fn [d ctx] (#'cookie-response d ctx))
-  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])
-                             slice (first (str/split cookie #"::"))
-                             id (second (str/split cookie #"::"))]
-
-                         (pages/template {:header (trace)
-                                          :body (str content " " id)
-                                          :id (str "SLICE: " slice)
-                              ;; :id (let [x (auth/parse-secret (get-cookie request))]
-                              ;;          (:uid auth/token))
-                              }))
+  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])]
+                         (if (empty? cookie)
+                           {:Welcome "first time I see you."}
+                             ;; slice (first (str/split cookie #"::"))
+                             ;; id (second (str/split cookie #"::"))]
+                           {:cookie cookie})
+                         ;; (pages/template {:header (util/trace)
+                         ;;                  :body (str content " " id)
+                         ;;                  :id (str "SLICE: " slice)
+                         ;;      ;; :id (let [x (auth/parse-secret (get-cookie request))]
+                         ;;      ;;          (:uid auth/token))
+                         ;;      }))
                 ))
+  )
