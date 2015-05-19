@@ -51,6 +51,12 @@
                  ;; json marshalling
                  [cheshire "5.4.0"]
 
+                 ;; json rendering
+                 [json-html "0.2.8"]
+
+                 ;; json serialization and encryption
+                 [com.taoensso/nippy "2.8.0"]
+
                  ;; json schema validation
                  [prismatic/schema "0.4.2"]
 
@@ -70,6 +76,9 @@
 
                  ;; human/machine interaction
                  [clojure-humanize "0.1.0"]
+
+                 ;; qrcode
+                 [clj.qrgen "0.3.0"]
 
                  ]
   :env [

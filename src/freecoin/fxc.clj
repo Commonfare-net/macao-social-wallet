@@ -98,7 +98,9 @@
 
 
 (defn extract-quorum [conf secret slice]
-  {:pre  [(contains? conf :quorum)]}
+  {:pre  [(contains? conf :quorum)
+          (contains? secret :slices)
+          (seq slice)]}
   ;; TODO: fix some off-by-one problem here (assert fails with +1)
   ;; :post [(= (count (get-in % (:ah :shares))) (:quorum conf))]}
 

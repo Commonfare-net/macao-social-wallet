@@ -31,14 +31,40 @@ As this is a work in progress, each section reports API completion with TODO and
    
 ## GET /wallet
 
-Open the wallet. Returns `balance`.
+Open the wallet. Returns `balance` as text/html.
+
+#### example response (TODO)
+
+<div>
+    <table>
+        <tbody>
+            <tr>
+                <th>nxtpass</th>
+                <td>FXC1_WYVWDPEE9Z2E_FXC_3QV8MD9LMLML_0</td>
+            </tr>
+            <tr>
+                <th>_id</th>
+                <td>FXC1_51403b99-0574-4d45-a437-a3c17f77ab54_FXC_39f55e39-20b0-4e67-8135-b55ea657a87c</td>
+            </tr>
+            <tr>
+                <th>name</th>
+                <td>jaromil</td>
+            </tr>
+            <tr>
+                <th>email</th>
+                <td>jaromil@dyne.org</td>
+            </tr>
+        </tbody>
+    </table>
+</div>     
+
 
 ## POST /wallet
 
 Same as get, returns a JSON structure as:
 
     {
-        "nick": "nickname"
+        "name": "nickname"
         "email": "email@address"
         "balance": float
         "created": date of wallet creation
@@ -46,23 +72,29 @@ Same as get, returns a JSON structure as:
 
 ## POST /wallet/create
 
-Check for duplicate nick and email in database, if available returns success with a `confirmation` hash to be used in a subsequent call to `/wallet/create/:confirmation`
+Check for duplicate name and email in database, if available returns success with a `confirmation` hash to be used in a subsequent call to `/wallet/create/:confirmation`
 
-Field: `nick`, `email`
+Field: `name`, `email`
 
 #### example request
 
-    curl http://nxt.dyne.org/wallet/create \
-        -F "nick=luther" \
-        -F "email=luther@dyne.org"
+POST http://localhost:8000/wallet/create
+Content-Type: application/json
+
+     {
+      "name": "jaromil",
+      "email": "jaromil@dyne.org"
+     }
 
 #### example response
 
-    {
-        "nick": "luther"
-        "email": "luther@dyne.org"
-        "hash": "sL70fkl82fgtcoZY"
-    }
+     {
+      "body":
+        {"email":"jaromil@dyne.org",
+         "name":"jaromil",
+         "_id":"D7GNYYP53E6YN"},
+      "confirm":"\/wallet\/create\/D7GNYYP53E6YN"
+     }
 
 ## GET /wallet/create/:confirmation
 
@@ -204,6 +236,24 @@ We want a situation in which one of these actors alone is not able to access the
 - Organization & Vendor (to redeem currency)
 
 The last case, Participant & Vendor, will likely not occur in normal situations, but is a warranty that the funds will exist even if the Organization disappears.
+
+# Bridge to NXT
+
+## GET /nxt/getState
+
+Reports the server statistics (getStatus) from the configured nxt server
+
+#### example response
+
+    {"numberOfPeers":464,"numberOfGoods":984,"numberOfUnlockedAccounts":0,"numberOfTransfers":116938,"numberOfOrders":4794,"numberOfTransactions":1264041,"maxMemory":893386752,"numberOfOffers":80,"isScanning":false,"cumulativeDifficulty":"17246844613317733","numberOfCurrencies":1814,"numberOfAssets":520,"freeMemory":116422992,"peerPort":7874,"availableProcessors":4,"numberOfAccounts":109511,"needsAdminPassword":true,"numberOfBlocks":430829,"isTestnet":false,"numberOfCurrencyTransfers":708,"requestProcessingTime":5455,"version":"1.4.18","numberOfBidOrders":1106,"lastBlock":"6250658716572190037","totalMemory":345505792,"application":"NRS","numberOfAliases":142259,"lastBlockchainFeederHeight":430828,"numberOfExchanges":1684,"numberOfTrades":98485,"numberOfPurchases":757,"numberOfTags":723,"isOffline":false,"time":46761926,"numberOfAskOrders":3688,"lastBlockchainFeeder":"217.17.88.5"}
+
+## GET /server/getPeers
+
+List the number of NXT peers connected by the configured nxt server
+
+#### example response
+
+    {"peers":["173.224.126.254","194.135.95.148","85.214.222.82"],"requestProcessingTime":7}
 
 ## FXC implementation
 

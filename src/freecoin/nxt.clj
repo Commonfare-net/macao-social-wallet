@@ -26,49 +26,75 @@
 (ns freecoin.nxt
   (:require
    [freecoin.secretshare :as ssss]
+   [freecoin.params :as param]
    [freecoin.utils :as util]
-   [freecoin.fxc :as fxc]
+   [freecoin.auth :as auth]
 
-   [cheshire.core :refer :all :as jj]
-   [clojure.pprint :as pp]
-   [org.httpkit.client :as http])
+   [liberator.core :refer [resource defresource]]
+
+
+   [cheshire.core :refer :all :as cheshire]
+   [org.httpkit.client :as http]
+   [json-html.core :as present]
+   [hiccup.page :as page]
+
+   )
   )
 
-(def conf {:url "https://nxt.dyne.org:7876/nxt"
-           :method :post             ; :post :put :head or other
-           :user-agent "Freecoin 0.2"
-           :headers {"X-header" "value"
-                     "X-Api-Version" "2"}
-           :keepalive 3000 ; Keep the TCP connection for 3000ms
-           :timeout 1000 ; connection and reading timeout 1000ms
-           :filter (org.httpkit.client/max-body-filter (* 1024 100))
-           ;; reject if body is more than 100k
-           :insecure? true
-           ;; Need to contact a server with an untrust
+;; operations always needing accountId
+(def account-ops ["getAccountId"
+                  "getAccount"
+                  "getAccountBlockCount"
+                  "getAccountBlockIds"
+                  "getAccountBlocks"
+                  "getAccountLessors"
+                  "getAccountPublicKey"
+                  "getAccountTransactionIds"
+                  "getAccountTransactions"
+                  "getBalance"
+                  "getGuaranteedBalance"
+                  "getUnconfirmedTransactionIds"
+                  "getUnconfirmedTransactions"
+                  "getAccountAssetCount"
+                  "getAccountAssets"
+                  "getAccountCurrentBidOrderIds"
+                  "getAccountCurrentAskOrderIds"
+                  "getAccountCurrentBidOrders"
+                  "getAccountCurrentAskOrders"
+                  "getAccountCurrencies"
+                  "getAccountCurrencyCount"])
 
-           :max-redirects 10 ; Max redirects to follow
-           ;; whether follow 301/302 redirects automatically, default
-           ;; to true
-           ;; :trace-redirects will contain the chain of the
-           ;; redirections followed.
-           :follow-redirects true
-           })
-
+                  
 ;; synchronous
 (defn call [arguments]
   {:pre [ (contains? arguments :query-params) ] }
   
   (let [{:keys [status headers body error] :as resp}
-        (http/post (:url conf) (merge conf arguments))]
-    (if (contains? @resp :error)
-      (util/log! "Error" "nxt/call" (:error @resp)))
-    ;; just debug for now
-    ;;    (pp/pprint (:body @resp))
-    (jj/parse-string (:body @resp) true) ; {:pretty true})
+        (http/post (:url param/nxt) (merge param/nxt arguments))]
+    (if (contains? @resp :errorCode)
+      (:errorDescription @resp))
+    (cheshire/parse-string (:body @resp) true) ; {:pretty true})
     )
   )
 
+;; ring resource for direct wiring
+(defresource api [request command]
+;;{:pre (string? command)}
 
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :authorized? (fn [ctx] {:apikey (auth/get-apikey request)})
+
+  :handle-ok (fn [ctx]
+               (let [apikey (:apikey ctx)]
+                 (if (empty? apikey) nil
+                   (page/html5
+                    [:head [:style (-> "json.human.css" clojure.java.io/resource slurp)]]
+                    (present/edn->html (call {:query-params command}))
+                    )
+                   )))
+  )
+                   
 (defn getMyInfo[]
   (call {:query-params {"requestType" "getMyInfo"}})
   )
@@ -92,7 +118,7 @@ application (S) is the name of the software application, typically NRS
 state (N) defines the state of the peer: 0 for NON_CONNECTED, 1 for CONNECTED, or 2 for DISCONNECTED
 shareAddress (B) is true if the address is allowed to be shared with other peers
 requestProcessingTime (N) is the API request processing time (in millisec)"
-  (call {:query-params {"requestType" "blacklistPeer"
+  (call {:query-params {"requestType" "getPeer"
                         "peer" (str peer)}})
   )
 
@@ -137,7 +163,6 @@ millisec)
 returned as a hex string
 * _requestProcessingTime_ (N) is the API request processing time (in
 millisec)"
-  (util/log! 'ACK 'getAccountPublicKey (:accountRS args))
   (call {:query-params
          { "requestType" "getAccountPublicKey"
            "account" (:accountRS args) }})

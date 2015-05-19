@@ -23,7 +23,12 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.params)
+(ns freecoin.params
+  (:require [org.httpkit.client :refer [max-body-filter]])
+  
+  )
+
+(def version "software release version" "0.2")
 
 (def webapp
   {:db-config {:host "localhost"
@@ -42,7 +47,7 @@
    
    :prime 'prime4096
    
-   :description "Freecoin 0.2"
+   :description "Freecoin"
    
    ;; versioning every secret
    :prefix "FXC1"
@@ -59,3 +64,28 @@
    :length 15
    :entropy 3.1
    })
+
+
+(def nxt {:url "https://nxt.dyne.org:7876/nxt"
+          :method :post             ; :post :put :head or other
+          :user-agent (str "Freecoin" version)
+          :headers {"X-header" "value"
+                    "X-Api-Version" "2"}
+          :keepalive 3000 ; Keep the TCP connection for 3000ms
+          :timeout 1000 ; connection and reading timeout 1000ms
+          :filter (org.httpkit.client/max-body-filter 1024000)
+          ;; reject if body is more than 1MB
+          :insecure? true
+          ;; Need to contact a server with an untrust
+          
+          :max-redirects 10 ; Max redirects to follow
+          ;; whether follow 301/302 redirects automatically, default
+          ;; to true
+          ;; :trace-redirects will contain the chain of the
+          ;; redirections followed.
+          :follow-redirects true
+          }
+  )
+
+(def currency {:code "FXCTA"
+               :_id "6010841431981818226"})

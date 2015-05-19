@@ -31,7 +31,7 @@
    [cheshire.core :refer :all :as jj]
 
    [freecoin.secretshare :as ssss]
-   [freecoin.pages :as pages]
+
    [freecoin.utils :as util]
    [freecoin.nxt :as nxt]
    )

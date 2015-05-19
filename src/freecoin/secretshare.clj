@@ -115,7 +115,7 @@
 
   (let [header (:header secret)
         shares (:shares secret)]
-    (util/log! "ACK" 'shamir-combine [ header shares ])
+    ;; (util/log! "ACK" 'shamir-combine [ header shares ])
     (loop [s (first shares)
            res []
            c 1]

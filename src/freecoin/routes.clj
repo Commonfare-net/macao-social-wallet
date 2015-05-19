@@ -27,7 +27,7 @@
   (:require
    [clojure.pprint :as pp]
    [clojure.string :as str]
-   [liberator.dev]
+;;   [liberator.dev]
    [liberator.core :refer [resource defresource]]
 
    [liberator.representation :refer [as-response ring-response]]
@@ -38,14 +38,14 @@
    [freecoin.secretshare :as ssss]
    [freecoin.actions :as actions]
    [freecoin.params :as param]
-   [freecoin.pages :as pages]
+
    [freecoin.utils :as util]
    [freecoin.auth :as auth]
 
    [freecoin.storage :as storage]
 
    [freecoin.fxc :as fxc]
-
+   [freecoin.nxt :as nxt]
    [freecoin.wallet :as wallet]
    )
   )
@@ -59,91 +59,61 @@
   )
 
 
-;; resources
-(declare serve)
-(declare create)
-(declare open)
-
-
-;; routes
-(defroutes app
-
-  (ANY "/"        [request] (serve    request  "Welcome!"))
-  (ANY "/version" [request] (serve    request
-                                      (str "Freecoin 0.2 running on "
-                                           (.. System getProperties (get "os.name"))
-                                           " version "
-                                           (.. System getProperties (get "os.version"))
-                                           " (" (.. System getProperties (get "os.arch")) ")")
-                                      )
-       )
-  (ANY "/wallet/create" [request] (wallet/create request))
-  (ANY "/wallet/create/:confirmation" [confirmation :as request]
-       (wallet/confirm_create request confirmation))
-  
-  (ANY "/open" [request] (wallet/open request))
-
-  ) ; end of routes
-
-(defresource create [request]
-  :allowed-methods [:get :post]
-  :available-media-types ["text/plain" "text/html"]
-  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])
-                             slice (first (str/split cookie #"::"))
-                             id (second (str/split cookie #"::"))]
-                         (pages/template {:header (util/trace)
-                                          :body "Create is post only, see API docs"
-                                          :id (str "ID: " id)})))
-  :post! (fn [ctx]
-           (let [secret (fxc/create-secret param/encryption)
-                 cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
-                 secret-without-cookie (dissoc secret :cookie)
-                 {id :_id} (storage/insert (get-in request [:config :db-connection]) "secrets" secret-without-cookie)]
-             {::id id
-              ::cookie-data cookie-data}))
-  :post-redirect? (fn [ctx] (freecoin.response/redirect  (format "/open/%s" (::id ctx))))
-  :handle-see-other (fn [ctx]
-                      (ring-response {:headers {"Location" (ctx :location)}
-                                      :session {:cookie-data (::cookie-data ctx)}})))
-
-(defresource open [request secret-id]
-  :allowed-methods [:get]
-  :available-media-types ["text/plain" "text/html"]
-  :exists? (fn [ctx]
-             (when-let [the-secret (storage/find-by-id
-                                    (get-in request [:config :db-connection])
-                                    "secrets" secret-id)]
-               {::data the-secret}))
-  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])
-                             slice (first (str/split cookie #"::"))
-                             id (second (str/split cookie #"::"))
-                             known (::data ctx)
-                             quorum (fxc/extract-quorum param/encryption known slice)
-                             ah (ssss/shamir-combine (:ah quorum))
-                             al (ssss/shamir-combine (:al quorum))
-                             nxtpass (fxc/render-slice param/encryption ah al 0)
-                             ]
-                          (pages/template {:header (util/trace)
-                                           :body (str "DATA: " (::data ctx))
-                                           :id (str "NXTPASS: " nxtpass)})
-;;                                           :id (str "COOKIE: " (:session request))})
-                          )))
-
 (defresource serve [request content]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 ;  :as-response (fn [d ctx] (#'cookie-response d ctx))
-  :handle-ok (fn [ctx] (let [cookie (get-in request [:session :cookie-data])]
-                         (if (empty? cookie)
-                           {:Welcome "first time I see you."}
-                             ;; slice (first (str/split cookie #"::"))
-                             ;; id (second (str/split cookie #"::"))]
-                           {:cookie cookie})
-                         ;; (pages/template {:header (util/trace)
-                         ;;                  :body (str content " " id)
-                         ;;                  :id (str "SLICE: " slice)
-                         ;;      ;; :id (let [x (auth/parse-secret (get-cookie request))]
-                         ;;      ;;          (:uid auth/token))
-                         ;;      }))
-                ))
+  :handle-ok  (ring-response {:body content})
   )
+
+;; debug
+(defresource echo [request]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :authorized? (fn [ctx] (auth/check request))
+;  :as-response (fn [d ctx] (#'cookie-response d ctx))
+  :handle-ok (fn [ctx] (util/pretty ctx))
+
+  )
+  
+;; routes
+(defroutes app
+
+  ;; debug
+  (ANY "/echo" [request] (echo request))
+
+  (ANY "/"        [request] (wallet/balance request))
+  (ANY "/version" [request] (serve request
+                                   (format "Freecoin %s running on %s version %s (%s)"
+                                           (param/version)
+                                           (.. System getProperties (get "os.name"))
+                                           (.. System getProperties (get "os.version"))
+                                           (.. System getProperties (get "os.arch")))
+                                   ))
+  
+  ;; Wallet operations
+  
+  (ANY "/wallet" [request] (wallet/balance request))
+  (ANY "/wallet/create" [request] (wallet/create request))
+  (ANY "/wallet/create/:confirmation" [confirmation :as request]
+       (wallet/confirm_create request confirmation))
+  (ANY "/wallet/balance" [request] (wallet/balance request))
+  (ANY "/wallet/qrcode" [request] (wallet/qrcode request))
+
+  (ANY "/give/:recipient/:quantity" [recipient quantity :as request]
+       (wallet/give request recipient quantity))
+
+
+
+
+  ;; 1 to 1 NXT api mapping for functions taking up to 2 args
+  (ANY "/nxt/:command" [command :as request]
+       (nxt/api request {"requestType" command}))
+  (ANY "/nxt/:cmd1/:key1/:val1" [cmd1 key1 val1 :as request]
+       (nxt/api request {"requestType" cmd1 key1 val1}))
+  (ANY "/nxt/:cmd1/:key1/:val1/:key2/:val2"
+       [cmd1 key1 val1 key2 val2 :as request]
+       (nxt/api request {"requestType" cmd1 key1 val1 key2 val2}))
+
+
+  ) ; end of routes

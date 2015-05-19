@@ -6,24 +6,42 @@
    [liberator.core :refer [resource defresource]]
    [liberator.representation :refer [as-response ring-response]]
 
+   [ring.util.io :refer [piped-input-stream]]
+
    [freecoin.secretshare :as ssss]
 
    [freecoin.params :as param]
    [freecoin.random :as rand]
    [freecoin.utils :as util]
-   [freecoin.validation :as valid]
-   [freecoin.response :as response]
+   [freecoin.auth :as auth]
+
    [freecoin.storage :as storage]
 
    [freecoin.fxc :as fxc]
+   [freecoin.nxt :as nxt]
 
    [cheshire.core :refer :all :as cheshire]
+
+   [clj.qrgen :as qr]
+
+   [taoensso.nippy :as nippy]
 
    )
   )
 
+;; Methods:
+;; create
+;; confirm_create (request-id)
+;; open
 
 (defresource create [request]
+
+;; Files a request to create a wallet, accepting a json structure
+;; containing name and email. Checks if the name doesn't already
+;; exists, if succesful returns a json structure containing the
+;; 'confirmation' field which is the hash to be used to confirm
+;; creation via GET url /wallet/create/confirmation-hash.
+
   :allowed-methods [:post]
   :available-media-types ["application/json"]                  
 
@@ -33,6 +51,7 @@
                    param_name (:name mapped_params)
                    param_email (:email mapped_params)
                    db (get-in request [:config :db-connection])
+                   ;; TODO: optimize using redis k/v for this unauthenticated lookup
                    dup (storage/find-one db "wallets" {:name param_name})]
 
                ;; TODO: truncate fields to length for security
@@ -59,25 +78,26 @@
   :handle-created (fn [ctx]
                     (if (::duplicate ctx)
                       ;; return duplicate error
-                      {:header (util/trace)
+                      {;; :debug (util/trace)
                        :body (::params ctx)
                        :id {:error "duplicate"}}
                       
                       ;; insert request
                       (let [name (get-in ctx [::params :name])
                             email (get-in ctx [::params :email])
+                            confirm (::confirmation ctx)
                             stored (storage/insert 
                                     (get-in request [:config :db-connection])
                                     "confirms"
-                                    {:_id   (::confirmation ctx)
+                                    {:_id   confirm
                                      :name  name
                                      :email email})]
                         
-                        {:header (util/trace)
-                         :body stored
-                         :id (::confirmation ctx)})
-                      )
-                    ))
+                        {:body stored
+                         :confirm (str "/wallet/create/" confirm)}
+                        ))
+                    )
+  )
 
 
 (defresource confirm_create [request confirmation]
@@ -103,18 +123,25 @@
                        db (get-in request [:config :db-connection])
                        secret (fxc/create-secret param/encryption)
                        cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
-                       secret-without-cookie (dissoc secret :cookie)]
-
+                       secret-without-cookie (dissoc secret :cookie)
+                       nxt-data (nxt/getAccountId 
+                                 {:secret (fxc/unlock-secret
+                                           param/encryption
+                                           secret-without-cookie
+                                           (:cookie secret))})]
+                                                                 
                    ;; delete the confirmation entry from the db
                    (storage/remove-by-id db "confirms" (:_id params))
 
-                   ;; insert the wallet in the database
-                   (storage/insert
-                    (get-in request [:config :db-connection])
-                    "wallets" (conj secret-without-cookie {:name  (get-in ctx [::params :name])
-                                                           :email (get-in ctx [::params :email])}))
+                   ;; insert in the secrets database
+                   (storage/insert db "secrets" secret-without-cookie)
 
-                   ;; return a cookie
+                   ;; insert in the wallet database
+                   (storage/insert db "wallets" (conj nxt-data {:name  (get-in ctx [::params :name])
+                                                                :email (get-in ctx [::params :email])
+                                                                :_id (:_id secret-without-cookie)}))
+
+                   ;; return the apikey cookie
                    (ring-response {:headers {"Location" (ctx :location)}
                                    :session {:cookie-data cookie-data}
                                    :apikey cookie-data}
@@ -125,34 +152,55 @@
                  {:debug (util/trace)
                   :error "Confirmation not found."
                   :id (::confirmation ctx)}))
-                 ;; (pages/template {:header (util/trace)
-                 ;;                  :body (str "Confirmation not found: " (::confirmation ctx))
-                 ;;                  :id (::confirmation ctx)})))
+
   )
 
-(defresource open [request]
+(defresource balance [request]
   :allowed-methods [:get :post]
   :available-media-types ["text/html" "application/json"]
-  :exists? (fn [ctx]
-             (let [cookie (get-in request [:session :cookie-data])
-                   db (get-in request [:config :db-connection])]
-               ;; safeguard
-               (if (empty? cookie) {::wallet false}
-                   
-                   (let [slice (first (str/split cookie #"::"))
-                         id (second (str/split cookie #"::"))
-                         wallet (storage/find-by-id db "wallets" id)]
-                     (if (empty? wallet) {::wallet false}
-                         {::wallet wallet
-                          ::slice slice})
-                     ))))
+  :authorized? (auth/check request)
+
 
   :handle-ok (fn [ctx]
-               (let [wallet (::wallet ctx)]
-                 (if wallet
-                   (dissoc (conj wallet {:nxtpass (fxc/unlock-secret param/encryption
-                                          (::wallet ctx) (::slice ctx))})
-                           :slices :config)
-                   {:error "Cannot open wallet."}))
-               )
+               (let [apikey (:apikey ctx)
+                     wallet (:wallet ctx)]
+                 (if (and wallet apikey)
+                   (clojure.set/rename-keys
+                    (dissoc
+                     (conj wallet {:QR "<img src=\"/wallet/qrcode\" alt=\"QR\">"}
+                           (nxt/getBalance (:account wallet))
+
+                           ;; TODO: remove this when testing is over (NEVER show nxtpass)
+                           ;; {:nxtpass (fxc/unlock-secret
+                           ;;            param/encryption
+                           ;;            (auth/get-secret request apikey) (:slice apikey))}
+                           ;;-----------------------------------------------------------
+
+                           )
+                     :_id :account :requestProcessingTime :publicKey)
+                    {:accountRS :Konto})
+
+                   {:Wallet "not found."})
+               ))
+  )
+
+
+(defresource qrcode [request]
+  :allowed-methods [:get]
+  :available-media-types ["image/png"]
+  :authorized? (fn [ctx] (auth/check request))
+  :handle-ok (fn [ctx]
+               (let [apikey (:apikey ctx)
+                     wallet (:wallet ctx)]
+                 (if (empty? wallet) ""
+                     (qr/as-input-stream (qr/from (:accountRS wallet))))
+               ))
+  )
+
+(defresource give [request recipient quantity]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :authorized? (fn [ctx] (auth/check request))
+
+  :handle-ok (fn [ctx] (auth/check request))
   )

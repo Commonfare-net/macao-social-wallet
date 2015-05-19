@@ -25,12 +25,21 @@
 
 (ns freecoin.utils
   (:require
-   [liberator.dev]
-   [liberator.core :refer [resource defresource]]
+   [json-html.core :as present]
+   [hiccup.page :as page]
+
    )
   )
 
 (declare log!)
+
+(defn pretty [edn]
+  {:pre (coll? edn)}
+
+  (page/html5
+   [:head [:style (-> "json.human.css" clojure.java.io/resource slurp)]]
+   (present/edn->html edn))
+  )
 
 (defn trace []
   (format "<a href=\"%s\">Trace</a>"
@@ -38,7 +47,8 @@
   )
 
 (defn trunc [s n]
-  {:pre (seq s)} ;; not empty
+  {:pre [(> n 0)
+         (seq s)]} ;; not empty
   "Truncate string at length"
   (subs s 0 (min (count s) n)))
 
