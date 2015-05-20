@@ -64,11 +64,23 @@
                   "getAccountCurrencies"
                   "getAccountCurrencyCount"])
 
-                  
+(def currency-ops ["getCurrency" ;; optional code
+                   "getCurrencyAccountCount"
+                   "getCurrencyAccounts"
+                   "getCurrencyFounders"
+                   "getcurrencyTransfers" ;; optional id
+                   "getExchanges" ;; optional id
+                   "canDeleteCurrency" ;; id
+                   "deleteCurrency"
+                   "getAccountCurrencies" ;; id
+                   "getAccountExchangeRequests" ;; id
+                   "getBuyOffers" "getSellOffers" ;; optional id
+                   "getCurrencyPhasedTransactions"])
+
 ;; synchronous
 (defn call [arguments]
   {:pre [ (contains? arguments :query-params) ] }
-  
+
   (let [{:keys [status headers body error] :as resp}
         (http/post (:url param/nxt) (merge param/nxt arguments))]
     (if (contains? @resp :errorCode)
@@ -88,46 +100,24 @@
   :handle-ok (fn [ctx]
                (let [apikey (:apikey ctx)]
                  (if (empty? apikey) nil
-                   (page/html5
-                    [:head [:style (-> "json.human.css" clojure.java.io/resource slurp)]]
-                    (present/edn->html (call {:query-params command}))
-                    )
-                   )))
-  )
-                   
-(defn getMyInfo[]
-  (call {:query-params {"requestType" "getMyInfo"}})
-  )
-(defn getPeer [peer]
-  "Request:
-requestType is getPeer
-peer is the IP address or domain name of the peer (plus optional port)
-Response:
-hallmark (S) is the hex string of the peer's hallmark, if it is defined
-downloadedVolume (N) is the number of bytes downloaded by the peer
-address (S) the IP address or DNS name of the peer
-weight (N) is the peer's weight value
-uploadedVolume (N) is the number of bytes uploaded by the peer
-version (S) is the version of the software running on the peer
-platform (S) is a string representing the peer's platform
-lastUpdated (N) is the timestamp (in seconds since the genesis block) of the last peer status update
-blacklisted (B) is true if the peer is blacklisted
-blacklistingCause (S) is the cause of blacklising (if blacklisted is true)
-announcedAddress (S) is the name that the peer announced to the network (could be a DNS name, IP address, or any other string)
-application (S) is the name of the software application, typically NRS
-state (N) defines the state of the peer: 0 for NON_CONNECTED, 1 for CONNECTED, or 2 for DISCONNECTED
-shareAddress (B) is true if the address is allowed to be shared with other peers
-requestProcessingTime (N) is the API request processing time (in millisec)"
-  (call {:query-params {"requestType" "getPeer"
-                        "peer" (str peer)}})
-  )
+                     (let [cmd (val (first command))]
 
-(defn getPeers []
-  (call {:query-params {"requestType" "getPeers"}})
-  )
-(defn blacklistPeer [peer]
-  (call {:query-params {"requestType" "blacklistPeer"
-                        "peer" (str peer)}})
+                       (if (some #{cmd} account-ops)
+
+                         ;; is an account api command
+                         (let [account (:account (auth/get-wallet request apikey))]
+                           (page/html5
+                            [:head [:style (-> "json.human.css" clojure.java.io/resource slurp)]]
+                            (present/edn->html (call {:query-params
+                                                      (conj {"account" account} command)}))
+                            ))
+
+                         ;; else
+                         (page/html5
+                          [:head [:style (-> "json.human.css" clojure.java.io/resource slurp)]]
+                          (present/edn->html (call {:query-params command}))
+                          )
+                         )))))
   )
 
 

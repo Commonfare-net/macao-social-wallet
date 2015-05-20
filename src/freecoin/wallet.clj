@@ -144,8 +144,9 @@
                    ;; return the apikey cookie
                    (ring-response {:headers {"Location" (ctx :location)}
                                    :session {:cookie-data cookie-data}
-                                   :apikey cookie-data}
-                                  )
+                                   :apikey cookie-data})
+                   ;; TODO: give PINs
+                   ;; send backup (show QR, also per email?)
 
                    )
                  ;; else confirmation not found
@@ -202,5 +203,8 @@
   :available-media-types ["text/html"]
   :authorized? (fn [ctx] (auth/check request))
 
+  ;; TODO: if none, get NXT from faucet account
+  ;; to cover the transaction fee. also check a maximum
+  ;; limit of transactions per day.
   :handle-ok (fn [ctx] (auth/check request))
   )

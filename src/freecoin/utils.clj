@@ -25,6 +25,7 @@
 
 (ns freecoin.utils
   (:require
+   [liberator.dev]
    [json-html.core :as present]
    [hiccup.page :as page]
 
