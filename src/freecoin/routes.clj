@@ -35,16 +35,11 @@
 
    ;; [environ.core :refer [env]]
 
-   [freecoin.secretshare :as ssss]
-   [freecoin.actions :as actions]
    [freecoin.params :as param]
 
    [freecoin.utils :as util]
    [freecoin.auth :as auth]
 
-   [freecoin.storage :as storage]
-
-   [freecoin.fxc :as fxc]
    [freecoin.nxt :as nxt]
    [freecoin.wallet :as wallet]
    )
@@ -56,14 +51,6 @@
   (liberator.representation/ring-response
    {:body "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/\"></head></html>"
     :headers {"Location" "/"}})
-  )
-
-
-(defresource serve [request content]
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-;  :as-response (fn [d ctx] (#'cookie-response d ctx))
-  :handle-ok  (ring-response {:body content})
   )
 
 ;; debug
@@ -83,13 +70,18 @@
   (ANY "/echo" [request] (echo request))
 
   (ANY "/"        [request] (wallet/balance request))
-  (ANY "/version" [request] (serve request
-                                   (format "Freecoin %s running on %s version %s (%s)"
-                                           (param/version)
-                                           (.. System getProperties (get "os.name"))
-                                           (.. System getProperties (get "os.version"))
-                                           (.. System getProperties (get "os.arch")))
-                                   ))
+  (ANY "/version" [] (resource
+                      :available-media-types ["text/html" "application/json"]
+                      :exists? {::hello  {:Freecoin "D-CENT"
+                                          :version param/version
+                                          :license "AGPLv3"
+                                          :os-name (.. System getProperties (get "os.name"))
+                                          :os-version (.. System getProperties (get "os.version"))
+                                          :os-arch (.. System getProperties (get "os.arch"))}}
+
+                      :handle-ok #(util/pretty (::hello %))
+                      :handle-create #(::hello %)
+                      ))
   
   ;; Wallet operations
   
@@ -100,8 +92,13 @@
   (ANY "/wallet/balance" [request] (wallet/balance request))
   (ANY "/wallet/qrcode" [request] (wallet/qrcode request))
 
-  (ANY "/give/:recipient/:quantity" [recipient quantity :as request]
-       (wallet/give request recipient quantity))
+
+  ;; Search function
+  (ANY "/find/:key/:value" [key value :as request] (wallet/find request key value))
+
+  ;; Money transfers
+  (ANY "/give/:recipient/:amount" [recipient amount :as request]
+       (wallet/give request recipient amount))
 
 
 

@@ -54,6 +54,9 @@
                  ;; json rendering
                  [json-html "0.2.8"]
 
+                 ;; json normalizing
+                 [autoclave "0.1.7"]
+
                  ;; json serialization and encryption
                  [com.taoensso/nippy "2.8.0"]
 
@@ -80,6 +83,8 @@
                  ;; qrcode
                  [clj.qrgen "0.3.0"]
 
+                 ;; code analysis: call-graph
+                 [cc.artifice/lein-gossip "0.2.1"]
                  ]
   :env [
         [:base-url "http://localhost:3000"]

@@ -33,7 +33,12 @@ As this is a work in progress, each section reports API completion with TODO and
 
 Open the wallet. Returns `balance` as text/html.
 
-#### example response (TODO)
+#### example call
+POST http://localhost:8000/wallet
+Content-Type: application/json
+#
+
+#### example response
 
 <div>
     <table>
@@ -220,6 +225,14 @@ Send `amount` to `vendor` in exchange of service credit for another `participant
 
 Same as GET operations, with POST fields `amount` and `vendor`, optional field `participant`.
 
+
+# Transparent bridge to NXT API
+
+If activated, there is a transparent bridge to most NXT API calls via `GET` on the `/nxt/` url.
+
+This works for instance for `/nxt/getState` or `/nxt/getBalance` and will return a formatted HTML5 page with results. Account ID is set automatically from the currently logged in user.
+
+
 # Key encryption scheme
 
 Authentication in Freecoin is based on Shamir's Secret Sharing encryption scheme (SSSS).
@@ -237,25 +250,9 @@ We want a situation in which one of these actors alone is not able to access the
 
 The last case, Participant & Vendor, will likely not occur in normal situations, but is a warranty that the funds will exist even if the Organization disappears.
 
-# Bridge to NXT
-
-## GET /nxt/getState
-
-Reports the server statistics (getStatus) from the configured nxt server
-
-#### example response
-
-    {"numberOfPeers":464,"numberOfGoods":984,"numberOfUnlockedAccounts":0,"numberOfTransfers":116938,"numberOfOrders":4794,"numberOfTransactions":1264041,"maxMemory":893386752,"numberOfOffers":80,"isScanning":false,"cumulativeDifficulty":"17246844613317733","numberOfCurrencies":1814,"numberOfAssets":520,"freeMemory":116422992,"peerPort":7874,"availableProcessors":4,"numberOfAccounts":109511,"needsAdminPassword":true,"numberOfBlocks":430829,"isTestnet":false,"numberOfCurrencyTransfers":708,"requestProcessingTime":5455,"version":"1.4.18","numberOfBidOrders":1106,"lastBlock":"6250658716572190037","totalMemory":345505792,"application":"NRS","numberOfAliases":142259,"lastBlockchainFeederHeight":430828,"numberOfExchanges":1684,"numberOfTrades":98485,"numberOfPurchases":757,"numberOfTags":723,"isOffline":false,"time":46761926,"numberOfAskOrders":3688,"lastBlockchainFeeder":"217.17.88.5"}
-
-## GET /server/getPeers
-
-List the number of NXT peers connected by the configured nxt server
-
-#### example response
-
-    {"peers":["173.224.126.254","194.135.95.148","85.214.222.82"],"requestProcessingTime":7}
-
 ## FXC implementation
+
+![FXC call graph](freecoin_fxc.png)
 
 This implementation is called "FXC protocol" and this is version 1.
 
@@ -290,6 +287,8 @@ Example:
 
 
 The random is a long integer encoded using hashid using an alphabet that is fine tuned to not include any ambiguous character and eventually be communicated between humans without the use of computers. The salt used to hashid encode is semi-secret and is communicated to all parties.
+
+![SecretShare call graph](freecoin_secretshare.png)
 
 ## Tokens
 
