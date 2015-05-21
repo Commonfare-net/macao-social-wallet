@@ -30,6 +30,12 @@
 
 (def version "software release version" "0.2")
 
+
+;; TODO: perhaps already configured in ring?
+(def host
+  {:address "localhost"
+   :port 8000})
+
 (def webapp
   {:db-config {:host "localhost"
                :port 27017

@@ -20,16 +20,60 @@ All failing operations may also return an error in the form:
 
 As this is a work in progress, each section reports API completion with TODO and DONE sections.
 
+# Card
+
+A card is the public facing information for every participant, it can be distributed and then used by the organization (and others participants, if allowed) to send any amount of value to the participant. It includes a qrcode that links directly to the `/send` endpoint.
+
+ - DONE
+   - GET|POST  /
+   - GET  /qrcode/:name
+   - GET  /find/key/value
+
+## GET|POST /
+
+Return a `card` including fields: `name`, `email`, `address` and a `qrcode`.
+
+The `address` is a unique identifier of the user's public identity on the blockchain.
+
+The qrcode is an html link to the `/qrcode` endpoint.
+
+#### example call
+POST http://localhost:8000/
+Content-Type: application/json
+#### example response
+     {
+         "QR": "<img src=\"/wallet/qrcode\" alt=\"QR\">",
+         "name": "Monaca",
+         "email": "monza@monastero.it",
+         "address": "NXT-L5RG-P7X9-DASP-6BWFV"
+     }
+
+Note: this is inaccurate until the embedding of the image is done inside the json (TODO).
+
+## GET /qrcode/:name
+
+Retrieve a QRCode image that, once scanned, will redirect to the `/send` url to transfer funds to the participant.
+
+#### example call
+GET http://localhost:8000/qrcode/Monaca
+Content-Type: text/html
+#### example response
+
+An PNG image with content-type `image/png` will be returned. This url can be directly used inside `<img src="">` fields.
+
 # Wallet
 
+A `wallet` is the private space where participants can check the funds they own.
+
+ - DONE
+   - POST     /wallet/create
+   - GET      /wallet/create/:confirmation
+
  - TODO
-   - GET /wallet
-   - POST /wallet
-   - POST /wallet/create
-   - GET /wallet/create/:confirmation
-   - POST /wallet/recover
-   
-## GET /wallet
+   - GET/POST /wallet
+   - POST     /wallet/recover
+
+## GET/POST /wallet
 
 Open the wallet. Returns `balance` as text/html.
 
@@ -40,39 +84,14 @@ Content-Type: application/json
 
 #### example response
 
-<div>
-    <table>
-        <tbody>
-            <tr>
-                <th>nxtpass</th>
-                <td>FXC1_WYVWDPEE9Z2E_FXC_3QV8MD9LMLML_0</td>
-            </tr>
-            <tr>
-                <th>_id</th>
-                <td>FXC1_51403b99-0574-4d45-a437-a3c17f77ab54_FXC_39f55e39-20b0-4e67-8135-b55ea657a87c</td>
-            </tr>
-            <tr>
-                <th>name</th>
-                <td>jaromil</td>
-            </tr>
-            <tr>
-                <th>email</th>
-                <td>jaromil@dyne.org</td>
-            </tr>
-        </tbody>
-    </table>
-</div>     
-
-
-## POST /wallet
-
-Same as get, returns a JSON structure as:
-
     {
         "name": "nickname"
         "email": "email@address"
         "balance": float
         "created": date of wallet creation
+        "last_access": date of last access
+        "last_location": location (IP) of last access
+        "last_transaction": link to the last transaction occurred
     }
 
 ## POST /wallet/create
@@ -103,7 +122,9 @@ Content-Type: application/json
 
 ## GET /wallet/create/:confirmation
 
-Check if the `confirmation` code is correct, then proceed creating the wallet. Returns the full wallet structure (design in progress).
+Check if the `confirmation` code is correct, then proceed creating the wallet.
+
+Returns the full wallet structure (design in progress).
 
 ## POST /wallet/recover
 
@@ -124,12 +145,12 @@ Will setup an url to have session cookies on a browser and return success.
         "apikey": "6mHAzKHuLclviVAm"
     }
 
-# Sending
+# Sending (TODO)
 
 Sending among participants is optional and depends from the monetary system setting by the issuing organization. If allowed the send API will be available for a "free market" among participants, making them able to transfer amounts among themselves.
 
  - TODO
-   - GET /send/:participant/:amount
+   - GET  /send/:participant/:amount
    - POST /send
    
 ## GET /send/:participant/:amount
@@ -152,10 +173,10 @@ Send `amount` to `participant`, return a machine readable json with the `txid`
     {
         "amount": 100
         "recipient": "luther"
-        "txid": "z5oJGVVKiWTLizpT"
+        "transaction": the id of the transaction
     }
 
-# Stashes
+# Stashes (TODO)
 
 A stash is a pre-defined amount that can be transferred off-line using a secret code or image (qrcode)
 
@@ -191,13 +212,11 @@ Same as GET, but with POST field `stash-id`
 
 
 
-# Clearing house
+# Clearing house (TODO)
 
 Clearing house must be interfaced with democratic decision making tools
 
 Objective8, YourPriorities, DemocracyOS, Mutual_Credit
-
-## TODO
 
 
 
@@ -215,11 +234,11 @@ Vendor value transactions must be customized ad-hoc for pilots: transport compan
 
 ## GET /vendor/send/:amount/:vendor
 
-Send `amount` to `vendor` in exchange for service credit for self, returns human readable message, all accepted fields and `txid` linking to transaction.
+Send `amount` to `vendor` in exchange for service credit for self, returns human readable message, all accepted fields and an id linking to the `transaction`.
 
 ## GET /vendor/send/:amount/:vendor/:participant
 
-Send `amount` to `vendor` in exchange of service credit for another `participant`, returns human readable message, all accepted fields plus a `txid` linking to transaction.
+Send `amount` to `vendor` in exchange of service credit for another `participant`, returns human readable message, all accepted fields plus an id linking to the `transaction`.
 
 ## POST /vendor/send
 

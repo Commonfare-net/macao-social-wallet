@@ -69,7 +69,6 @@
   ;; debug
   (ANY "/echo" [request] (echo request))
 
-  (ANY "/"        [request] (wallet/balance request))
   (ANY "/version" [] (resource
                       :available-media-types ["text/html" "application/json"]
                       :exists? {::hello  {:Freecoin "D-CENT"
@@ -85,18 +84,23 @@
   
   ;; Wallet operations
   
-  (ANY "/wallet" [request] (wallet/balance request))
+  (ANY "/"         [request] (wallet/card request))
+
+  (ANY "/qrcode" [request] (wallet/qrcode request nil))
+  (ANY "/qrcode/:name" [name :as request] (wallet/qrcode request name))
+
+
+
+;;  (ANY "/wallet" [request] (wallet/balance request))
   (ANY "/wallet/create" [request] (wallet/create request))
   (ANY "/wallet/create/:confirmation" [confirmation :as request]
        (wallet/confirm_create request confirmation))
-  (ANY "/wallet/balance" [request] (wallet/balance request))
-  (ANY "/wallet/qrcode" [request] (wallet/qrcode request))
 
 
   ;; Search function
-  (ANY "/find/:key/:value" [key value :as request] (wallet/find request key value))
+  (ANY "/find/:key/:value" [key value :as request] (wallet/find-card request key value))
 
-  ;; Money transfers
+  ;; Money transfers (TODO)
   (ANY "/give/:recipient/:amount" [recipient amount :as request]
        (wallet/give request recipient amount))
 

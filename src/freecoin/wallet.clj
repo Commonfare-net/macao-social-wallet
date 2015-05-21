@@ -1,3 +1,31 @@
+;; Freecoin - digital social currency toolkit
+
+;; part of Decentralized Citizen Engagement Technologies (D-CENT)
+;; R&D funded by the European Commission (FP7/CAPS 610349)
+
+;; Copyright (C) 2015 Dyne.org foundation
+;; Copyright (C) 2015 Thoughtworks, Inc.
+
+;; Sourcecode designed, written and maintained by
+;; Denis Roio <jaromil@dyne.org>
+
+;; With contributions by
+;; Gareth Rogers <grogers@thoughtworks.com>
+;; Duncan Mortimer <dmortime@thoughtworks.com>
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 (ns freecoin.wallet
   (:require
    [clojure.string :as str]
@@ -20,15 +48,40 @@
    [freecoin.fxc :as fxc]
    [freecoin.nxt :as nxt]
 
-   [cheshire.core :refer :all :as cheshire]
+   [cheshire.core :as cheshire]
 
    [clj.qrgen :as qr]
 
-   [taoensso.nippy :as nippy]
+;;   [taoensso.nippy :as nippy]
 
-   [autoclave.core :refer :all]
+   [autoclave.core :as autoclave]
    )
   )
+
+
+(defn- format-card-html [card]
+  {:post [(contains? % :address)]}
+
+  (if (empty? card) {:address "not found."}
+      {:QR (format "<img src=\"/qrcode/%s\" alt=\"QR\">" (:name card))
+       :name (:name card)
+       :email (:email card)
+       :address (:accountRS card)})
+  )
+
+(defn- format-card-json [card]
+  {:post [(string? %)]}
+  (if (empty? card) "{\"address\": \"not found.\"}"
+      (cheshire/generate-string
+       ;; TODO: make an inline image of the qrcode, see:
+       ;; http://www.websiteoptimization.com/speed/tweak/inline-images/
+       {:QR "<img src=\"/qrcode\" alt=\"QR\">"
+        :name (:name card)
+        :email (:email card)
+        :address (:accountRS card)}
+       ))
+  )
+
 
 
 (defn find-wallet [request key value]
@@ -39,6 +92,63 @@
   (storage/find-by-key 
                (get-in request [:config :db-connection])
                "wallets" {key value}))
+
+(defresource card [request]
+  :allowed-methods       [:get :post]
+  :available-media-types ["text/html" "application/json"]
+  :authorized?           (auth/check request)
+
+  :handle-ok      #(format-card-html (:wallet %))
+  :handle-created #(format-card-json (:wallet %))
+)
+
+(defresource find-card [request key value]
+  :allowed-methods       [:get :post]
+  :available-media-types ["text/html" "application/json"]
+  :authorized?           (auth/check request)
+
+  :exists?         {::found (first (find-wallet request (keyword key) value))}
+  :handle-ok       #(format-card-html (::found %))
+  :handle-created  #(format-card-json (::found %))
+  )
+
+(defresource qrcode [request name]
+  :allowed-methods [:get]
+  :available-media-types ["image/png"]
+  :authorized? (fn [ctx] (auth/check request))
+  :handle-ok #(if (nil? name)
+                ;; name is the currently logged in user
+                (let [wallet (:wallet %)]
+                  (if (empty? wallet) ""
+                      (qr/as-input-stream
+                       (qr/from (format "http://%s:%d/give/%s"
+                                        (:address param/host)
+                                        (:port param/host)
+                                        (:accountRS wallet))))
+                      ))
+                ;; else a name is specified
+                (let [wallet (first (find-wallet request :name name))]
+                  (if (empty? wallet) ""
+                      (qr/as-input-stream
+                       (qr/from (format "http://%s:%d/give/%s"
+                                        (:address param/host)
+                                        (:port param/host)
+                                        (:accountRS wallet))))                      
+                      ))
+                ))
+
+
+(defresource give [request recipient quantity]
+  :allowed-methods       [:get :post]
+  :available-media-types ["text/html" "application/json"]
+  :authorized?           (auth/check request)
+
+  ;; TODO: if none, get NXT from faucet account
+  ;; to cover the transaction fee. also check a maximum
+  ;; limit of transactions per day.
+  :handle-ok (fn [ctx] (auth/check request))
+  )
+
 
 
 ;; Methods:
@@ -58,7 +168,7 @@
   :available-media-types ["application/json"]                  
 
   :exists? (fn [ctx]
-             (let [params (json-sanitize (slurp  (get-in ctx [:request :body])))
+             (let [params (autoclave/json-sanitize (slurp  (get-in ctx [:request :body])))
                    mapped_params  (cheshire/parse-string params true)
                    param_name (:name mapped_params)
                    param_email (:email mapped_params)
@@ -162,29 +272,6 @@
 
   )
 
-
-(defn- format-card-html [ctx]
-  {:post [(contains? % :address)]}
-
-  (if (empty? ctx) {:address "not found."}
-      {:QR "<img src=\"/wallet/qrcode\" alt=\"QR\">"
-       :name (:name ctx)
-       :email (:email ctx)
-       :address (:accountRS ctx)})
-  )
-
-(defn- format-card-json [ctx]
-  {:post [(string? %)]}
-  (if (empty? ctx) "{\"address\": \"not found.\"}"
-      (cheshire/generate-string
-       ;; TODO: make an inline image of the qrcode, see:
-       ;; http://www.websiteoptimization.com/speed/tweak/inline-images/
-       {:QR "<img src=\"/wallet/qrcode\" alt=\"QR\">"
-        :name (:name ctx)
-        :email (:email ctx)
-        :address (:accountRS ctx)}
-       ))
-  )
               
 ;; Reminder, but NEVER show nxtpass!
 ;; {:nxtpass (fxc/unlock-secret
@@ -192,46 +279,3 @@
 ;;            (auth/get-secret request apikey) (:slice apikey))}
 ;;-----------------------------------------------------------
               
-
-(defresource balance [request]
-  :allowed-methods       [:get :post]
-  :available-media-types ["text/html" "application/json"]
-  :authorized?           (auth/check request)
-
-  :handle-ok      #(format-card-html (:wallet %))
-  :handle-created #(format-card-json (:wallet %))
-)
-
-(defresource qrcode [request]
-  :allowed-methods [:get]
-  :available-media-types ["image/png"]
-  :authorized? (fn [ctx] (auth/check request))
-  :handle-ok (fn [ctx]
-               (let [wallet (:wallet ctx)]
-                 (if (empty? wallet) ""
-                     (qr/as-input-stream
-                      (qr/from (format "http://localhost:8000/give/%s" (:accountRS wallet))))
-               ))
-  ))
-
-
-(defresource find [request key value]
-  :allowed-methods       [:get :post]
-  :available-media-types ["text/html" "application/json"]
-  :authorized?           (auth/check request)
-
-  :exists?         {::found (first (find-wallet request (keyword key) value))}
-  :handle-ok       #(format-card-html (::found %))
-  :handle-created  #(format-card-json (::found %))
-  )
-
-(defresource give [request recipient quantity]
-  :allowed-methods       [:get :post]
-  :available-media-types ["text/html" "application/json"]
-  :authorized?           (auth/check request)
-
-  ;; TODO: if none, get NXT from faucet account
-  ;; to cover the transaction fee. also check a maximum
-  ;; limit of transactions per day.
-  :handle-ok (fn [ctx] (auth/check request))
-  )

@@ -10,3 +10,6 @@ all: api
 
 api:
 	restdown API.md -m .
+
+upload: api
+	rsync -Pr API.html dyne@web-us.dyne.org:webapps/freecoin/api/index.html
