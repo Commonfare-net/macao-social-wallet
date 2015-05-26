@@ -31,7 +31,7 @@
    [liberator.core :refer [resource defresource]]
 
    [liberator.representation :refer [as-response ring-response]]
-   [compojure.core :refer [defroutes ANY]]
+   [compojure.core :refer [defroutes ANY GET POST]]
 
    ;; [environ.core :refer [env]]
 
@@ -91,8 +91,9 @@
 
 
 
-;;  (ANY "/wallet" [request] (wallet/balance request))
-  (ANY "/wallet/create" [request] (wallet/create request))
+  ;;  (ANY "/wallet" [request] (wallet/balance request))
+  (GET "/wallet/create" [request] (wallet/create-form request))
+  (POST "/wallet/create" [request] (wallet/create request))
   (ANY "/wallet/create/:confirmation" [confirmation :as request]
        (wallet/confirm_create request confirmation))
 

@@ -30,6 +30,10 @@
   (:require
    [clojure.string :as str]
 
+   [hiccup.page :as page]
+   [formative.core :as fc]
+   [formative.parse :as fp]
+
    [liberator.dev]
    [liberator.core :refer [resource defresource]]
    [liberator.representation :refer [as-response ring-response]]
@@ -156,8 +160,32 @@
 ;; confirm_create (request-id)
 ;; open
 
-(defresource create [request]
+(def wallet-create-form
+  {:fields [{:name :name :type :text}
+            {:name :email :type :email}]
+   :validations [[:required [:name :email]]]})
 
+(defresource create-form [request]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx]
+               (page/html5 (fc/render-form wallet-create-form))))
+
+(defn parse-hybrid-form [form-spec request]
+  (case (get-in request [:headers "content-type"])
+    "application/x-www-form-urlencoded"
+    (fp/with-fallback
+      (fn [problems] {:status :error :problems problems})
+      {:status :ok
+       :data (fp/parse-params form-spec (:params request))})
+
+    "application/json"
+    {:status :ok
+     :data (cheshire/parse-string (autoclave/json-sanitize (slurp (:body request))) true)}
+    
+    {:status :error :problems "unknown content type"}))
+
+(defresource create [request]
 ;; Files a request to create a wallet, accepting a json structure
 ;; containing name and email. Checks if the name doesn't already
 ;; exists, if succesful returns a json structure containing the
@@ -165,39 +193,39 @@
 ;; creation via GET url /wallet/create/confirmation-hash.
 
   :allowed-methods [:post]
-  :available-media-types ["application/json"]                  
+  :available-media-types ["application/json"]
 
   :exists? (fn [ctx]
-             (let [params (autoclave/json-sanitize (slurp  (get-in ctx [:request :body])))
-                   mapped_params  (cheshire/parse-string params true)
-                   param_name (:name mapped_params)
-                   param_email (:email mapped_params)
-                   db (get-in request [:config :db-connection])
-                   ;; TODO: optimize using redis k/v for this unauthenticated lookup
-                   dup (storage/find-one db "wallets" {:name param_name})]
-
-               ;; TODO: truncate fields to length for security
-               (if (empty? dup)
-                 ;; no duplicates found
-                 {::params mapped_params ::duplicate false}
-                 ;; else
-                 {::params mapped_params ::duplicate true}
-                 )
-               ))
-
-
+             (let [{status :status params :data problems :problems} (parse-hybrid-form wallet-create-form request)]
+               (case status
+                 :ok
+                 (let [db (get-in request [:config :db-connection])
+                       ;; TODO: optimize using redis k/v for this unauthenticated lookup
+                       dup (storage/find-one db "wallets" {:name (:name params)})]
+                   ;; TODO: truncate fields to length for security
+                   (if (empty? dup)
+                     ;; no duplicates found
+                     {::status :ok ::params params}
+                     ;; else
+                     {::status :error ::params params ::problems "Duplicate username"}
+                     ))
+                   
+                 :error
+                 {::status :error ::params params ::problems problems})))
 
   :post! (fn [ctx]
-           (if (::duplicate ctx) nil
-               {::confirmation (ssss/hash-encode-num
-                                param/encryption (:integer (rand/create 16 2.5)))}
-               ))
+           (case (::status ctx)
+             :ok
+             {::confirmation (ssss/hash-encode-num
+                               param/encryption (:integer (rand/create 16 2.5)))}
+
+             {}))
 
   ;; :post-redirect? (fn [ctx] (response/redirect  (format "/open/%s" (::id ctx))))
   ;;  :respond-with-entity? true
   :handle-created (fn [ctx]
-                    (if (::duplicate ctx)
-                      {:error 'DUP :explanation "Name already exists, choose another."}
+                    (if (= :error (::status ctx))
+                      {:error (::problems ctx)}
                       
                       ;; insert request
                       (let [name (get-in ctx [::params :name])
@@ -209,13 +237,14 @@
                                     {:_id   confirm
                                      :name  name
                                      :email email})]
-                        
-                        {:body stored
-                         :confirm (str "/wallet/create/" confirm)}
-                        ))
-                    )
-  )
+                        (case (get-in request [:headers "content-type"])
+                          "application/json"
+                          {:body stored
+                           :confirm (str "/wallet/create/" confirm)}
 
+                          "application/x-www-form-urlencoded"
+                          {:body stored
+                           :confirm (str "<a href=\"/wallet/create/" confirm "\">confirm link</a>")})))))
 
 (defresource confirm_create [request confirmation]
   :allowed-methods [:get]

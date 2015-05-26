@@ -47,6 +47,9 @@
 
                  ;; templating
                  [enlive "1.1.5"]
+                 
+                 ;; Form generation / validation
+                 [formative "0.8.8"]
 
                  ;; json marshalling
                  [cheshire "5.4.0"]
