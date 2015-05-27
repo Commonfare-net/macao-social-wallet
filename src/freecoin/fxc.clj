@@ -41,6 +41,14 @@
 (declare extract-ahal)
 (declare extract-int)
 
+
+(defn new-passphrase [conf type]
+  (format "%s_%s_FXC_%s_%s" (:prefix conf)
+          (ssss/hash-encode-num conf (:integer (rand/create (:length conf))))
+          (ssss/hash-encode-num conf (:integer (rand/create (:length conf))))
+          type)
+  )
+
 (defn create-secret
   "Takes a configuration and optionally two integers, creates a wallet
   address, returned as a string"
@@ -62,6 +70,8 @@
 
      ;; secret wallet rendering
      ;; slices: collection of rendered string slices for ssss
+
+     ;; unique id
      {:_id (format "%s_%s_FXC_%s" (:prefix conf)
                    (get-in ah [:header :_id])
                    (get-in al [:header :_id]))
