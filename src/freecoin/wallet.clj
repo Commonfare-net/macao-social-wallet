@@ -278,52 +278,51 @@
   :exists? (fn [ctx]
              (let [db (get-in request [:config :db-connection])
                    cc (storage/find-by-id db "confirms" confirmation)]
-                         (if (empty? cc)
-                           ;; no confirmation found
-                           {::found false ::confirmation confirmation}
-                           ;; entry found, proceed
-                           {::found true ::params cc}
-                           )))
+               (if (empty? cc)
+                 ;; no confirmation found
+                 {::found false ::confirmation confirmation}
+                 ;; entry found, proceed
+                 {::found true ::params cc}
+                 )))
   
-  :handle-ok (fn [ctx]
-               ;; the confirmation was found
-               (if (::found ctx)
-                 ;; proceed with the wallet creation
-                 (let [params (::params ctx)
-                       db (get-in request [:config :db-connection])
-                       secret (fxc/create-secret param/encryption)
-                       cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
-                       secret-without-cookie (dissoc secret :cookie)
-                       nxt-data (nxt/getAccountId 
-                                 {:secret (fxc/unlock-secret
-                                           param/encryption
-                                           secret-without-cookie
-                                           (:cookie secret))})]
-                                                                 
-                   ;; delete the confirmation entry from the db
-                   (storage/remove-by-id db "confirms" (:_id params))
+  :handle-created (fn [ctx]
+                    ;; the confirmation was found
+                    (if (::found ctx)
+                      ;; proceed with the wallet creation
+                      (let [params (::params ctx)
+                            db (get-in request [:config :db-connection])
+                            secret (fxc/create-secret param/encryption)
+                            cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
+                            secret-without-cookie (dissoc secret :cookie)
+                            nxt-data (nxt/getAccountId 
+                                      {:secret (fxc/unlock-secret
+                                                param/encryption
+                                                secret-without-cookie
+                                                (:cookie secret))})]
+                        ;; delete the confirmation entry from the db
+                        (storage/remove-by-id db "confirms" (:_id params))
 
-                   ;; insert in the secrets database
-                   (storage/insert db "secrets" secret-without-cookie)
+                        ;; insert in the secrets database
+                        (storage/insert db "secrets" secret-without-cookie)
 
-                   ;; insert in the wallet database
-                   (storage/insert db "wallets"
-                                   (conj nxt-data {:name  (:name params)
-                                                   :email (:email params)
-                                                   :_id (:_id secret-without-cookie)}))
-                   
-                   ;; return the apikey cookie
-                   (ring-response {:headers {"Location" (ctx :location)}
-                                   :session {:cookie-data cookie-data}
-                                   :apikey cookie-data})
-                   ;; TODO: give PINs
-                   ;; send backup (show QR, also per email?)
+                        ;; insert in the wallet database
+                        (storage/insert db "wallets"
+                                        (conj nxt-data {:name  (:name params)
+                                                        :email (:email params)
+                                                        :_id (:_id secret-without-cookie)}))
+                        
+                        ;; return the apikey cookie
+                        (ring-response {:headers {"Location" (ctx :location)}
+                                        :session {:cookie-data cookie-data}
+                                        :apikey cookie-data})
+                        ;; TODO: give PINs
+                        ;; send backup (show QR, also per email?)
 
-                   )
-                 ;; else confirmation not found
-                 {:debug (util/trace)
-                  :error "Confirmation not found."
-                  :id (::confirmation ctx)})))
+                        )
+                      ;; else confirmation not found
+                      {:debug (util/trace)
+                       :error "Confirmation not found."
+                       :id (::confirmation ctx)})))
 
               
 ;; Reminder, but NEVER show nxtpass!
