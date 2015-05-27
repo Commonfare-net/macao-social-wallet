@@ -43,10 +43,9 @@
 (fact "Secret FXC codec"
 
   ;; manual creation of an nxt address to intercept it in clear
-  (def fake {:ah (:integer (rand/create (:length param/encryption)
-                                        (:entropy param/encryption)))
-             :al (:integer (rand/create (:length param/encryption)
-                                        (:entropy param/encryption)))
+  (def fake {:ah (:integer (rand/create (:length param/encryption)))
+
+             :al (:integer (rand/create (:length param/encryption)))
              })
   (def nxtpass (fxc/render-slice param/encryption (:ah fake) (:al fake) 0))
   (def secret (fxc/create-secret param/encryption (:ah fake) (:al fake)))

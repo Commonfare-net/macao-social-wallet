@@ -55,20 +55,11 @@
 
 ;; creates a random biginteger of specified length and entropy above
 ;; the specified minimum 
-(defn create [length min-entropy]
-  "returns a random integer of length with a shannon entropy level above the minimum
-   as map { :integer :string :entropy }"
-  (def res-str "")
-  (loop [ent 0.0]
-    (when (< ent min-entropy)
-      (def res-str (intchain length))
-      (recur (float (entropy res-str)))
-      )
+(defn create [length]
+  "returns a random integer of length as map { :integer :string }"
+  (let [res (intchain length)]
+    {:integer (biginteger res)
+     :string (str res)}
     )
-  {:integer (biginteger res-str)
-   :string (str res-str)
-   :entropy (entropy res-str)
-   }
-
   )
 

@@ -4,5 +4,5 @@
 
 (fact "Checking random generator"
   (fact "proper size returned"
-    (.length (:string (random/create 20 3.0))) => 20))
+    (.length (:string (random/create 20))) => 20))
 

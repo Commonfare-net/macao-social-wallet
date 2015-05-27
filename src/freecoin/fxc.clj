@@ -46,8 +46,8 @@
   address, returned as a string"
 
   ([conf]
-   (let [ah (:integer (rand/create (:length conf) (:entropy conf)))
-         al (:integer (rand/create (:length conf) (:entropy conf)))]
+   (let [ah (:integer (rand/create (:length conf)))
+         al (:integer (rand/create (:length conf)))]
      (create-secret conf ah al)
      ))
 
