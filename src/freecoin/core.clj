@@ -43,8 +43,7 @@
    [freecoin.routes :as routes]
    [freecoin.params :as param]
    [freecoin.storage :as storage]
-   [freecoin.secretshare :as ssss]
-   [freecoin.example-cookie-store :as ecs])
+   [freecoin.secretshare :as ssss])
   ;; (:gen-class)
   )
 

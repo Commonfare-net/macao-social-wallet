@@ -8,6 +8,7 @@
              {:dependencies
               [
                [midje "1.6.3"]
+               [peridot "0.3.1"]
 ;               [org.clojure/tools.trace "0.7.8"]
                ]
               :plugins [[lein-midje "3.1.3"]]

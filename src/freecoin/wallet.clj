@@ -62,7 +62,6 @@
    )
   )
 
-
 (defn- format-card-html [card]
   {:post [(contains? % :address)]}
 
@@ -180,8 +179,10 @@
        :data (fp/parse-params form-spec (:params request))})
 
     "application/json"
-    {:status :ok
-     :data (cheshire/parse-string (autoclave/json-sanitize (slurp (:body request))) true)}
+    (let [data (cheshire/parse-string (autoclave/json-sanitize (slurp (:body request))) true)]
+      (fp/with-fallback
+        (fn [problems] {:status :error :problems problems})
+        {:status :ok :data (fp/parse-params form-spec data)}))
     
     {:status :error :problems "unknown content type"}))
 
@@ -195,56 +196,53 @@
   :allowed-methods [:post]
   :available-media-types ["application/json"]
 
-  :exists? (fn [ctx]
-             (let [{status :status params :data problems :problems} (parse-hybrid-form wallet-create-form request)]
-               (case status
-                 :ok
-                 (let [db (get-in request [:config :db-connection])
-                       ;; TODO: optimize using redis k/v for this unauthenticated lookup
-                       dup (storage/find-one db "wallets" {:name (:name params)})]
-                   ;; TODO: truncate fields to length for security
-                   (if (empty? dup)
-                     ;; no duplicates found
-                     {::status :ok ::params params}
-                     ;; else
-                     {::status :error ::params params ::problems "Duplicate username"}
-                     ))
-                   
-                 :error
-                 {::status :error ::params params ::problems problems})))
+  :allowed? (fn [ctx]
+                  (let [{status :status user-data :data problems :problems}
+                        (parse-hybrid-form wallet-create-form request)]
+                    (case status
+                      :ok
+                      (let [db (get-in request [:config :db-connection])]
+                        ;; TODO: optimize using redis k/v for this unauthenticated lookup
+                        (if (storage/find-one db "wallets" {:name (:name user-data)})
+
+                          [false {::user-data user-data
+                                  ::problems [{:keys ["name"] :msg "Username already exists"}]
+                                  :representation {:media-type "application/json"}}]
+                          
+                          [true {::user-data user-data}]))
+
+                      :error
+                      [false {::user-data user-data ::problems problems
+                              :representation {:media-type (get-in request [:headers "content-type"])}}]
+
+                      ;; handle default case
+                      )))
+
+  :handle-forbidden (fn [ctx] {:reason (::problems ctx)})
 
   :post! (fn [ctx]
-           (case (::status ctx)
-             :ok
-             {::confirmation (ssss/hash-encode-num
-                               param/encryption (:integer (rand/create 16 2.5)))}
+           (let [name (get-in ctx [::user-data :name])
+                 email (get-in ctx [::user-data :email])
+                 confirmation-code (ssss/hash-encode-num
+                                    param/encryption (:integer (rand/create 16)))
+                 stored-confirmation (storage/insert
+                                      (get-in request [:config :db-connection])
+                                      "confirms"
+                                      {:_id   confirmation-code
+                                       :name  name
+                                       :email email})]
+             {::confirmation stored-confirmation}))
 
-             {}))
-
-  ;; :post-redirect? (fn [ctx] (response/redirect  (format "/open/%s" (::id ctx))))
-  ;;  :respond-with-entity? true
   :handle-created (fn [ctx]
-                    (if (= :error (::status ctx))
-                      {:error (::problems ctx)}
-                      
-                      ;; insert request
-                      (let [name (get-in ctx [::params :name])
-                            email (get-in ctx [::params :email])
-                            confirm (::confirmation ctx)
-                            stored (storage/insert 
-                                    (get-in request [:config :db-connection])
-                                    "confirms"
-                                    {:_id   confirm
-                                     :name  name
-                                     :email email})]
-                        (case (get-in request [:headers "content-type"])
-                          "application/json"
-                          {:body stored
-                           :confirm (str "/wallet/create/" confirm)}
+                    (let [confirmation (::confirmation ctx)]
+                      (case (get-in request [:headers "content-type"])
+                        "application/json"
+                        {:body confirmation
+                         :confirm (str "/wallet/create/" (:_id confirmation))}
 
-                          "application/x-www-form-urlencoded"
-                          {:body stored
-                           :confirm (str "<a href=\"/wallet/create/" confirm "\">confirm link</a>")})))))
+                        "application/x-www-form-urlencoded"
+                        {:body confirmation
+                         :confirm (str "<a href=\"/wallet/create/" (:_id confirmation) "\">confirm link</a>")}))))
 
 (defresource confirm_create [request confirmation]
   :allowed-methods [:get]

@@ -62,7 +62,7 @@
   :handle-ok (fn [ctx] (util/pretty ctx))
 
   )
-  
+
 ;; routes
 (defroutes app
 
@@ -89,8 +89,6 @@
   (ANY "/qrcode" [request] (wallet/qrcode request nil))
   (ANY "/qrcode/:name" [name :as request] (wallet/qrcode request name))
 
-
-
   ;;  (ANY "/wallet" [request] (wallet/balance request))
   (GET "/wallet/create" [request] (wallet/create-form request))
   (POST "/wallet/create" [request] (wallet/create request))
@@ -105,9 +103,6 @@
   (ANY "/give/:recipient/:amount" [recipient amount :as request]
        (wallet/give request recipient amount))
 
-
-
-
   ;; 1 to 1 NXT api mapping for functions taking up to 2 args
   (ANY "/nxt/:command" [command :as request]
        (nxt/api request {"requestType" command}))
@@ -119,3 +114,4 @@
 
 
   ) ; end of routes
+
