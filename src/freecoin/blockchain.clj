@@ -32,8 +32,6 @@
    [freecoin.storage :as storage])
   )
 
-(def (storage/connect
-
 (defprotocol Blockchain
   ;; account
   (import-account [bck wallet secret])
