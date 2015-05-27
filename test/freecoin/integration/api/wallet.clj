@@ -75,7 +75,7 @@
          (after :facts (destroy-test-session app-state))])
 
        (facts "with content-type application/json"
-              (fact "generates a wallet creation confirmation code when provided with unique username and email address"
+              (fact "when successful, generates a wallet creation confirmation code"
                     (let [{response :response} (-> (:session app-state)
                                                    (p/content-type "application/json")
                                                    (p/request "/wallet/create"
@@ -97,8 +97,10 @@
                       (:status response) => 403
                       (:body response) => (ih/json-contains ?problems)))
 
-               ?user-data                     ?problems
-               {:email "valid@email.com"}     {:reason [{:keys ["name"] :msg "must not be blank"}]})
+               ?user-data                      ?problems
+               {:email "valid@email.com"}      {:reason [{:keys ["name"] :msg "must not be blank"}]}
+               {:name "user"}                  {:reason [{:keys ["email"] :msg "must not be blank"}]}
+               {:name "user" :email "invalid"} {:reason [{:keys ["email"] :msg "must be a valid email"}]})
               
               (fact "returns 403 if a wallet already exists for the given username"
                     (let [wallet (storage/insert (:db-connection app-state) "wallets" {:name "user"})
@@ -108,9 +110,39 @@
                                                               :request-method :post
                                                               :body json-body))]
                       (:status response) => 403
-                      (:body response) => (ih/json-contains {:reason [{:keys ["name"] :msg "Username already exists"}]}))))
+                      (:body response) => (ih/json-contains {:reason [{:keys ["name"] :msg "username already exists"}]}))))
        
-       (future-facts "with content-type application/x-www-form-urlencoded"
-                     (fact "when successful, initiates confirmation process")
-                     (fact "when posted data is invalid, redirects to /wallet/create with error message")
-                     (fact "when username not unique, redirects to /wallet/create with error message")))
+       (facts "with content-type application/x-www-form-urlencoded"
+              (fact "when successful, initiates confirmation process"
+                    (let [{response :response} (-> (:session app-state)
+                                                   (p/content-type "application/x-www-form-urlencoded")
+                                                   (p/request "/wallet/create"
+                                                              :request-method :post
+                                                              :body form-body))]
+                      (:status response) => 303
+                      (:headers response) => (contains {"Location" #"^/wallet/create/"})))
+
+              (tabular
+               (fact "when posted data is invalid, redirects to /wallet/create with error message"
+                     (let [{response :response} (-> (:session app-state)
+                                                    (p/content-type "application/x-www-form-urlencoded")
+                                                    (p/request "/wallet/create"
+                                                               :request-method :post
+                                                               :body ?user-data))]
+                       (:status response) => 403
+                       (:body response) => (contains ?error-text)))
+
+               ?user-data                     ?error-text
+               "name=user"                    #"Email.+: must not be blank"
+               "email=valid@email.com"        #"Name.+: must not be blank"
+               "name=user&email=invalid"      #"Email.+: must be a valid email")
+
+              (fact "when username not unique, redirects to /wallet/create with error message"
+                    (let [wallet (storage/insert (:db-connection app-state) "wallets" {:name "user"})
+                          {response :response} (-> (:session app-state)
+                                                   (p/content-type "application/x-www-form-urlencoded")
+                                                   (p/request "/wallet/create"
+                                                              :request-method :post
+                                                              :body "name=user&email=valid@email.com"))]
+                      (:status response) => 403
+                      (:body response) => (contains #"Name.+: username already exists")))))

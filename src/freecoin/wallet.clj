@@ -186,6 +186,10 @@
     
     {:status :error :problems "unknown content type"}))
 
+(def response-representation
+  {"application/json" "application/json"
+   "application/x-www-form-urlencoded" "text/html"})
+
 (defresource create [request]
 ;; Files a request to create a wallet, accepting a json structure
 ;; containing name and email. Checks if the name doesn't already
@@ -197,28 +201,35 @@
   :available-media-types ["application/json"]
 
   :allowed? (fn [ctx]
-                  (let [{status :status user-data :data problems :problems}
-                        (parse-hybrid-form wallet-create-form request)]
-                    (case status
-                      :ok
-                      (let [db (get-in request [:config :db-connection])]
-                        ;; TODO: optimize using redis k/v for this unauthenticated lookup
-                        (if (storage/find-one db "wallets" {:name (:name user-data)})
+              (let [content-type (get-in request [:headers "content-type"])
+                    {:keys [status data problems]} (parse-hybrid-form
+                                                    wallet-create-form
+                                                    request)]
+                (case status
+                  :ok
+                  (let [db (get-in request [:config :db-connection])]
+                    ;; TODO: optimize using redis k/v for this unauthenticated lookup
+                    (if (storage/find-one db "wallets" {:name (:name data)})
 
-                          [false {::user-data user-data
-                                  ::problems [{:keys ["name"] :msg "Username already exists"}]
-                                  :representation {:media-type "application/json"}}]
-                          
-                          [true {::user-data user-data}]))
+                      [false {::user-data data
+                              ::problems [{:keys ["name"] :msg "username already exists"}]
+                              :representation {:media-type (get response-representation content-type)}}]
 
-                      :error
-                      [false {::user-data user-data ::problems problems
-                              :representation {:media-type (get-in request [:headers "content-type"])}}]
+                      [true {::user-data data}]))
 
-                      ;; handle default case
-                      )))
+                  :error
+                  [false {::user-data data ::problems problems
+                          :representation {:media-type (get response-representation content-type)}}]
 
-  :handle-forbidden (fn [ctx] {:reason (::problems ctx)})
+                  ;; TODO: handle default case
+                  )))
+
+  :handle-forbidden (fn [ctx]
+                      (case (get-in request [:headers "content-type"])
+                        "application/json" {:reason (::problems ctx)}
+
+                        "application/x-www-form-urlencoded"
+                        (page/html5 (fc/render-form (assoc wallet-create-form :problems (::problems ctx))))))
 
   :post! (fn [ctx]
            (let [name (get-in ctx [::user-data :name])
@@ -233,6 +244,17 @@
                                        :email email})]
              {::confirmation stored-confirmation}))
 
+  :post-redirect? (fn [ctx]
+                    (case (get-in request [:headers "content-type"])
+                      "application/json" false
+
+                      "application/x-www-form-urlencoded"
+                      (let [confirmation (::confirmation ctx)]
+                        {:location (str "/wallet/create/" (:_id confirmation))})
+
+                      ;; TODO: handle default case
+                      ))
+
   :handle-created (fn [ctx]
                     (let [confirmation (::confirmation ctx)]
                       (case (get-in request [:headers "content-type"])
@@ -240,12 +262,18 @@
                         {:body confirmation
                          :confirm (str "/wallet/create/" (:_id confirmation))}
 
-                        "application/x-www-form-urlencoded"
-                        {:body confirmation
-                         :confirm (str "<a href=\"/wallet/create/" (:_id confirmation) "\">confirm link</a>")}))))
+                        ;; TODO: handle default case
+                        ))))
 
-(defresource confirm_create [request confirmation]
+(def wallet-confirm-create-form {})
+
+(defresource confirm-create-form [request]
   :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx] (page/html5 (fc/render-form wallet-confirm-create-form))))
+
+(defresource confirm-create [request confirmation]
+  :allowed-methods [:post]
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
              (let [db (get-in request [:config :db-connection])
@@ -295,9 +323,7 @@
                  ;; else confirmation not found
                  {:debug (util/trace)
                   :error "Confirmation not found."
-                  :id (::confirmation ctx)}))
-
-  )
+                  :id (::confirmation ctx)})))
 
               
 ;; Reminder, but NEVER show nxtpass!

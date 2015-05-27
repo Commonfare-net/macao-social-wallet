@@ -92,8 +92,10 @@
   ;;  (ANY "/wallet" [request] (wallet/balance request))
   (GET "/wallet/create" [request] (wallet/create-form request))
   (POST "/wallet/create" [request] (wallet/create request))
-  (ANY "/wallet/create/:confirmation" [confirmation :as request]
-       (wallet/confirm_create request confirmation))
+
+  (GET "/wallet/create/:confirmation" [request] (wallet/confirm-create-form request))
+  (POST "/wallet/create/:confirmation" [confirmation :as request]
+        (wallet/confirm-create request confirmation))
 
 
   ;; Search function
