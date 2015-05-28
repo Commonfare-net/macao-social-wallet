@@ -30,7 +30,6 @@
   (:require
    [clojure.string :as str]
 
-   [hiccup.page :as page]
    [formative.core :as fc]
    [formative.parse :as fp]
 
@@ -39,6 +38,14 @@
    [liberator.representation :refer [as-response ring-response]]
 
    [ring.util.io :refer [piped-input-stream]]
+
+   [cheshire.core :as cheshire]
+
+   [clj.qrgen :as qr]
+
+;;   [taoensso.nippy :as nippy]
+
+   [autoclave.core :as autoclave]
 
    [freecoin.secretshare :as ssss]
 
@@ -52,13 +59,8 @@
    [freecoin.fxc :as fxc]
    [freecoin.nxt :as nxt]
 
-   [cheshire.core :as cheshire]
-
-   [clj.qrgen :as qr]
-
-;;   [taoensso.nippy :as nippy]
-
-   [autoclave.core :as autoclave]
+   [freecoin.views :as views]
+   
    )
   )
 
@@ -175,6 +177,7 @@
 ;; confirm_create (request-id)
 ;; open
 
+
 (def wallet-create-form
   {:fields [{:name :name :type :text}
             {:name :email :type :email}]
@@ -184,10 +187,13 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
-               (page/html5 (fc/render-form wallet-create-form))))
+               (views/render-page views/simple-form-template
+                                  {:title "Create wallet"
+                                   :heading "Create a new wallet"
+                                   :form-spec wallet-create-form})))
 
-(defn parse-hybrid-form [form-spec request]
-  (case (get-in request [:headers "content-type"])
+(defn parse-hybrid-form [form-spec {:keys [request] :as ctx}]
+  (case (::content-type ctx)
     "application/x-www-form-urlencoded"
     (fp/with-fallback
       (fn [problems] {:status :error :problems problems})
@@ -200,52 +206,66 @@
         (fn [problems] {:status :error :problems problems})
         {:status :ok :data (fp/parse-params form-spec data)}))
     
-    {:status :error :problems "unknown content type"}))
+    {:status :error :problems [{:keys [] :msg (str "unknown content type: " (::content-type ctx))}]}))
 
 (def response-representation
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})
 
 (defresource create [request]
-;; Files a request to create a wallet, accepting a json structure
-;; containing name and email. Checks if the name doesn't already
-;; exists, if succesful returns a json structure containing the
-;; 'confirmation' field which is the hash to be used to confirm
-;; creation via GET url /wallet/create/confirmation-hash.
+  ;; Files a request to create a wallet, accepting a json structure
+  ;; containing name and email. Checks if the name doesn't already
+  ;; exists, if succesful returns a json structure containing the
+  ;; 'confirmation' field which is the hash to be used to confirm
+  ;; creation via GET url /wallet/create/confirmation-hash.
+
+  
+  ;; Liberator doesn't provide a way to initialise the context;
+  ;; service-available? is the first decision point, and defaults to
+  ;; 'true'.   Thus, we'll use it to add some convenient values to our context.
+  ;; Will create a PR for liberator to add an 'initialise' key. DM
+  :service-available? {::db (get-in request [:config :db-connection])
+                       ::content-type (get-in request [:headers "content-type"])}
 
   :allowed-methods [:post]
   :available-media-types ["application/json"]
 
   :allowed? (fn [ctx]
-              (let [content-type (get-in request [:headers "content-type"])
-                    {:keys [status data problems]} (parse-hybrid-form
+              (let [{:keys [status data problems]} (parse-hybrid-form
                                                     wallet-create-form
-                                                    request)]
+                                                    ctx)]
                 (case status
                   :ok
-                  (let [db (get-in request [:config :db-connection])]
-                    ;; TODO: optimize using redis k/v for this unauthenticated lookup
-                    (if (storage/find-one db "wallets" {:name (:name data)})
+                  ;; TODO: optimize using redis k/v for this unauthenticated lookup
+                  (if (storage/find-one (::db ctx) "wallets" {:name (:name data)})
 
-                      [false {::user-data data
-                              ::problems [{:keys ["name"] :msg "username already exists"}]
-                              :representation {:media-type (get response-representation content-type)}}]
+                    [false {::user-data data
+                            ::problems [{:keys ["name"] :msg "username already exists"}]
+                            :representation {:media-type (get response-representation
+                                                              (::content-type ctx))}}]
 
-                      [true {::user-data data}]))
+                    [true {::user-data data}])
 
                   :error
-                  [false {::user-data data ::problems problems
-                          :representation {:media-type (get response-representation content-type)}}]
-
+                  [false {::user-data data
+                          ::problems problems
+                          :representation {:media-type
+                                           (get response-representation (::content-type ctx))}}]
+                  
                   ;; TODO: handle default case
                   )))
 
   :handle-forbidden (fn [ctx]
-                      (case (get-in request [:headers "content-type"])
+                      (case (::content-type ctx)
                         "application/json" {:reason (::problems ctx)}
 
                         "application/x-www-form-urlencoded"
-                        (page/html5 (fc/render-form (assoc wallet-create-form :problems (::problems ctx))))))
+                        (views/render-page views/simple-form-template
+                                           {:title "Create wallet"
+                                            :heading "Create a new wallet"
+                                            :form-spec (assoc wallet-create-form
+                                                              :problems (::problems ctx)
+                                                              :values (::user-data ctx))})))
 
   :post! (fn [ctx]
            (let [name (get-in ctx [::user-data :name])
@@ -253,7 +273,7 @@
                  confirmation-code (ssss/hash-encode-num
                                     param/encryption (:integer (rand/create 16)))
                  stored-confirmation (storage/insert
-                                      (get-in request [:config :db-connection])
+                                      (::db ctx)
                                       "confirms"
                                       {:_id   confirmation-code
                                        :name  name
@@ -261,7 +281,7 @@
              {::confirmation stored-confirmation}))
 
   :post-redirect? (fn [ctx]
-                    (case (get-in request [:headers "content-type"])
+                    (case (::content-type ctx)
                       "application/json" false
 
                       "application/x-www-form-urlencoded"
@@ -273,7 +293,7 @@
 
   :handle-created (fn [ctx]
                     (let [confirmation (::confirmation ctx)]
-                      (case (get-in request [:headers "content-type"])
+                      (case (::content-type ctx)
                         "application/json"
                         {:body confirmation
                          :confirm (str "/wallet/create/" (:_id confirmation))}
@@ -281,12 +301,15 @@
                         ;; TODO: handle default case
                         ))))
 
-(def wallet-confirm-create-form {})
+(def wallet-confirm-create-form {:submit-label "Confirm"})
 
 (defresource confirm-create-form [request]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (fn [ctx] (page/html5 (fc/render-form wallet-confirm-create-form))))
+  :handle-ok (fn [ctx] (views/render-page views/simple-form-template
+                                          {:title "Confirm wallet creation"
+                                           :heading "Please confirm the creation of your wallet"
+                                           :form-spec wallet-confirm-create-form})))
 
 (defresource confirm-create [request confirmation]
   :allowed-methods [:post]
