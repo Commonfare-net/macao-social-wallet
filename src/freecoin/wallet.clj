@@ -89,7 +89,7 @@
 
 (defrecord wallet
     [_id name email public-key private-key
-     blockchains blockchain-secrets])
+     blockchains blockchain-accounts blockchain-secrets])
 
 (defn new [name email]
   (wallet. (:string (rand/create 20)) ;; unique id
