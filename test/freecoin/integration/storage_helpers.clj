@@ -36,3 +36,8 @@
 
 (defn drop-collection [db-connection collection]
   (mc/drop (:db db-connection) collection))
+
+(defn clear-db [db-connection]
+  (do (drop-collection db-connection "wallets")
+      (drop-collection db-connection "confirms")
+      (drop-collection db-connection "secrets")))

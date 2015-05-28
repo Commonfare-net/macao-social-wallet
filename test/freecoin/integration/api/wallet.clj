@@ -35,35 +35,6 @@
             [freecoin.core :as core]
             [freecoin.storage :as storage]))
 
-(defonce app-state {})
-
-(def test-app-params
-  {:db-config sh/test-db-config
-   :cookie-config {}})
-
-(defn start-test-session [app-state]
-  (assoc app-state :session (p/session (core/handler app-state))))
-
-(defn initialise-test-session [app-state params]
-  (alter-var-root #'app-state
-                  #(-> %
-                       (core/init params)
-                       core/connect-db
-                       start-test-session)))
-
-(defn clear-db [db-connection]
-  (do (sh/drop-collection db-connection "wallets")
-      (sh/drop-collection db-connection "confirms")
-      (sh/drop-collection db-connection "secrets")))
-
-(defn destroy-test-session [app-state]
-  (when (:db-connection app-state)
-    (clear-db (:db-connection app-state)))
-  (alter-var-root #'app-state
-                  #(-> %
-                       (dissoc :session)
-                       core/disconnect-db)))
-
 (def json-body (json/generate-string {:name "user"
                                       :email "test@test.com"}))
 
@@ -71,12 +42,12 @@
 
 (facts "POST /wallet/create"
        (against-background
-        [(before :facts (initialise-test-session app-state test-app-params))
-         (after :facts (destroy-test-session app-state))])
+        [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
+         (after :facts (ih/destroy-test-session ih/app-state))])
 
        (facts "with content-type application/json"
               (fact "when successful, generates a wallet creation confirmation code"
-                    (let [{response :response} (-> (:session app-state)
+                    (let [{response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/json")
                                                    (p/request "/wallet/create"
                                                               :request-method :post
@@ -89,7 +60,7 @@
 
               (tabular
                (fact "returns 403 and error report if posted json data is invalid"
-                     (let [{response :response} (-> (:session app-state)
+                     (let [{response :response} (-> (:session ih/app-state)
                                                     (p/content-type "application/json")
                                                     (p/request "/wallet/create"
                                                                :request-method :post
@@ -103,8 +74,8 @@
                {:name "user" :email "invalid"} {:reason [{:keys ["email"] :msg "must be a valid email"}]})
               
               (fact "returns 403 if a wallet already exists for the given username"
-                    (let [wallet (storage/insert (:db-connection app-state) "wallets" {:name "user"})
-                          {response :response} (-> (:session app-state)
+                    (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
+                          {response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/json")
                                                    (p/request "/wallet/create"
                                                               :request-method :post
@@ -114,7 +85,7 @@
        
        (facts "with content-type application/x-www-form-urlencoded"
               (fact "when successful, initiates confirmation process"
-                    (let [{response :response} (-> (:session app-state)
+                    (let [{response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/x-www-form-urlencoded")
                                                    (p/request "/wallet/create"
                                                               :request-method :post
@@ -124,7 +95,7 @@
 
               (tabular
                (fact "when posted data is invalid, redirects to /wallet/create with error message"
-                     (let [{response :response} (-> (:session app-state)
+                     (let [{response :response} (-> (:session ih/app-state)
                                                     (p/content-type "application/x-www-form-urlencoded")
                                                     (p/request "/wallet/create"
                                                                :request-method :post
@@ -138,8 +109,8 @@
                "name=user&email=invalid"      #"Email.+: must be a valid email")
 
               (fact "when username not unique, redirects to /wallet/create with error message"
-                    (let [wallet (storage/insert (:db-connection app-state) "wallets" {:name "user"})
-                          {response :response} (-> (:session app-state)
+                    (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
+                          {response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/x-www-form-urlencoded")
                                                    (p/request "/wallet/create"
                                                               :request-method :post

@@ -28,7 +28,37 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 (ns freecoin.integration.integration-helpers
   (:require [midje.sweet :as midje]
-            [clojure.data.json :as cl-json]))
+            [clojure.data.json :as cl-json]
+            [peridot.core :as p]
+            [freecoin.integration.storage-helpers :as sh]
+            [freecoin.core :as core]))
+
+;; For whole-stack integration tests
+(defonce app-state {})
+
+(def test-app-params
+  {:db-config sh/test-db-config
+   :cookie-config {}})
+
+(defn start-test-session [app-state]
+  (assoc app-state :session (p/session (core/handler app-state))))
+
+(defn initialise-test-session [app-state params]
+  (alter-var-root #'app-state
+                  #(-> %
+                       (core/init params)
+                       core/connect-db
+                       start-test-session)))
+
+(defn destroy-test-session [app-state]
+  (when (:db-connection app-state)
+    (sh/clear-db (:db-connection app-state)))
+  (alter-var-root #'app-state
+                  #(-> %
+                       (dissoc :session)
+                       core/disconnect-db)))
+
+;; Midje checkers
 
 (defn parse-json-string-with-entity-value-as-keyword [json-string]
   (cl-json/read-str json-string 
@@ -39,3 +69,4 @@
   (midje/chatty-checker [actual]
                          ((apply midje/contains expected options) 
                           (parse-json-string-with-entity-value-as-keyword actual))))
+

@@ -12,6 +12,7 @@
 ;; With contributions by
 ;; Gareth Rogers <grogers@thoughtworks.com>
 ;; Duncan Mortimer <dmortime@thoughtworks.com>
+;; Andrei Biasprozvanny <abiaspro@thoughtworks.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -117,26 +118,27 @@
 (defresource card [request]
   :allowed-methods       [:get :post]
   :available-media-types ["text/html" "application/json"]
-  :authorized?           (auth/check request)
+  :authorized?           (:authorised? (auth/check request))
 
   :handle-ok      #(format-card-html (:wallet %))
   :handle-created #(format-card-json (:wallet %))
 )
 
 (defresource find-card [request key value]
-  :allowed-methods       [:get :post]
+  :allowed-methods       [:get]
   :available-media-types ["text/html" "application/json"]
-  :authorized?           (auth/check request)
-
-  :exists?         {::found (first (find-wallet request (keyword key) value))}
-  :handle-ok       #(format-card-html (::found %))
-  :handle-created  #(format-card-json (::found %))
-  )
+  :authorized?           (:authorised? (auth/check request))
+  
+  :handle-unauthorized "Sorry, you are not signed in"
+  :handle-ok       (fn [ctx]
+                     (if-let [wallet (first (find-wallet request (keyword key) value))]
+                       (format-card-html wallet)
+                       (format-card-html nil))))
 
 (defresource qrcode [request name]
   :allowed-methods [:get]
   :available-media-types ["image/png"]
-  :authorized? (fn [ctx] (auth/check request))
+  :authorized? (:authorised? (auth/check request))
   :handle-ok #(if (nil? name)
                 ;; name is the currently logged in user
                 (let [wallet (:wallet %)]
@@ -162,12 +164,12 @@
 (defresource give [request recipient quantity]
   :allowed-methods       [:get :post]
   :available-media-types ["text/html" "application/json"]
-  :authorized?           (auth/check request)
+  :authorized?           (:authorised? (auth/check request))
 
   ;; TODO: if none, get NXT from faucet account
   ;; to cover the transaction fee. also check a maximum
   ;; limit of transactions per day.
-  :handle-ok (fn [ctx] (auth/check request))
+  :handle-ok (:wallet (auth/check request))
   )
 
 

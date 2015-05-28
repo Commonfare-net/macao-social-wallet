@@ -85,10 +85,9 @@
 
 (defn check [request]
   (let [apikey (get-apikey request)]
-    (if (empty? apikey) {:status 401}
+    (if (empty? apikey) {:authorised? false :reason ::no-cookie}
         (let [wallet (get-wallet request apikey)]
-          (if (empty? wallet) {:status 404}
-              {:wallet wallet
-               :apikey apikey})))
-    )
-  )
+          (if (empty? wallet) {:authorised? false :reason ::wallet-not-found}
+              {:authorised? true
+               :wallet {:wallet wallet
+                        :apikey apikey}})))))
