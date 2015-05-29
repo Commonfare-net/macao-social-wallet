@@ -39,6 +39,12 @@
    [ring.middleware.session.cookie :refer [cookie-store]]
    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]
+
+   [persona-kit.middleware :as pm]
+   [persona-kit.friend :as pf]
+   [persona-kit.uris :as pu]
+   [cemerick.friend :as friend]
+   
    [compojure.core :refer [defroutes ANY]]
    [freecoin.routes :as routes]
    [freecoin.params :as param]
@@ -52,17 +58,29 @@
     (handler (assoc-in request [:config :db-connection] db-connection))))
 
 (defn handler [app-state]
-  (-> #'routes/app
-      ;; comment the following to deactivate debug
-      (liberator.dev/wrap-trace :header :ui)
-      (wrap-db (:db-connection app-state))
-      wrap-cookies
-      (wrap-session {:cookie-attrs (get-in app-state [:config-params :cookie-config])
-                     :store (cookie-store {:key "sCWg45lZNFNESvPv"})})
-      wrap-keyword-params
-      wrap-params))
+  (let [host-url (str "http://" (get-in app-state [:config-params :host :address])
+                      ":" (get-in app-state [:config-params :host :port]))]
+    (-> #'routes/app
+
+        ;; authentication using Mozilla persona
+        pm/wrap-persona-resources
+        pf/wrap-persona-friend
+        (friend/authenticate {:credential-fn pf/credential-fn
+                              :workflows [(partial pf/persona-workflow host-url)]})
+        
+        ;; comment the following to deactivate debug
+        (liberator.dev/wrap-trace :header :ui)
+        (wrap-db (:db-connection app-state))
+        wrap-cookies
+        (wrap-session {:cookie-attrs (get-in app-state [:config-params :cookie-config])
+                       :store (cookie-store {:key "sCWg45lZNFNESvPv"})})
+        wrap-keyword-params
+        wrap-params)))
 
 (defonce app-state {})
+
+(alter-var-root #'pu/*login-uri* (constantly "/persona/login"))
+(alter-var-root #'pu/*logout-uri* (constantly "/persona/logout"))
 
 (defn connect-db [app-state]
   (if (:db-connection app-state)

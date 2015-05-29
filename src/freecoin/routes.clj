@@ -9,6 +9,8 @@
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
 ;; Gareth Rogers <grogers@thoughtworks.com>
+;; Duncan Mortimer <dmortime@thoughtworks.com>
+;; Andrei Biasprozvanny <abiaspro@thoughtworks.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -42,8 +44,9 @@
 
    [freecoin.nxt :as nxt]
    [freecoin.wallet :as wallet]
-   )
-  )
+
+   ;; SPIKE: learning about Mozilla persona
+   [freecoin.persona-spike :as persona-spike]))
 
 
 
@@ -115,6 +118,8 @@
        [cmd1 key1 val1 key2 val2 :as request]
        (nxt/api request {"requestType" cmd1 key1 val1 key2 val2}))
 
-
+  ;; Persona spike
+  persona-spike/routes
+  
   ) ; end of routes
 

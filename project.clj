@@ -44,6 +44,10 @@
                  [compojure "1.3.3"]
                  [ring/ring-core "1.3.2"]
 
+                 ;; authentication
+                 [com.cemerick/friend "0.2.1" :exclusions [robert/hooke xml-apis]]
+                 [persona-kit "0.1.1-SNAPSHOT" :exclusions [com.cemerick/friend]]
+
                  ;; http client
                  [http-kit "2.1.18"]
 
