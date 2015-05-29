@@ -47,6 +47,7 @@
                  ;; authentication
                  [com.cemerick/friend "0.2.1" :exclusions [robert/hooke xml-apis]]
                  [persona-kit "0.1.1-SNAPSHOT" :exclusions [com.cemerick/friend]]
+                 [clj-oauth "1.5.1"]
 
                  ;; http client
                  [http-kit "2.1.18"]
@@ -84,7 +85,7 @@
                  ;; [org.clojure/tools.namespace "0.2.10"]
 
                  ;; configuration
-                 [environ "0.5.0"]
+                 [environ "1.0.0"]
 
                  ;; human/machine interaction
                  [clojure-humanize "0.1.0"]

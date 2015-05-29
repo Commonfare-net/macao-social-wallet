@@ -5,9 +5,10 @@ pom.xml
 pom.xml.asc
 *.jar
 *.class
-/.lein-*
+.lein-*
 /.nrepl-port
 .hgignore
 .hg/
 tests.log
 *.swp
+profiles.clj

@@ -40,17 +40,19 @@
    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]
 
-   [persona-kit.middleware :as pm]
-   [persona-kit.friend :as pf]
-   [persona-kit.uris :as pu]
    [cemerick.friend :as friend]
-   
+
+   ;; For Mozilla persona spike
+   ;; [persona-kit.middleware :as pm]
+   ;; [persona-kit.friend :as pf]
+   ;; [persona-kit.uris :as pu]
+
    [compojure.core :refer [defroutes ANY]]
    [freecoin.routes :as routes]
    [freecoin.params :as param]
    [freecoin.storage :as storage]
    [freecoin.secretshare :as ssss])
-  ;; (:gen-class)
+   ;; (:gen-class)
   )
 
 (defn wrap-db [handler db-connection]
@@ -60,14 +62,14 @@
 (defn handler [app-state]
   (let [host-url (str "http://" (get-in app-state [:config-params :host :address])
                       ":" (get-in app-state [:config-params :host :port]))]
-    (-> #'routes/app
+    (-> routes/app
 
         ;; authentication using Mozilla persona
-        pm/wrap-persona-resources
-        pf/wrap-persona-friend
-        (friend/authenticate {:credential-fn pf/credential-fn
-                              :workflows [(partial pf/persona-workflow host-url)]})
-        
+        ;; pm/wrap-persona-resources
+        ;; pf/wrap-persona-friend
+        ;; (friend/authenticate {:credential-fn pf/credential-fn
+        ;;                       :workflows [(partial pf/persona-workflow host-url)]})
+
         ;; comment the following to deactivate debug
         (liberator.dev/wrap-trace :header :ui)
         (wrap-db (:db-connection app-state))
@@ -79,8 +81,8 @@
 
 (defonce app-state {})
 
-(alter-var-root #'pu/*login-uri* (constantly "/persona/login"))
-(alter-var-root #'pu/*logout-uri* (constantly "/persona/logout"))
+;; (alter-var-root #'pu/*login-uri* (constantly "/persona/login"))
+;; (alter-var-root #'pu/*logout-uri* (constantly "/persona/logout"))
 
 (defn connect-db [app-state]
   (if (:db-connection app-state)

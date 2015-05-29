@@ -4,6 +4,27 @@ Freecoin aims to be a framework for remuneration and authentication supporting m
 
 API design is work in progress on http://freecoin.ch/api
 
+## Configuration
+
+Application configuration is done using `environ.clj` (see https://github.com/weavejester/environ).
+
+For development, provide configuration variables in the `profiles.clj` file in the freecoin root directory.
+E.G.: To provide values for twitter OAuth tokens:
+
+```
+{:dev {:env
+       {:twitter-consumer-token "YOUR_CONSUMER_TOKEN_FROM_TWITTER"
+        :twitter-secret-token "YOUR_SECRET_TOKEN_FROM_TWITTER"
+}}}
+```
+
+For deployment, configuration can be provided via environment variables:
+```
+TWITTER_CONSUMER_TOKEN="YOUR_CONSUMER_TOKEN_FROM_TWITTER"\
+TWITTER_SECRET_TOKEN="YOUR_SECRET_TOKEN_FROM_TWITTER"\
+java -jar freecoin.jar
+```
+
 ## Running the app from the repl
 
 The server can be started and stopped from the repl by doing the following
@@ -14,7 +35,6 @@ user=> (use 'freecoin.core)
 user=> (start) ;; starts the server
 user=> (stop) ;; stops the server
 ```
-
 
 ## Running the app using ring server
 

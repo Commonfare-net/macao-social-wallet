@@ -33,7 +33,7 @@
    [liberator.core :refer [resource defresource]]
 
    [liberator.representation :refer [as-response ring-response]]
-   [compojure.core :refer [defroutes ANY GET POST]]
+   [compojure.core :refer [defroutes ANY GET POST context]]
 
    ;; [environ.core :refer [env]]
 
@@ -46,7 +46,11 @@
    [freecoin.wallet :as wallet]
 
    ;; SPIKE: learning about Mozilla persona
-   [freecoin.persona-spike :as persona-spike]))
+   ;; [freecoin.persona-spike :as persona-spike]
+
+   ;; SPIKE: Twitter oauth example
+   [freecoin.twitter :as twitter]
+   ))
 
 
 
@@ -119,7 +123,10 @@
        (nxt/api request {"requestType" cmd1 key1 val1 key2 val2}))
 
   ;; Persona spike
-  persona-spike/routes
+  ;; persona-spike/routes
+
+  ;; Twitter oauth example
+  (context "/twitter" [] twitter/routes)
   
   ) ; end of routes
 
