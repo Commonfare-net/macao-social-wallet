@@ -65,6 +65,8 @@
    )
   )
 
+(defn unauthorized-response [ctx] "Sorry, you are not signed in")
+
 (defn- format-card-html [card]
   {:post [(contains? % :address)]}
 
@@ -104,8 +106,6 @@
            )
   )
 
-
-
 (defn find-wallet [request key value]
   {:pre [(keyword? key)]
    :post [(coll? %)]}
@@ -120,16 +120,49 @@
   :available-media-types ["text/html" "application/json"]
   :authorized?           (:authorised? (auth/check request))
 
+  :handle-unauthorized   unauthorized-response
   :handle-ok      #(format-card-html (:wallet %))
   :handle-created #(format-card-json (:wallet %))
 )
+
+(def find-wallet-form-spec
+  {:fields [{:name :field
+             :type :select
+             :options ["name" "email"]}
+            {:name :value :type :text}]
+   :validations [[:required [:field :value]]]
+   :action "/wallets"
+   :method "get"})
+
+(defresource find-wallet-form [request]
+  :allowed-methods       [:get]
+  :available-media-types ["text/html"]
+  :authorized?           (:authorised? (auth/check request))
+
+  :handle-unauthorized   unauthorized-response
+  :handle-ok             (views/render-page views/simple-form-template
+                                  {:title "Find wallet"
+                                   :heading "Search for a wallet"
+                                   :form-spec find-wallet-form-spec}))
+
+(defresource wallets [request]
+  :allowed-methods       [:get]
+  :available-media-types ["text/html"]
+  :authorized?           (:authorised? (auth/check request))
+
+  :handle-unauthorized   unauthorized-response
+  :handle-ok             (fn [ctx]
+                           (let [{:keys [field value]} (get-in ctx [:request :params])
+                                 find-url (str "/find/" field "/" value)]
+                             (ring-response {:status 302
+                                             :headers {"Location" find-url}}))))
 
 (defresource find-card [request key value]
   :allowed-methods       [:get]
   :available-media-types ["text/html" "application/json"]
   :authorized?           (:authorised? (auth/check request))
   
-  :handle-unauthorized "Sorry, you are not signed in"
+  :handle-unauthorized unauthorized-response
   :handle-ok       (fn [ctx]
                      (if-let [wallet (first (find-wallet request (keyword key) value))]
                        (format-card-html wallet)
@@ -139,6 +172,8 @@
   :allowed-methods [:get]
   :available-media-types ["image/png"]
   :authorized? (:authorised? (auth/check request))
+
+  :handle-unauthorized   unauthorized-response
   :handle-ok #(if (nil? name)
                 ;; name is the currently logged in user
                 (let [wallet (:wallet %)]
@@ -166,6 +201,7 @@
   :available-media-types ["text/html" "application/json"]
   :authorized?           (:authorised? (auth/check request))
 
+  :handle-unauthorized   unauthorized-response
   ;; TODO: if none, get NXT from faucet account
   ;; to cover the transaction fee. also check a maximum
   ;; limit of transactions per day.

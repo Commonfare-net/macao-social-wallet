@@ -39,18 +39,48 @@
 (def wallet
   {:name "user" :email "valid@email.com"})
 
+(facts "GET /find-wallet"
+       (against-background
+        [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
+         (after :facts (ih/destroy-test-session ih/app-state))])
+
+       (fact "Responds with 401 when user is not authenticated"
+             (let [{response :response} (-> (:session ih/app-state)
+                                            (p/request "/find-wallet"))]
+               (:status response) => 401
+               (:body response) => (contains #"Sorry, you are not signed in")))
+
+       (fact "Renders the find wallet form when user is authorised"
+             (against-background
+              (auth/check anything) => {:authorised? true})
+             (let [{response :response} (-> (:session ih/app-state)
+                                            (p/request (str "/find-wallet")))]
+               (:status response) => 200
+               (:body response) => (contains #"Search for a wallet"))))
+
+(facts "GET /wallets?field=<:field>&value=<:value>"
+       (against-background
+        [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
+         (after :facts (ih/destroy-test-session ih/app-state))])
+
+       (fact "redirects to /find/:field/:value"
+             (against-background
+              (auth/check anything) => {:authorised? true})
+             (let [{response :response} (-> (:session ih/app-state)
+                                            (p/request (str "/wallets?field=name&value=user")))]
+               (:status response) => 302
+               (:headers response) => (contains {"Location" "/find/name/user"}))))
+
 (facts "GET /find/:field/:value"
        (against-background
         [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
          (after :facts (ih/destroy-test-session ih/app-state))])
 
-       (fact "Responds with 40? when user is not authenticated"
+       (fact "Responds with 401 when user is not authenticated"
              (let [{response :response} (-> (:session ih/app-state)
                                             (p/request "/find/name/user"))]
                (:status response) => 401
-               (:body response) => (contains #"Sorry, you are not signed in")
-               )
-             )
+               (:body response) => (contains #"Sorry, you are not signed in")))
 
        (facts "when user is authenticated"
               (against-background
