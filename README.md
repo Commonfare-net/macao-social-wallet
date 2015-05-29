@@ -1,5 +1,9 @@
 # Freecoin - digital social currency toolkit
 
+Freecoin aims to be a framework for remuneration and authentication supporting multi-sig and off-line transactions on top of multiple blockchain backends. It is open source, written in Clojure and comprising of a REST API and a clean user interface.
+
+API design is work in progress on http://freecoin.ch/api
+
 ## Running the app from the repl
 
 The server can be started and stopped from the repl by doing the following
@@ -11,8 +15,21 @@ user=> (start) ;; starts the server
 user=> (stop) ;; stops the server
 ```
 
+
+## Running the app using ring server
+
+```
+$ lein ring server
+```
+
+Will open a browser on localhost port 8000
+
 ## Running the tests
 
+```
+$ lein midje
+```
+or
 ```
 $ ./go.sh ;; convenience script for running all tests
 ```
@@ -20,8 +37,7 @@ See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced t
 
 ## Usage
 
-FIXME
-
+WIP
 
 ## License
 
@@ -35,9 +51,11 @@ Copyright (C) 2015 Thoughtworks, Inc.
 ```
 
 ```
-Sourcecode designed, written and maintained by
-Denis Roio <jaromil@dyne.org>
+Designed and maintained by Denis Roio <jaromil@dyne.org>
+With contributions by:
 Gareth Rogers <grogers@thoughtworks.com>
+Duncan Mortimer <dmortime@thoughtworks.com>
+Andrei Biasprozvanny <abiaspro@thoughtworks.com>
 ```
 
 This program is free software: you can redistribute it and/or modify

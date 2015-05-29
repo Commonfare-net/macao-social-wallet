@@ -4,19 +4,15 @@ title: Freecoin API
 
 # Introduction
 
-The Freecoin API is not stateless, but stores the API KEY in a session cookie or `apikey` POST field for authenticating.
+Welcome developers! This API is currently under re-design. The public repository for this software is https://github.com/d-cent/freecoin
+
+The API authentication in Freecoin is as permanent as possible, following device based entitlement.
 
 The API KEY is obtained on wallet creation or restore, we may refer to it simply as "key". All other fields are highlighted `this way`.
 
-All GET operations presume to have the key in place as session cookie. If the global parameter `external-webapp-url` is set, then will POST the result to the configured url including the field `api-call`, `nick` and any other field specified.
+All GET operations presume to have the key in place as session cookie.
 
-All failing operations may also return an error in the form:
-
-    {
-        "error": "Error description"
-        "class": "fatal" or "warning"
-        "call": "/api/call"
-    }
+All failing operations return an HTTP error code and a json structure including the key `problems` followed by an explanation of the error that has occurred.
 
 As this is a work in progress, each section reports API completion with TODO and DONE sections.
 
