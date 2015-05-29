@@ -12,10 +12,8 @@ For development, provide configuration variables in the `profiles.clj` file in t
 E.G.: To provide values for twitter OAuth tokens:
 
 ```
-{:dev {:env
-       {:twitter-consumer-token "YOUR_CONSUMER_TOKEN_FROM_TWITTER"
-        :twitter-secret-token "YOUR_SECRET_TOKEN_FROM_TWITTER"
-}}}
+{:dev-local {:env {:twitter-consumer-token "YOUR_CONSUMER_TOKEN_FROM_TWITTER"
+                   :twitter-secret-token "YOUR_SECRET_TOKEN_FROM_TWITTER"}}}
 ```
 
 For deployment, configuration can be provided via environment variables:
