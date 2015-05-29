@@ -52,7 +52,7 @@
 
    [freecoin.params :as param]
    [freecoin.random :as rand]
-   [freecoin.utils :as util]
+   [freecoin.utils :as utils]
    [freecoin.auth :as auth]
 
    [freecoin.storage :as storage]
@@ -106,15 +106,6 @@
            )
   )
 
-(defn find-wallet [request key value]
-  {:pre [(keyword? key)]
-   :post [(coll? %)]}
-  "Find a wallet in the database using the id, which can be the name or
-  email or NXT Reed-Solomon or numeric address."
-  (storage/find-by-key 
-               (get-in request [:config :db-connection])
-               "wallets" {key value}))
-
 (defresource card [request]
   :allowed-methods       [:get :post]
   :available-media-types ["text/html" "application/json"]
@@ -145,17 +136,44 @@
                                    :heading "Search for a wallet"
                                    :form-spec find-wallet-form-spec}))
 
+(defn find-wallets [db query]
+  (storage/find-by-key db "wallets" query))
+
+(defn request->wallet-query [{:keys [params] :as request}]
+  (if-let [{:keys [field value]} (utils/select-all-or-nothing params [:field :value])]
+    {(keyword field) value}
+    {}))
+
+(defn render-wallet [wallet]
+  [:li {:style "margin-top: 1em; width: 200px;"}
+   [:div {:style "border: solid 1px; padding: 1em;"}
+    [:span (str "name: " (:name wallet))]
+    [:br]
+    [:span (str " email: " (:email wallet))]
+    [:br]
+    [:img {:src (format "/qrcode/%s" (:name wallet))}]]])
+
+(defn wallets-template [{:keys [wallets] :as content}]
+  [:div
+   (if (empty? wallets)
+     [:span (str "No wallets found")]
+     [:ul {:style "list-style-type: none;"}
+      (for [wallet wallets]
+        (render-wallet wallet))])])
+
 (defresource wallets [request]
+  :service-available? {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
   :authorized?           (:authorised? (auth/check request))
 
   :handle-unauthorized   unauthorized-response
   :handle-ok             (fn [ctx]
-                           (let [{:keys [field value]} (get-in ctx [:request :params])]
-                             (if-let [wallet (first (find-wallet request (keyword field) value))]
-                               (format-card-html wallet)
-                               (format-card-html nil)))))
+                           (let [wallets (->> request
+                                              request->wallet-query
+                                              (find-wallets (::db ctx)))]
+                             (views/render-page wallets-template {:title "wallets"
+                                                                  :wallets wallets}))))
 
 (defresource qrcode [request name]
   :allowed-methods [:get]
@@ -386,7 +404,7 @@
 
                         )
                       ;; else confirmation not found
-                      {:debug (util/trace)
+                      {:debug (utils/trace)
                        :error "Confirmation not found."
                        :id (::confirmation ctx)})))
 

@@ -36,58 +36,72 @@
             [freecoin.storage :as storage]
             [freecoin.auth :as auth]))
 
-(def wallet
-  {:name "user" :email "valid@email.com"})
+(def wallet1
+  {:name "user1" :email "valid1@email.com"})
 
-(facts "GET /find-wallet"
-       (against-background
-        [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
-         (after :facts (ih/destroy-test-session ih/app-state))])
+(def wallet2
+  {:name "user2" :email "valid2@email.com"})
 
-       (fact "Responds with 401 when user is not authenticated"
-             (let [{response :response} (-> (:session ih/app-state)
-                                            (p/request "/find-wallet"))]
-               (:status response) => 401
-               (:body response) => (contains #"Sorry, you are not signed in")))
+(against-background
+ [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
+  (after :facts (ih/destroy-test-session ih/app-state))]
+ 
+ (facts "GET /find-wallet"
+        (fact "Responds with 401 when user is not authenticated"
+              (let [{response :response} (-> (:session ih/app-state)
+                                             (p/request "/find-wallet"))]
+                (:status response) => 401
+                (:body response) => (contains #"Sorry, you are not signed in")))
 
-       (fact "Renders the find wallet form when user is authorised"
-             (against-background
-              (auth/check anything) => {:authorised? true})
-             (let [{response :response} (-> (:session ih/app-state)
-                                            (p/request (str "/find-wallet")))]
-               (:status response) => 200
-               (:body response) => (contains #"Search for a wallet"))))
-
-(facts "GET /wallets?field=<:field>&value=<:value>"
-       (against-background
-        [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
-         (after :facts (ih/destroy-test-session ih/app-state))])
-
-       (fact "Responds with 401 when user is not authenticated"
-             (let [{response :response} (-> (:session ih/app-state)
-                                            (p/request "/wallets?field=name&value=user"))]
-               (:status response) => 401
-               (:body response) => (contains #"Sorry, you are not signed in")))
-
-       (facts "when user is authenticated"
+        (fact "Renders the find wallet form when user is authorised"
               (against-background
                (auth/check anything) => {:authorised? true})
+              (let [{response :response} (-> (:session ih/app-state)
+                                             (p/request (str "/find-wallet")))]
+                (:status response) => 200
+                (:body response) => (contains #"Search for a wallet"))))
 
-              (tabular
-               (fact "Retrieves a wallet by name or by email address"
-                     (let [_ (storage/insert (:db-connection ih/app-state) "wallets" wallet)
-                           {response :response} (-> (:session ih/app-state)
-                                                    (p/request (str "/wallets?field=" ?field "&value=" ?value)))]
-                       (:status response) => 200
-                       (:body response) => (contains #"name.+user")
-                       (:body response) => (contains #"email.+valid@email.com")))
+ (facts "GET /wallets"
+        (fact "Responds with 401 when user is not authenticated"
+              (let [{response :response} (-> (:session ih/app-state)
+                                             (p/request "/wallets?field=name&value=user"))]
+                (:status response) => 401
+                (:body response) => (contains #"Sorry, you are not signed in")))
 
-               ?field   ?value               ?result
-               "name"   "user"               wallet
-               "email"  "valid@email.com"    wallet)
+        (facts "when user is authenticated"
+               (against-background
+                (auth/check anything) => {:authorised? true})
 
-              (fact "Responds with a 200 and reports no result when no wallets found"
-                    (let [{response :response} (-> (:session ih/app-state)
-                                                   (p/request (str "/wallets?field=name&value=user")))]
-                      (:status response) => 200
-                      (:body response) => (contains #"address.+not found")))))
+               (facts "without query string"
+                      (fact "retrieves all existing wallets"
+                            (let [_ (doseq [n (range 10)]
+                                      (->> {:name (str "name-" n)
+                                            :email (str "email-" n "@test.com")}
+                                           (storage/insert (:db-connection ih/app-state) "wallets")))
+                                  {response :response} (-> (:session ih/app-state)
+                                                           (p/request "/wallets"))]
+                              (:status response) => 200
+                              (:body response) => (contains #"name-0")
+                              (:body response) => (contains #"name-9")
+                              (:body response) =not=> (contains #"name-10"))))
+               
+               (facts "with query string ?field=<:field>&value=<:value>"
+                      (tabular
+                       (fact "Retrieves a wallet by name or by email address"
+                             (let [_ (storage/insert (:db-connection ih/app-state) "wallets" wallet1)
+                                   _ (storage/insert (:db-connection ih/app-state) "wallets" wallet2)
+                                   {response :response} (-> (:session ih/app-state)
+                                                            (p/request (str "/wallets?field=" ?field "&value=" ?value)))]
+                               (:status response) => 200
+                               (:body response) => (contains (re-pattern (str "name.+" (:name ?found))))
+                               (:body response) =not=> (contains (re-pattern (str "name.+" (:name ?not-found))))))
+                       
+                       ?field   ?value   ?found    ?not-found
+                       "name"   "user1"  wallet1    wallet2
+                       "name"   "user2"  wallet2    wallet1)
+                      
+                      (fact "Responds with a 200 and reports no result when no wallets found"
+                            (let [{response :response} (-> (:session ih/app-state)
+                                                           (p/request (str "/wallets?field=name&value=user")))]
+                              (:status response) => 200
+                              (:body response) => (contains #"No wallets found")))))))

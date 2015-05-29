@@ -65,6 +65,11 @@
       ~@forms
       (- (System/nanoTime) start#))))
 
+;; For working with maps
+(defn select-all-or-nothing [m keys]
+  (when (every? (partial contains? m) keys)
+    (select-keys m keys)))
+
 ;; LOGS are all in this format: name trace description
 (defn dolog [name trace desc]
   (println (format "LOG: %s (%s) %s" name trace desc))
