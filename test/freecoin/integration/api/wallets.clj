@@ -26,7 +26,7 @@
 
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-(ns freecoin.integration.api.find
+(ns freecoin.integration.api.wallets
   (:require [midje.sweet :refer :all]
             [peridot.core :as p]
             [cheshire.core :as json]
@@ -63,22 +63,9 @@
         [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
          (after :facts (ih/destroy-test-session ih/app-state))])
 
-       (fact "redirects to /find/:field/:value"
-             (against-background
-              (auth/check anything) => {:authorised? true})
-             (let [{response :response} (-> (:session ih/app-state)
-                                            (p/request (str "/wallets?field=name&value=user")))]
-               (:status response) => 302
-               (:headers response) => (contains {"Location" "/find/name/user"}))))
-
-(facts "GET /find/:field/:value"
-       (against-background
-        [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
-         (after :facts (ih/destroy-test-session ih/app-state))])
-
        (fact "Responds with 401 when user is not authenticated"
              (let [{response :response} (-> (:session ih/app-state)
-                                            (p/request "/find/name/user"))]
+                                            (p/request "/wallets?field=name&value=user"))]
                (:status response) => 401
                (:body response) => (contains #"Sorry, you are not signed in")))
 
@@ -90,7 +77,7 @@
                (fact "Retrieves a wallet by name or by email address"
                      (let [_ (storage/insert (:db-connection ih/app-state) "wallets" wallet)
                            {response :response} (-> (:session ih/app-state)
-                                                    (p/request (str "/find/" ?field "/" ?value)))]
+                                                    (p/request (str "/wallets?field=" ?field "&value=" ?value)))]
                        (:status response) => 200
                        (:body response) => (contains #"name.+user")
                        (:body response) => (contains #"email.+valid@email.com")))
@@ -101,6 +88,6 @@
 
               (fact "Responds with a 200 and reports no result when no wallets found"
                     (let [{response :response} (-> (:session ih/app-state)
-                                                   (p/request (str "/find/name/user")))]
+                                                   (p/request (str "/wallets?field=name&value=user")))]
                       (:status response) => 200
                       (:body response) => (contains #"address.+not found")))))

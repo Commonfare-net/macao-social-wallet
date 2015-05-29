@@ -107,7 +107,6 @@
   ;; Search function
   (GET "/find-wallet" [request] (wallet/find-wallet-form request))
   (GET "/wallets" [request] (wallet/wallets request))
-  (ANY "/find/:key/:value" [key value :as request] (wallet/find-card request key value))
 
   ;; Money transfers (TODO)
   (ANY "/give/:recipient/:amount" [recipient amount :as request]

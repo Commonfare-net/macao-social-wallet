@@ -152,21 +152,10 @@
 
   :handle-unauthorized   unauthorized-response
   :handle-ok             (fn [ctx]
-                           (let [{:keys [field value]} (get-in ctx [:request :params])
-                                 find-url (str "/find/" field "/" value)]
-                             (ring-response {:status 302
-                                             :headers {"Location" find-url}}))))
-
-(defresource find-card [request key value]
-  :allowed-methods       [:get]
-  :available-media-types ["text/html" "application/json"]
-  :authorized?           (:authorised? (auth/check request))
-  
-  :handle-unauthorized unauthorized-response
-  :handle-ok       (fn [ctx]
-                     (if-let [wallet (first (find-wallet request (keyword key) value))]
-                       (format-card-html wallet)
-                       (format-card-html nil))))
+                           (let [{:keys [field value]} (get-in ctx [:request :params])]
+                             (if-let [wallet (first (find-wallet request (keyword field) value))]
+                               (format-card-html wallet)
+                               (format-card-html nil)))))
 
 (defresource qrcode [request name]
   :allowed-methods [:get]
