@@ -4,7 +4,7 @@ title: Freecoin API
 
 # Introduction
 
-Welcome developers! This API is currently under re-design. The public repository for this software is https://github.com/d-cent/freecoin
+Welcome developers! This API is currently under re-design. The public repository for this software is on [github.com/d-cent/freecoin](https://github.com/d-cent/freecoin)
 
 The API authentication in Freecoin is as permanent as possible, following device based entitlement.
 
