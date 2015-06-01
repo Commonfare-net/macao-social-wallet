@@ -61,7 +61,7 @@
    [freecoin.nxt :as nxt]
 
    [freecoin.views :as views]
-   
+
    )
   )
 
@@ -109,7 +109,7 @@
 (defresource card [request]
   :allowed-methods       [:get :post]
   :available-media-types ["text/html" "application/json"]
-  :authorized?           (:authorised? (auth/check request))
+  :authorized?           (:result (auth/check request))
 
   :handle-unauthorized   unauthorized-response
   :handle-ok      #(format-card-html (:wallet %))
@@ -128,9 +128,10 @@
 (defresource find-wallet-form [request]
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
-  :authorized?           (:authorised? (auth/check request))
+  :authorized?           (:result (auth/check request))
+  ;; :handle-unauthorized   {:status 200
+  ;;                         :body (:problem (auth/check request))}
 
-  :handle-unauthorized   unauthorized-response
   :handle-ok             (views/render-page views/simple-form-template
                                   {:title "Find wallet"
                                    :heading "Search for a wallet"
@@ -165,7 +166,7 @@
   :service-available? {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
-  :authorized?           (:authorised? (auth/check request))
+  :authorized?           (:result (auth/check request))
 
   :handle-unauthorized   unauthorized-response
   :handle-ok             (fn [ctx]
@@ -175,38 +176,40 @@
                              (views/render-page wallets-template {:title "wallets"
                                                                   :wallets wallets}))))
 
-(defresource qrcode [request name]
+(defresource qrcode [request id]
   :allowed-methods [:get]
   :available-media-types ["image/png"]
-  :authorized? (:authorised? (auth/check request))
+  :authorized?           (:result (auth/check request))
+  :handle-unauthorized   (:problem (auth/check request))
 
-  :handle-unauthorized   unauthorized-response
-  :handle-ok #(if (nil? name)
-                ;; name is the currently logged in user
-                (let [wallet (:wallet %)]
-                  (if (empty? wallet) ""
-                      (qr/as-input-stream
-                       (qr/from (format "http://%s:%d/give/%s"
-                                        (:address param/host)
-                                        (:port param/host)
-                                        (:accountRS wallet))))
-                      ))
-                ;; else a name is specified
-                (let [wallet (first (find-wallet request :name name))]
-                  (if (empty? wallet) ""
-                      (qr/as-input-stream
-                       (qr/from (format "http://%s:%d/give/%s"
-                                        (:address param/host)
-                                        (:port param/host)
-                                        (:accountRS wallet))))                      
-                      ))
-                ))
+  :handle-ok (fn [ctx]
+               (if (nil? id) ;; name is the currently logged in user
+                 (let [wallet (auth/get-wallet request)]
+                   (if (empty? wallet) ""
+                       (qr/as-input-stream
+                        (qr/from (format "http://%s:%d/give/%s"
+                                         (:address param/host)
+                                         (:port param/host)
+                                         (:accountRS wallet))))
+                       ))
+
+                 ;; else a name is specified
+                 (let [wallet (first (storage/find-by-key (get-in request [:config :db-connection])
+                                                          "wallets" {:name id}))]
+                   (if (empty? wallet) ""
+                       (qr/as-input-stream
+                        (qr/from (format "http://%s:%d/give/%s"
+                                         (:address param/host)
+                                         (:port param/host)
+                                         (:accountRS wallet))))
+                       ))
+                 )))
 
 
 (defresource give [request recipient quantity]
   :allowed-methods       [:get :post]
   :available-media-types ["text/html" "application/json"]
-  :authorized?           (:authorised? (auth/check request))
+  :authorized?           (:result (auth/check request))
 
   :handle-unauthorized   unauthorized-response
   ;; TODO: if none, get NXT from faucet account
@@ -250,7 +253,7 @@
       (fp/with-fallback
         (fn [problems] {:status :error :problems problems})
         {:status :ok :data (fp/parse-params form-spec data)}))
-    
+
     {:status :error :problems [{:keys [] :msg (str "unknown content type: " (::content-type ctx))}]}))
 
 (def response-representation
@@ -264,7 +267,7 @@
   ;; 'confirmation' field which is the hash to be used to confirm
   ;; creation via GET url /wallet/create/confirmation-hash.
 
-  
+
   ;; Liberator doesn't provide a way to initialise the context;
   ;; service-available? is the first decision point, and defaults to
   ;; 'true'.   Thus, we'll use it to add some convenient values to our context.
@@ -296,7 +299,7 @@
                           ::problems problems
                           :representation {:media-type
                                            (get response-representation (::content-type ctx))}}]
-                  
+
                   ;; TODO: handle default case
                   )))
 
@@ -368,7 +371,7 @@
                  ;; entry found, proceed
                  {::found true ::params cc}
                  )))
-  
+
   :handle-created (fn [ctx]
                     ;; the confirmation was found
                     (if (::found ctx)
@@ -378,7 +381,7 @@
                             secret (fxc/create-secret param/encryption)
                             cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
                             secret-without-cookie (dissoc secret :cookie)
-                            nxt-data (nxt/getAccountId 
+                            nxt-data (nxt/getAccountId
                                       {:secret (fxc/unlock-secret
                                                 param/encryption
                                                 secret-without-cookie
@@ -394,7 +397,7 @@
                                         (conj nxt-data {:name  (:name params)
                                                         :email (:email params)
                                                         :_id (:_id secret-without-cookie)}))
-                        
+
                         ;; return the apikey cookie
                         (ring-response {:headers {"Location" (ctx :location)}
                                         :session {:cookie-data cookie-data}
@@ -408,7 +411,7 @@
                        :error "Confirmation not found."
                        :id (::confirmation ctx)})))
 
-              
+
 ;; Reminder, but NEVER show nxtpass!
 ;; {:nxtpass (fxc/unlock-secret
 ;;            param/encryption

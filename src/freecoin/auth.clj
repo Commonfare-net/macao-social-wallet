@@ -48,46 +48,56 @@
               ;; else
               {:_id (second toks)
                :slice (first toks)}
-              
+
               )))))
-    
-        
-(defn get-wallet [request apikey]
-  {:pre [(contains? request :config)
-         (contains? (:config request) :db-connection)
-         (contains? apikey :_id)]}
 
 
-  (let [id (:_id apikey)
-        db (get-in request [:config :db-connection])
-        wallet (storage/find-by-id db "wallets" id)]
+(defn get-wallet
+  ([request]
+   (get-wallet request (get-apikey request)))
 
-    (if (empty? wallet) false
-        ;; else
-        wallet
-        )
-    )
-  )
+  ([request apikey]
+   {:pre [(contains? request :config)
+          (contains? (:config request) :db-connection)
+          (contains? apikey :_id)]}
 
 
-(defn get-secret [request apikey]
-  {:pre [(contains? request :config)
-         (contains? apikey :_id)]}
+   (let [id (:_id apikey)
+         db (get-in request [:config :db-connection])
+         wallet (storage/find-by-id db "wallets" id)]
 
-  (let [id (:_id apikey)
-        db (get-in request [:config :db-connection])
-        secret (storage/find-by-id db "secrets" id)]
-    ;; safeguard
-    (if (empty? secret) false
-        ;; else return the
-        secret))
-  )
+     (if (empty? wallet) false
+         ;; else
+         wallet
+         )
+     )
+   ))
+
+
+(defn get-secret
+  ([request]
+   (get-secret request (get-apikey request)))
+
+  ([request apikey]
+   {:pre [(contains? request :config)
+          (contains? apikey :_id)]}
+
+   (let [id (:_id apikey)
+         db (get-in request [:config :db-connection])
+         secret (storage/find-by-id db "secrets" id)]
+     ;; safeguard
+     (if (empty? secret) false
+         ;; else return the
+         secret))
+   ))
 
 (defn check [request]
   (let [apikey (get-apikey request)]
-    (if (empty? apikey) {:authorised? false :reason ::no-cookie}
+    (if (empty? apikey) {:result false
+                         :problem "Authorization failed: no cookie found in session."}
         (let [wallet (get-wallet request apikey)]
-          (if (empty? wallet) {:authorised? false :reason ::wallet-not-found}
-              {:authorised? true
-               :wallet {:wallet wallet
-                        :apikey apikey}})))))
+          (if (empty? wallet) {:result false
+                               :problem "Authorization failed: wallet not found in database."}
+              {:result true
+               :wallet wallet
+               :apikey apikey})))))
