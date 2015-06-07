@@ -28,7 +28,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.wallet
-  (:import [freecoin.blockchain stub])
+  ;; (:import [freecoin.blockchain stub])
   (:require
    [clojure.string :as str]
 
@@ -369,7 +369,7 @@
                       (let [params (::params ctx)
                             db (get-in request [:config :db-connection])
                             new-wallet (blockchain/create-account
-                                        (stub.) ;; default blockchain
+                                        (blockchain/new-stub) ;; default blockchain
                                         (wallet. ""
                                          (:name params) (:email params)
                                          nil ;; public key

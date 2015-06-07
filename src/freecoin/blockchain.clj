@@ -24,8 +24,6 @@
 
 
 (ns freecoin.blockchain
-  (:gen-class)
-;;  (:import [freecoin.wallet wallet])
   (:require
    [clojure.string :as str]
 
@@ -108,6 +106,7 @@
   (redeem-voucher [bk wallet voucher] nil)
   )
 
+(defn new-stub [] (stub.))
 ;; example
 ;;  (b/create-account (b/_create "STUB" "sadsd" 444)
 ;;                    (w/new "csdaz" "ca@sdasd") {})
