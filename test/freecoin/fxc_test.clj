@@ -47,8 +47,8 @@
 
              :al (:integer (rand/create (:length param/encryption)))
              })
-  (def nxtpass (fxc/render-slice param/encryption (:ah fake) (:al fake) 0))
-  (def secret (fxc/create-secret param/encryption (:ah fake) (:al fake)))
+  (def nxtpass (fxc/render-slice param/encryption "STUB" (:ah fake) (:al fake) 0))
+  (def secret (fxc/create-secret param/encryption "STUB" (:ah fake) (:al fake)))
   
   (pp/pprint nxtpass)
   
@@ -75,7 +75,7 @@
           al (ssss/shamir-combine (:al quorum))]
       ah => (:ah fake)
       al => (:al fake)
-      (fxc/render-slice param/encryption ah al 0) => nxtpass
+      (fxc/render-slice param/encryption "STUB" ah al 0) => nxtpass
       (util/log! 'ACK 'unlocking-secret-test
                  ["Quorum size: " (count (get-in quorum [:ah :shares]))
                   "expected: " (get-in quorum [:ah :header :quorum])]

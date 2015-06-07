@@ -24,8 +24,11 @@
 
 
 (ns freecoin.blockchain
-  (:import [freecoin.wallet.wallet])
+  (:gen-class)
+;;  (:import [freecoin.wallet wallet])
   (:require
+   [clojure.string :as str]
+
    [freecoin.fxc :as fxc]
    [freecoin.random :as rand]
    [freecoin.params :as param]
@@ -34,21 +37,21 @@
 
 (defprotocol Blockchain
   ;; account
-  (import-account [bck wallet secret])
-  (create-account [bck wallet secret])
+  (import-account [bk wallet secret])
+  (create-account [bk wallet])
 
-  (get-account [bck wallet])
-  (get-address [bck wallet])
-  (get-balance [bck wallet])
+  (get-account [bk wallet])
+  (get-address [bk wallet])
+  (get-balance [bk wallet])
 
   ;; transactions
-  (list-transactions [bck wallet])
-  (get-transaction   [bck wallet txid])
-  (make-transaction  [bck wallet amount recipient secret])
+  (list-transactions [bk wallet])
+  (get-transaction   [bk wallet txid])
+  (make-transaction  [bk wallet amount recipient secret])
 
   ;; vouchers
-  (create-voucher [bck wallet amount expiration secret])
-  (redeem-voucher [bck wallet voucher])
+  (create-voucher [bk wallet amount expiration secret])
+  (redeem-voucher [bk wallet voucher])
   )
 
 (defrecord voucher [_id expiration sender
@@ -58,48 +61,52 @@
     [_id emission broadcast signed sender
     amount resipient blockchain currency])
 
+
+(defn recname [record]
+  "Return a string which is the name of the record class, uppercase. Used to identify the class type."
+  (str/upper-case (last (str/split (pr-str (class record)) #"\.")))
+  )
+  
+;; TODO
 (defrecord nxt  [server port])
 
-
-(defrecord stub [server port]
+;; inherits from Blockchain and implements its methods
+(defrecord stub []
   Blockchain
-  (import-account [bck wallet secrets] nil)
+  (import-account [bk wallet secrets] nil)
 
   ;; return an updated wallet map
-  (create-account [bck wallet secrets]
-    {:pre [(coll? secrets)
-           (= 2 (count secrets))
-           (contains? wallet :name)]}
+  (create-account [bk wallet]
+    {:pre [(contains? wallet :name)]}
 
-    (let [passphrase (fxc/new-passphrase param/encryption (:type bck))                   ;; fake address
-          new-bck-pub (assoc-in wallet [:blockchains (keyword (:type bck))] (:string (rand/create 20)))]
-      (assoc-in new-bck-pub [:blockchain-secrets (keyword (:type bck))] passphrase)
+    (if (contains? (:blockchains wallet) (keyword (recname bk)))
+      {:status ::error
+       :problem (str "Account already present in wallet: " (recname bk))}
+      ;; else
+      (let [secret (fxc/create-secret param/encryption (recname bk))
+            new-bk-pub (assoc-in wallet
+                                 [:blockchains (keyword (recname bk))]
+                                 (:_id secret))]
+        (assoc-in new-bk-pub
+                  [:blockchain-secrets (keyword (recname bk))]
+                  secret)
       ;; TODO: wrap all this with symmetric encryption using secrets
-      )
+        ))
     )
 
-  (get-account [bck wallet]
-    (get-in wallet [:blockchains (keyword (:type bck))]))
+  (get-account [bk wallet]
+    (get-in wallet [:blockchains (keyword (recname bk))]))
 
-  (get-address [bck wallet] nil)
-  (get-balance [bck wallet] nil)
+  (get-address [bk wallet] nil)
+  (get-balance [bk wallet] nil)
 
-  (list-transactions [bck wallet] nil)
-  (get-transaction   [bck wallet txid] nil)
-  (make-transaction  [bck wallet amount recipient secret] nil)
+  (list-transactions [bk wallet] nil)
+  (get-transaction   [bk wallet txid] nil)
+  (make-transaction  [bk wallet amount recipient secret] nil)
 
-  (create-voucher [bck wallet amount expiration secret] nil)
-  (redeem-voucher [bck wallet voucher] nil)
+  (create-voucher [bk wallet amount expiration secret] nil)
+  (redeem-voucher [bk wallet voucher] nil)
   )
-
-
-(defn create [type server port]
-  (case type
-    "NXT"  (conj (nxt.  server port) {:type type})
-    "STUB" (conj (stub. server port) {:type type})
-    nil)
-  )
-
 
 ;; example
 ;;  (b/create-account (b/_create "STUB" "sadsd" 444)

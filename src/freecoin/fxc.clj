@@ -43,23 +43,22 @@
 
 
 (defn new-passphrase [conf type]
-  (format "%s_%s_FXC_%s_%s" (:prefix conf)
+  (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type
           (ssss/hash-encode-num conf (:integer (rand/create (:length conf))))
           (ssss/hash-encode-num conf (:integer (rand/create (:length conf))))
-          type)
+          0)
   )
 
 (defn create-secret
-  "Takes a configuration and optionally two integers, creates a wallet
-  address, returned as a string"
+  "Takes a configuration, the blockchain type and optionally two integers, creates a wallet address, returned as a string"
 
-  ([conf]
+  ([conf type]
    (let [ah (:integer (rand/create (:length conf)))
          al (:integer (rand/create (:length conf)))]
-     (create-secret conf ah al)
+     (create-secret conf type ah al)
      ))
 
-  ([conf hi lo]
+  ([conf type hi lo]
    {:pre  [(contains? conf :version)
            (contains? conf :length)
            (contains? conf :entropy)]
@@ -72,10 +71,10 @@
      ;; slices: collection of rendered string slices for ssss
 
      ;; unique id
-     {:_id (format "%s_%s_FXC_%s" (:prefix conf)
+     {:_id (format "%s_%s_%s_FXC_%s" (:prefix conf) type
                    (get-in ah [:header :_id])
                    (get-in al [:header :_id]))
-      :config conf
+      :config (assoc conf :type type)
 
       :slices (loop [lah (first (:shares ah))
                      lal (first (:shares al))
@@ -84,14 +83,15 @@
                 (if (< c (count (:shares ah)))
                   (recur (nth (:shares ah) c)
                          (nth (:shares al) c)
-                         (merge res (render-slice conf lah lal c))
+                         (merge res (render-slice conf type lah lal c))
                          (inc c))
-                  (merge res (render-slice conf lah lal c))))
+                  (merge res (render-slice conf type lah lal c))))
 
       ;; to be deleted by http session
-      :cookie (render-slice conf
+      :cookie (render-slice conf type
                             (first (:shares ah))
                             (first (:shares al)) 1)
+
       }
      ))
   )
@@ -150,8 +150,8 @@
       ))
   ))
 
-(defn render-slice [conf ah al idx]
-   (format "%s_%s_FXC_%s_%d" (:prefix conf)
+(defn render-slice [conf type ah al idx]
+   (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type
            (ssss/hash-encode-num conf ah)
            (ssss/hash-encode-num conf al)
            idx)
@@ -164,7 +164,7 @@
       (if-not (= (subs (first toks) 0 4) "FXC1")
         (throw (Exception.
                 (format "Invalid FXC address: %s" (first toks))))
-        (nth toks (case ah-or-al "al" 3 "ah" 1 0))
+        (nth toks (case ah-or-al "al" 4 "ah" 2 0))
         ;; TODO: check that only valid characters in alphabet are present
         ))
 

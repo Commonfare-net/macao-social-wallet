@@ -64,8 +64,8 @@
 (defresource echo [request]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :authorized? (:authorised? (auth/check request))
-;;  :authorized? (fn [ctx] (auth/check request))
+  ;; :authorized? (:authorised? (auth/check request))
+  :authorized? (fn [ctx] (auth/check request))
   :handle-unauthorized (:problem (auth/check request))
 ;  :as-response (fn [d ctx] (#'cookie-response d ctx))
   :handle-ok (fn [ctx] (util/pretty ctx))

@@ -28,6 +28,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.wallet
+  (:import [freecoin.blockchain stub])
   (:require
    [clojure.string :as str]
 
@@ -58,7 +59,7 @@
    [freecoin.storage :as storage]
 
    [freecoin.fxc :as fxc]
-   [freecoin.nxt :as nxt]
+   [freecoin.blockchain :as blockchain]
 
    [freecoin.views :as views]
 
@@ -92,19 +93,8 @@
 
 (defrecord wallet
     [_id name email public-key private-key
-     blockchains blockchain-accounts blockchain-secrets])
+     blockchains blockchain-secrets])
 
-(defn new [name email]
-  (wallet. (:string (rand/create 20)) ;; unique id
-           name
-           email
-           nil ;; public key
-           nil ;; private key
-           [] ;; blockchains
-           [] ;; blockchain-accounts
-           [] ;; blockchain-secrets
-           )
-  )
 
 (defresource card [request]
   :allowed-methods       [:get :post]
@@ -349,15 +339,15 @@
                         ;; TODO: handle default case
                         ))))
 
-(def wallet-confirm-create-form {:submit-label "Confirm"})
-
 (defresource confirm-create-form [request]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (fn [ctx] (views/render-page views/simple-form-template
-                                          {:title "Confirm wallet creation"
-                                           :heading "Please confirm the creation of your wallet"
-                                           :form-spec wallet-confirm-create-form})))
+  :handle-ok (fn [ctx]
+               (views/render-page
+                views/simple-form-template
+                {:title "Confirm wallet creation"
+                 :heading "Please confirm the creation of your wallet"
+                 :form-spec {:submit-label "Confirm"}})))
 
 (defresource confirm-create [request confirmation]
   :allowed-methods [:post]
@@ -378,25 +368,35 @@
                       ;; proceed with the wallet creation
                       (let [params (::params ctx)
                             db (get-in request [:config :db-connection])
-                            secret (fxc/create-secret param/encryption)
-                            cookie-data (str/join "::" [(:cookie secret) (:_id secret)])
+                            new-wallet (blockchain/create-account
+                                        (stub.) ;; default blockchain
+                                        (wallet. ""
+                                         (:name params) (:email params)
+                                         nil ;; public key
+                                         nil ;; private key
+                                         {} ;; blockchains
+                                         {} ;; blockchain-secrets
+                                         ))
+                            secret (get-in new-wallet [:blockchain-secrets :STUB])
                             secret-without-cookie (dissoc secret :cookie)
-                            nxt-data (nxt/getAccountId
-                                      {:secret (fxc/unlock-secret
-                                                param/encryption
-                                                secret-without-cookie
-                                                (:cookie secret))})]
+                            cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
+                        (utils/log! ::ACK :cookie cookie-data)
+                        (utils/log! ::ACK :secret secret)
+                        (utils/log! ::ACK :wallet (pr-str new-wallet))
+
+                            ;; nxt-data (nxt/getAccountId
+                            ;;           {:secret (fxc/unlock-secret
+                            ;;                     param/encryption
+                            ;;                     secret-without-cookie
+                            ;;                     (:cookie secret))})]
                         ;; delete the confirmation entry from the db
                         (storage/remove-by-id db "confirms" (:_id params))
 
-                        ;; insert in the secrets database
-                        (storage/insert db "secrets" secret-without-cookie)
+                        ;; ;; insert in the secrets database
+                        ;; (storage/insert db "secrets" secret-without-cookie)
 
                         ;; insert in the wallet database
-                        (storage/insert db "wallets"
-                                        (conj nxt-data {:name  (:name params)
-                                                        :email (:email params)
-                                                        :_id (:_id secret-without-cookie)}))
+                        (storage/insert db "wallets" (assoc new-wallet :_id (:_id secret) ))
 
                         ;; return the apikey cookie
                         (ring-response {:headers {"Location" (ctx :location)}
