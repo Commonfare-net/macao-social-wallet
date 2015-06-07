@@ -1,5 +1,7 @@
 # Freecoin - digital social currency toolkit
 
+[![Build Status](https://travis-ci.org/d-cent/freecoin.svg?branch=master)](https://travis-ci.org/d-cent/freecoin)
+
 Freecoin aims to be a framework for remuneration and authentication supporting multi-sig and off-line transactions on top of multiple blockchain backends. It is open source, written in Clojure and comprising of a REST API and a clean user interface.
 
 API design is work in progress on http://freecoin.ch/api
