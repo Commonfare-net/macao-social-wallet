@@ -30,7 +30,9 @@
    [freecoin.fxc :as fxc]
    [freecoin.random :as rand]
    [freecoin.params :as param]
-   [freecoin.storage :as storage])
+   [freecoin.storage :as storage]
+
+   )
   )
 
 (defprotocol Blockchain

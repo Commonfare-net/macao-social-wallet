@@ -90,6 +90,9 @@
                  ;; qrcode
                  [clj.qrgen "0.3.0"]
 
+                 ;; gravatar
+                 [clavatar "0.2.1"]
+
                  ;; code analysis: call-graph
                  [cc.artifice/lein-gossip "0.2.1"]
                  ]

@@ -45,6 +45,8 @@
 
    [clj.qrgen :as qr]
 
+   [clavatar.core]
+
 ;;   [taoensso.nippy :as nippy]
 
    [autoclave.core :as autoclave]
@@ -136,13 +138,15 @@
     {}))
 
 (defn render-wallet [wallet]
-  [:li {:style "margin-top: 1em; width: 200px;"}
+  [:li {:style "margin: 1em"}
    [:div {:style "border: solid 1px; padding: 1em;"}
-    [:span (str "name: " (:name wallet))]
+    [:span (str "Name: " (:name wallet))]
     [:br]
-    [:span (str " email: " (:email wallet))]
+    [:span (str "E-Mail: " (:email wallet))]
     [:br]
-    [:img {:src (format "/qrcode/%s" (:name wallet))}]]])
+    [:img {:src (format "/qrcode/%s" (:name wallet))}]
+    [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]
+    ]])
 
 (defn wallets-template [{:keys [wallets] :as content}]
   [:div
@@ -339,7 +343,7 @@
                         ;; TODO: handle default case
                         ))))
 
-(defresource confirm-create-form [request]
+(defresource confirm-create-form [request confirmation]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
