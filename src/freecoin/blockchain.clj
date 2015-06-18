@@ -82,6 +82,9 @@
     (if (contains? (:blockchains wallet) (keyword (recname bk)))
       {:status ::error
        :problem (str "Account already present in wallet: " (recname bk))}
+
+
+
       ;; else
       (let [secret (fxc/create-secret param/encryption (recname bk))
             new-bk-pub (assoc-in wallet

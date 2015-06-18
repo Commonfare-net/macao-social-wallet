@@ -6,7 +6,7 @@ title: Freecoin API
 
 Welcome developers! This API is currently under re-design. The public repository for this software is on [github.com/d-cent/freecoin](https://github.com/d-cent/freecoin)
 
-The API authentication in Freecoin is as permanent as possible, following device based entitlement.
+Freecoin uses device based entitlement.
 
 The API KEY is obtained on wallet creation or restore, we may refer to it simply as "key". All other fields are highlighted `this way`.
 
@@ -16,113 +16,99 @@ All failing operations return an HTTP error code and a json structure including 
 
 As this is a work in progress, each section reports API completion with TODO and DONE sections.
 
-# Card
+# Balance
 
-A card is the public facing information for every participant, it can be distributed and then used by the organization (and others participants, if allowed) to send any amount of value to the participant. It includes a qrcode that links directly to the `/send` endpoint.
+The balance endpoint is the default and will redirect to the creation of a new wallet if the client is not associated with one yet. It will visualize a card and the information on the current balance and a recent history of transactions.
 
- - DONE
-   - GET|POST  /
-   - GET  /qrcode/:name
-   - GET  /find/key/value
+## GET /
 
-## GET|POST /
+Return the balance as a static html page.
 
-Return a `card` including fields: `name`, `email`, `address` and a `qrcode`.
+# Participants
 
-The `address` is a unique identifier of the user's public identity on the blockchain.
+The participants endpoint provides access to the public facing information for every known participant, returning `cards` with name, email and a qrcode that can be used to send any amount of value to the participant, linking directly to the `send` endpoint.
 
-The qrcode is an html link to the `/qrcode` endpoint.
+## GET /participants
 
-#### example call
-POST http://localhost:8000/
-Content-Type: application/json
-#### example response
-     {
-         "QR": "<img src=\"/wallet/qrcode\" alt=\"QR\">",
-         "name": "Monaca",
-         "email": "monza@monastero.it",
-         "address": "NXT-L5RG-P7X9-DASP-6BWFV"
-     }
+Return a search form where partcipants can be looked up by name or email
 
-Note: this is inaccurate until the embedding of the image is done inside the json (TODO).
 
-## GET /qrcode/:name
+## GET /participants/all
 
-Retrieve a QRCode image that, once scanned, will redirect to the `/send` url to transfer funds to the participant.
+Shows a list of cards of all known participants, in plain static html, including name, email and qrcode.
 
-#### example call
-GET http://localhost:8000/qrcode/Monaca
-Content-Type: text/html
-#### example response
+## GET /participants/find?
 
-An PNG image with content-type `image/png` will be returned. This url can be directly used inside `<img src="">` fields.
+Accepts two url encoded parameters, one is the `field` to be searched (`name` or `email` and other wallet fields) and the other is the `value` to search for.
+
+Returns the card of the found participant or an html page containing "No participant found".
+
+#### example request
+GET http://localhost:8000/participants/find?field=email&value=jaromil@dyne.org
+
+## GET /participants/name
+
+Return the card of the `name`d participant.
+
+## GET /participants/name/qrcode
+
+Retrieve the QRCode image for the participant corresponding to `name`. The QR image can be scanned to redirect to the `/send` url to transfer funds to the participant. The returned value is an actual `image/png` content-type. This url can be directly used inside `<img src="">` fields.
+
+## GET /participants/name/avatar
+
+Retrieve the avatar image for the participant corresponding to `name`. The avatar is retrieved from the GRavatar on-line service (wordpress) and is returned with content-type `image/png`. This url can be directly used inside `<img src="">` fields.
+
 
 # Wallet
 
-A `wallet` is the private space where participants can check the funds they own.
+A `wallet` is basically a private account. This endpoint provides services to create, recover or destroy a wallet.
 
- - DONE
-   - POST     /wallet/create
-   - GET      /wallet/create/:confirmation
+## GET /wallets
 
- - TODO
-   - GET/POST /wallet
-   - POST     /wallet/recover
+Will respond with an html form to create a wallet, following up with configured confirmations.
 
-## GET/POST /wallet
+If the caller has already created a wallet, will act as the `/` endpoint, returning the current balance.
 
-Open the wallet. Returns `balance` as text/html.
+## POST /wallets
 
-#### example call
-POST http://localhost:8000/wallet
-Content-Type: application/json
-#
+Endpoint for the GET form, accepts fields `name` and `email`.
 
-#### example response
+Check for duplicate name and email in database, if available returns success with a `confirmation` hash.
 
-    {
-        "name": "nickname"
-        "email": "email@address"
-        "balance": float
-        "created": date of wallet creation
-        "last_access": date of last access
-        "last_location": location (IP) of last access
-        "last_transaction": link to the last transaction occurred
-    }
+If content-type is `text/html`, the browser is redirected to `GET /wallets/hash` (described below)
 
-## POST /wallet/create
+Graft here any other mechanism for sophisticated confirmation, also bound to external applications or email confirmation.
 
-Check for duplicate name and email in database, if available returns success with a `confirmation` hash to be used in a subsequent call to `/wallet/create/:confirmation`
 
-Field: `name`, `email`
+<!-- #### example response -->
 
-#### example request
+<!--     { -->
+<!--         "name": "nickname" -->
+<!--         "email": "email@address" -->
+<!--         "balance": float -->
+<!--         "created": date of wallet creation -->
+<!--         "last_access": date of last access -->
+<!--         "last_location": location (IP) of last access -->
+<!--         "last_transaction": link to the last transaction occurred -->
+<!--     } -->
 
-POST http://localhost:8000/wallet/create
-Content-Type: application/json
+## GET /wallets/hash
 
-     {
-      "name": "jaromil",
-      "email": "jaromil@dyne.org"
-     }
+Returns a simple page with a confirmation button.
 
-#### example response
+<!-- TODO: Check here if the `hash` is valid? right now is checked in the next one. -->
+<!-- Leaving this here may help for tracing malicious attempts. -->
 
-     {
-      "body":
-        {"email":"jaromil@dyne.org",
-         "name":"jaromil",
-         "_id":"D7GNYYP53E6YN"},
-      "confirm":"\/wallet\/create\/D7GNYYP53E6YN"
-     }
+## POST /wallets/hash
 
-## GET /wallet/create/:confirmation
+Checks if the `hash` is valid (present in the confirmations collection) and actually creates the wallet as requested.
 
-Check if the `confirmation` code is correct, then proceed creating the wallet.
+<!-- TODO: Perhaps create a generic confirmation endpoint for a linked-list (closure) of actions to be executed. -->
 
-Returns the full wallet structure (design in progress).
 
-## POST /wallet/recover
+## POST /wallets/recover
+
+TODO
 
 Check for `email` in database, if found read and use `ah` and `al` pins to restore the wallet
 
@@ -141,7 +127,7 @@ Will setup an url to have session cookies on a browser and return success.
         "apikey": "6mHAzKHuLclviVAm"
     }
 
-# Sending (TODO)
+# Sending
 
 Sending among participants is optional and depends from the monetary system setting by the issuing organization. If allowed the send API will be available for a "free market" among participants, making them able to transfer amounts among themselves.
 
@@ -172,73 +158,65 @@ Send `amount` to `participant`, return a machine readable json with the `txid`
         "transaction": the id of the transaction
     }
 
-# Stashes (TODO)
+# Vouchers
 
-A stash is a pre-defined amount that can be transferred off-line using a secret code or image (qrcode)
+A voucher is a pre-defined amount that can be transferred off-line using a secret code or image (qrcode)
 
-Using stashes is possible to make intuitive a POS transaction:
+Using vouchers is possible to make intuitive a POS transaction:
 
-1. participant scans the price to be paid, link to /stash/create url
-2. wallet respond with a QRcode that is a /stash/claim/:stash-id url
+1. participant scans the price to be paid, link to /voucher/create url
+2. wallet respond with a QRcode that is a /voucher/claim/:voucher-id url
 3. participant offers the QRcode to the vendor for scanning
-4. vendor scans the /stash/claim url and confirms payment
+4. vendor scans the /voucher/claim url and confirms payment
 
 - TODO
   - API design
-  - GET /stash/create/:amount
-  - POST /stash/create
-  - GET /stash/claim/:stash-id
-  - POST /stash/claim
+  - GET /voucher/create/:amount
+  - POST /voucher/create
+  - GET /voucher/claim/:voucher-id
+  - POST /voucher/claim
   
-## GET /stash/create/:amount
+## GET /voucher/create/:amount
 
-Create a signed stash of `amount` ready to be given, returns human readable stash-id and QR image.
+Create a signed voucher of `amount` ready to be given, returns human readable stash-id and QR image.
 
-## POST /stash/create
+## POST /voucher/create
 
 Same as GET, but with POST field `amount`
 
-## GET /stash/claim/:stash-id
+## GET /voucher/claim/:stash-id
 
-Claim a stash of coins by url (can also be a direct link from qrcode)
+Claim a voucher by url (can also be a direct link from qrcode)
 
-## POST /stash/claim
+## POST /voucher/claim
 
 Same as GET, but with POST field `stash-id`
 
 
 
-# Clearing house (TODO)
+<!-- # Vendor relations -->
 
-Clearing house must be interfaced with democratic decision making tools
+<!-- Vendor value transactions must be customized ad-hoc for pilots: transport companies, tax departments, service providers. -->
 
-Objective8, YourPriorities, DemocracyOS, Mutual_Credit
-
-
-
-# Vendor relations
-
-Vendor value transactions must be customized ad-hoc for pilots: transport companies, tax departments, service providers.
-
-- TODO
-  - API design
-  - GET /vendor/send/:amount/:vendor
-  - GET /vendor/send/:amount/:vendor/:participant
-  - POST /vendor/send
-  - vendor plugins
+<!-- - TODO -->
+<!--   - API design -->
+<!--   - GET /vendor/send/:amount/:vendor -->
+<!--   - GET /vendor/send/:amount/:vendor/:participant -->
+<!--   - POST /vendor/send -->
+<!--   - vendor plugins -->
 
 
-## GET /vendor/send/:amount/:vendor
+<!-- ## GET /vendor/send/:amount/:vendor -->
 
-Send `amount` to `vendor` in exchange for service credit for self, returns human readable message, all accepted fields and an id linking to the `transaction`.
+<!-- Send `amount` to `vendor` in exchange for service credit for self, returns human readable message, all accepted fields and an id linking to the `transaction`. -->
 
-## GET /vendor/send/:amount/:vendor/:participant
+<!-- ## GET /vendor/send/:amount/:vendor/:participant -->
 
-Send `amount` to `vendor` in exchange of service credit for another `participant`, returns human readable message, all accepted fields plus an id linking to the `transaction`.
+<!-- Send `amount` to `vendor` in exchange of service credit for another `participant`, returns human readable message, all accepted fields plus an id linking to the `transaction`. -->
 
-## POST /vendor/send
+<!-- ## POST /vendor/send -->
 
-Same as GET operations, with POST fields `amount` and `vendor`, optional field `participant`.
+<!-- Same as GET operations, with POST fields `amount` and `vendor`, optional field `participant`. -->
 
 
 # Transparent bridge to NXT API
@@ -353,10 +331,10 @@ Recover:
 
 
 
-# More TODO
+<!-- # More TODO -->
 
-Progress using http://swagger.io
+<!-- Progress using http://swagger.io -->
 
-Ring-swagger https://github.com/metosin/ring-swagger
+<!-- Ring-swagger https://github.com/metosin/ring-swagger -->
 
-Defining schema using Prismatic https://github.com/Prismatic/schema
+<!-- Defining schema using Prismatic https://github.com/Prismatic/schema -->

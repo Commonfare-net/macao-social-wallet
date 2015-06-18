@@ -110,13 +110,15 @@
 
 (defn render-wallet [wallet]
   [:li {:style "margin: 1em"}
-   [:div {:style "border: solid 3px #888; border-radius: 5px; padding: 1em"}
+   [:div {:class "card pull-left" }
     [:span (str "name: " (:name wallet))]
     [:br]
     [:span (str "email: " (:email wallet))]
     [:br]
-    [:img {:src (format "/qrcode/%s" (:name wallet))}]
-    [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]
+    [:span {:class "qrcode pull-left"}
+     [:img {:src (format "/qrcode/%s" (:name wallet))} ]]
+    [:span {:class "gravatar pull-right"}
+     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]
     ]])
 
 (defn participants-template [{:keys [wallets] :as content}]
@@ -135,7 +137,7 @@
    )
 
 (defresource participants [request]
-  :service-available? {::db (get-in request [:config :db-connection])}
+  :service-available?    {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
   :authorized?           (:result (auth/check request))
@@ -146,7 +148,7 @@
                                               request->wallet-query
                                               (find-wallets (::db ctx)))]
                              (views/render-page participants-template {:title "wallets"
-                                                                  :wallets wallets}))))
+                                                                       :wallets wallets}))))
 
 (defresource qrcode [request id]
   :allowed-methods [:get]
@@ -162,7 +164,7 @@
                         (qr/from (format "http://%s:%d/give/%s"
                                          (:address param/host)
                                          (:port param/host)
-                                         (:accountRS wallet))))
+                                         (:_id wallet))))
                        ))
 
                  ;; else a name is specified
@@ -361,48 +363,58 @@
                             new-wallet (blockchain/create-account
                                         (blockchain/new-stub) ;; default blockchain
                                         (wallet. ""
-                                         (:name params) (:email params)
-                                         nil ;; public key
-                                         nil ;; private key
-                                         {} ;; blockchains
-                                         {} ;; blockchain-secrets
-                                         ))
+                                                 (:name params) (:email params)
+                                                 nil ;; public key
+                                                 nil ;; private key
+                                                 {} ;; blockchains
+                                                 {} ;; blockchain-secrets
+                                                 ))
                             secret (get-in new-wallet [:blockchain-secrets :STUB])
                             secret-without-cookie (dissoc secret :cookie)
                             cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
 
-                        ;; (utils/log! ::ACK :cookie cookie-data)
-                        ;; (utils/log! ::ACK :secret secret)
-                        ;; (utils/log! ::ACK :wallet (pr-str new-wallet))
+                        (if (contains? new-wallet :problem)
+                          (utils/log! (::error new-wallet))
+                          (let []
+                            ;; else
 
-                        ;; nxt-data (nxt/getAccountId
-                        ;;           {:secret (fxc/unlock-secret
-                        ;;                     param/encryption
-                        ;;                     secret-without-cookie
-                        ;;                     (:cookie secret))})]
 
-                        ;; delete the confirmation entry from the db
-                        (storage/remove-by-id db "confirms" (:_id params))
+                            ;; delete the confirmation entry from the db
+                            (storage/remove-by-id db "confirms" (:_id params))
 
-                        ;; ;; insert in the secrets database
-                        ;; (storage/insert db "secrets" secret-without-cookie)
+                            ;; ;; insert in the secrets database
+                            ;; (storage/insert db "secrets" secret-without-cookie)
 
-                        ;; insert in the wallet database
-                        (storage/insert db "wallets" (assoc new-wallet :_id (:_id secret) ))
+                            ;; insert in the wallet database
+                            (storage/insert db "wallets" (assoc new-wallet :_id (:_id secret) ))
 
-                        ;; return the apikey cookie
-                        (ring-response {:headers {"Location" (ctx :location)}
-                                        :session {:cookie-data cookie-data}
-                                        :apikey cookie-data})
-                        ;; TODO: give PINs
-                        ;; send backup (show QR, also per email?)
+                            ;; return the apikey cookie
+                            (ring-response {:headers {"Location" (ctx :location)}
+                                            :session {:cookie-data cookie-data}
+                                            :apikey cookie-data})
+                            ;; TODO: give PINs
+                            ;; send backup (show QR, also per email?)
 
-                        )
+                            )))
+
+
                       ;; else confirmation not found
                       {:debug (utils/trace)
                        :error "Confirmation not found."
-                       :id (::confirmation ctx)})))
+                       :id (::confirmation ctx)}
+                      )
+                    )
+  )
 
+                            ;; (utils/log! ::ACK :cookie cookie-data)
+                            ;; (utils/log! ::ACK :secret secret)
+                            ;; (utils/log! ::ACK :wallet (pr-str new-wallet))
+
+                            ;; nxt-data (nxt/getAccountId
+                            ;;           {:secret (fxc/unlock-secret
+                            ;;                     param/encryption
+                            ;;                     secret-without-cookie
+                            ;;                     (:cookie secret))})]
 
 (defresource balance-show [request]
   :service-available?    {::db (get-in request [:config :db-connection])}
@@ -418,9 +430,9 @@
                                     :wallet (:wallet (auth/check request))}
                  ))
   )
-  
 
-  
+
+
 ;; Reminder, but NEVER show nxtpass!
 ;; {:nxtpass (fxc/unlock-secret
 ;;            param/encryption

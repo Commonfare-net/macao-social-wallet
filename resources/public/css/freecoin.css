@@ -1,3 +1,19 @@
 li {
-    float: left
+    float: left;
+}
+
+.qrcode {
+    float: left;
+    margin-left: -19px;
+}
+
+
+.card {
+    border: solid 3px #888;
+    border-radius: 5px;
+    padding: 1.5em 2.2em .8em 2.2em;
+}
+
+.card .gravatar {
+    margin-top: 19px;
 }
