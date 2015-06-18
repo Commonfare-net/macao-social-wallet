@@ -40,6 +40,8 @@
   (page/html5
     [:head
      [:title title]
-     (page/include-css "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/css/bootstrap.min.css")
+     (page/include-css "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css")
+     (page/include-css "css/freecoin.css")
+
      ]
     [:body (template content)]))

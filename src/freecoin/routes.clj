@@ -34,6 +34,7 @@
 
    [liberator.representation :refer [as-response ring-response]]
    [compojure.core :refer [defroutes ANY GET POST context]]
+   [compojure.route :refer [resources]]
 
    ;; [environ.core :refer [env]]
 
@@ -75,6 +76,9 @@
 ;; routes
 (defroutes app
 
+  ;; embedded resources from resources/public
+  (compojure.route/resources "/")
+
   ;; debug
   (ANY "/echo" [request] (echo request))
 
@@ -90,19 +94,19 @@
                       :handle-ok #(util/pretty (::hello %))
                       :handle-create #(::hello %)
                       ))
-  
+
   ;; Wallet operations
-  
+
   (ANY "/"         [request] (wallet/card request))
 
   (ANY "/qrcode" [request] (wallet/qrcode request nil))
   (ANY "/qrcode/:name" [name :as request] (wallet/qrcode request name))
 
   ;;  (ANY "/wallet" [request] (wallet/balance request))
-  (GET "/wallet/create" [request] (wallet/create-form request))
-  (POST "/wallet/create" [request] (wallet/create request))
-
-  (GET "/wallet/create/:confirmation" [request] (wallet/confirm-create-form request))
+  (GET  "/wallet/create"                [request] (wallet/create-form request))
+  (POST "/wallet/create"                [request] (wallet/create request))
+  (GET  "/wallet/create/:confirmation"  [confirmation :as request]
+        (wallet/confirm-create-form request confirmation))
   (POST "/wallet/create/:confirmation" [confirmation :as request]
         (wallet/confirm-create request confirmation))
 
@@ -128,6 +132,5 @@
 
   ;; Twitter oauth example
   (context "/twitter" [] twitter/routes)
-  
-  ) ; end of routes
 
+  ) ; end of routes
