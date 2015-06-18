@@ -46,10 +46,10 @@
  [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
   (after :facts (ih/destroy-test-session ih/app-state))]
 
- (facts "GET /find-wallet"
+ (facts "GET /participants"
         (fact "Responds with 401 when user is not authenticated"
               (let [{response :response} (-> (:session ih/app-state)
-                                             (p/request "/find-wallet"))]
+                                             (p/request "/participants"))]
                 (:status response) => 401))
                 ;; (:body response) => (contains #"Sorry, you are not signed in")))
 
@@ -57,16 +57,16 @@
               (against-background
                (auth/check anything) => {:result true})
               (let [{response :response} (-> (:session ih/app-state)
-                                             (p/request (str "/find-wallet")))]
+                                             (p/request (str "/participants")))]
                 (:status response) => 200
                 (:body response) => (contains #"Search for a wallet")))
         )
 
 
- (facts "GET /wallets"
+ (facts "GET /participants"
         (fact "Responds with 401 when user is not authenticated"
               (let [{response :response} (-> (:session ih/app-state)
-                                             (p/request "/wallets?field=name&value=user"))]
+                                             (p/request "/participants?field=name&value=user"))]
                 (:status response) => 401))
                 ;; (:body response) => (contains #"Sorry, you are not signed in")))
 
@@ -81,7 +81,7 @@
                                             :email (str "email-" n "@test.com")}
                                            (storage/insert (:db-connection ih/app-state) "wallets")))
                                   {response :response} (-> (:session ih/app-state)
-                                                           (p/request "/wallets"))]
+                                                           (p/request "/participants/all"))]
                               (:status response) => 200
                               (:body response) => (contains #"name-0")
                               (:body response) => (contains #"name-9")
@@ -93,7 +93,7 @@
                              (let [_ (storage/insert (:db-connection ih/app-state) "wallets" wallet1)
                                    _ (storage/insert (:db-connection ih/app-state) "wallets" wallet2)
                                    {response :response} (-> (:session ih/app-state)
-                                                            (p/request (str "/wallets?field=" ?field "&value=" ?value)))]
+                                                            (p/request (str "/participants/find?field=" ?field "&value=" ?value)))]
                                (:status response) => 200
                                (:body response) => (contains (re-pattern (str "name.+" (:name ?found))))
                                (:body response) =not=> (contains (re-pattern (str "name.+" (:name ?not-found))))))
@@ -104,6 +104,6 @@
 
                       (fact "Responds with a 200 and reports no result when no wallets found"
                             (let [{response :response} (-> (:session ih/app-state)
-                                                           (p/request (str "/wallets?field=name&value=user")))]
+                                                           (p/request (str "/participants/find?field=name&value=user")))]
                               (:status response) => 200
-                              (:body response) => (contains #"No wallets found")))))))
+                              (:body response) => (contains #"No participant found")))))))

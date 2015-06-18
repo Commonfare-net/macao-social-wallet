@@ -99,6 +99,7 @@
 
   (get-address [bk wallet] nil)
   (get-balance [bk wallet] nil)
+;;    (let [id (get-account bk wallet)]
 
   (list-transactions [bk wallet] nil)
   (get-transaction   [bk wallet txid] nil)
@@ -108,7 +109,10 @@
   (redeem-voucher [bk wallet voucher] nil)
   )
 
-(defn new-stub [] (stub.))
+(defn new-stub []
+  "Check that the blockchain is available, then return a record"
+  (stub.)
+  )
 ;; example
 ;;  (b/create-account (b/_create "STUB" "sadsd" 444)
 ;;                    (w/new "csdaz" "ca@sdasd") {})

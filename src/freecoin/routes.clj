@@ -97,22 +97,23 @@
 
   ;; Wallet operations
 
-  (ANY "/"         [request] (wallet/card request))
+  (ANY "/"       [request] (wallet/balance-show request))
 
   (ANY "/qrcode" [request] (wallet/qrcode request nil))
   (ANY "/qrcode/:name" [name :as request] (wallet/qrcode request name))
 
   ;;  (ANY "/wallet" [request] (wallet/balance request))
-  (GET  "/wallet/create"                [request] (wallet/create-form request))
-  (POST "/wallet/create"                [request] (wallet/create request))
-  (GET  "/wallet/create/:confirmation"  [confirmation :as request]
+  (GET  "/wallets"                [request] (wallet/create-form request))
+  (POST "/wallets"                [request] (wallet/create request))
+  (GET  "/wallets/:confirmation"  [confirmation :as request]
         (wallet/confirm-create-form request confirmation))
-  (POST "/wallet/create/:confirmation" [confirmation :as request]
+  (POST "/wallets/:confirmation" [confirmation :as request]
         (wallet/confirm-create request confirmation))
 
   ;; Search function
-  (GET "/find-wallet" [request] (wallet/find-wallet-form request))
-  (GET "/wallets" [request] (wallet/wallets request))
+  (GET "/participants" [request] (wallet/find-wallet-form request))
+  (GET "/participants/find" [request] (wallet/participants request))
+  (GET "/participants/all" [request] (wallet/participants request))
 
   ;; Money transfers (TODO)
   (ANY "/give/:recipient/:amount" [recipient amount :as request]

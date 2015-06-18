@@ -40,7 +40,7 @@
 
 (def form-body "name=user&email=test@test.com")
 
-(facts "POST /wallet/create"
+(facts "POST /wallets"
        (against-background
         [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
          (after :facts (ih/destroy-test-session ih/app-state))])
@@ -49,20 +49,20 @@
               (fact "when successful, generates a wallet creation confirmation code"
                     (let [{response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/json")
-                                                   (p/request "/wallet/create"
+                                                   (p/request "/wallets"
                                                               :request-method :post
                                                               :body json-body))]
                       (:status response) => 201
                       (:body response) => (ih/json-contains {:body (contains {:name "user"
                                                                               :email "test@test.com"
                                                                               :_id anything})
-                                                             :confirm (contains #"^/wallet/create/")})))
+                                                             :confirm (contains #"^/wallets/")})))
 
               (tabular
                (fact "returns 403 and error report if posted json data is invalid"
                      (let [{response :response} (-> (:session ih/app-state)
                                                     (p/content-type "application/json")
-                                                    (p/request "/wallet/create"
+                                                    (p/request "/wallets"
                                                                :request-method :post
                                                                :body (json/generate-string ?user-data)))]
                       (:status response) => 403
@@ -77,7 +77,7 @@
                     (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
                           {response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/json")
-                                                   (p/request "/wallet/create"
+                                                   (p/request "/wallets"
                                                               :request-method :post
                                                               :body json-body))]
                       (:status response) => 403
@@ -87,17 +87,17 @@
               (fact "when successful, initiates confirmation process"
                     (let [{response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/x-www-form-urlencoded")
-                                                   (p/request "/wallet/create"
+                                                   (p/request "/wallets"
                                                               :request-method :post
                                                               :body form-body))]
                       (:status response) => 303
-                      (:headers response) => (contains {"Location" #"^/wallet/create/"})))
+                      (:headers response) => (contains {"Location" #"^/wallets/"})))
 
               (tabular
-               (fact "when posted data is invalid, redirects to /wallet/create with error message"
+               (fact "when posted data is invalid, redirects to /wallets with error message"
                      (let [{response :response} (-> (:session ih/app-state)
                                                     (p/content-type "application/x-www-form-urlencoded")
-                                                    (p/request "/wallet/create"
+                                                    (p/request "/wallets"
                                                                :request-method :post
                                                                :body ?user-data))]
                        (:status response) => 403
@@ -108,11 +108,11 @@
                "email=valid@email.com"        #"Name.+: must not be blank"
                "name=user&email=invalid"      #"Email.+: must be a valid email")
 
-              (fact "when username not unique, redirects to /wallet/create with error message"
+              (fact "when username not unique, redirects to /wallets with error message"
                     (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
                           {response :response} (-> (:session ih/app-state)
                                                    (p/content-type "application/x-www-form-urlencoded")
-                                                   (p/request "/wallet/create"
+                                                   (p/request "/wallets"
                                                               :request-method :post
                                                               :body "name=user&email=valid@email.com"))]
                       (:status response) => 403

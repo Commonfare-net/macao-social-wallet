@@ -68,45 +68,16 @@
    )
   )
 
-(defn unauthorized-response [ctx] "Sorry, you are not signed in")
-
-(defn- format-card-html [card]
-  {:post [(contains? % :address)]}
-
-  (if (empty? card) {:address "not found."}
-      {:QR (format "<img src=\"/qrcode/%s\" alt=\"QR\">" (:name card))
-       :name (:name card)
-       :email (:email card)
-       :address (:accountRS card)})
-  )
-
-(defn- format-card-json [card]
-  {:post [(string? %)]}
-  (if (empty? card) "{\"address\": \"not found.\"}"
-      (cheshire/generate-string
-       ;; TODO: make an inline image of the qrcode, see:
-       ;; http://www.websiteoptimization.com/speed/tweak/inline-images/
-       {:QR "<img src=\"/qrcode\" alt=\"QR\">"
-        :name (:name card)
-        :email (:email card)
-        :address (:accountRS card)}
-       ))
-  )
-
+;; A wallet can contain multiple, non duplicate blockchain accounts and is unique to a participant.
 (defrecord wallet
-    [_id name email public-key private-key
-     blockchains blockchain-secrets])
-
-
-(defresource card [request]
-  :allowed-methods       [:get :post]
-  :available-media-types ["text/html" "application/json"]
-  :authorized?           (:result (auth/check request))
-
-  :handle-unauthorized   unauthorized-response
-  :handle-ok      #(format-card-html (:wallet %))
-  :handle-created #(format-card-json (:wallet %))
-)
+    [_id                 ;; unique id
+     name                ;; identifier, case insensitive, space counts
+     email               ;; working email account (can be restricted to a list of accepted domains)
+     public-key          ;; public asymmetric key for off-the-blockchain message encryption
+     private-key         ;; private asymmetric key for off-the-blockchain message encryption
+     blockchains         ;; list of blockchains and public account ids
+     blockchain-secrets  ;; list of secrets enabling the access to private blockchain operations
+     ])
 
 (def find-wallet-form-spec
   {:fields [{:name :field
@@ -114,7 +85,7 @@
              :options ["name" "email"]}
             {:name :value :type :text}]
    :validations [[:required [:field :value]]]
-   :action "/wallets"
+   :action "/participants/find"
    :method "get"})
 
 (defresource find-wallet-form [request]
@@ -139,7 +110,7 @@
 
 (defn render-wallet [wallet]
   [:li {:style "margin: 1em"}
-   [:div {:style "border: solid 1px; padding: 1em;"}
+   [:div {:style "border: solid 3px #888; border-radius: 5px; padding: 1em"}
     [:span (str "name: " (:name wallet))]
     [:br]
     [:span (str "email: " (:email wallet))]
@@ -148,26 +119,33 @@
     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]
     ]])
 
-(defn wallets-template [{:keys [wallets] :as content}]
+(defn participants-template [{:keys [wallets] :as content}]
   [:div
    (if (empty? wallets)
-     [:span (str "No wallets found")]
+     [:span (str "No participant found")]
      [:ul {:style "list-style-type: none;"}
       (for [wallet wallets]
         (render-wallet wallet))])])
 
-(defresource wallets [request]
+(defn balance-template [{:keys [wallet] :as content}]
+   (if (empty? wallet)
+     [:span (str "No wallet found")]
+     [:ul {:style "list-style-type: none;"}
+      (render-wallet wallet)])
+   )
+
+(defresource participants [request]
   :service-available? {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
   :authorized?           (:result (auth/check request))
+  :handle-unauthorized   (:problem (auth/check request))
 
-  :handle-unauthorized   unauthorized-response
   :handle-ok             (fn [ctx]
                            (let [wallets (->> request
                                               request->wallet-query
                                               (find-wallets (::db ctx)))]
-                             (views/render-page wallets-template {:title "wallets"
+                             (views/render-page participants-template {:title "wallets"
                                                                   :wallets wallets}))))
 
 (defresource qrcode [request id]
@@ -204,8 +182,8 @@
   :allowed-methods       [:get :post]
   :available-media-types ["text/html" "application/json"]
   :authorized?           (:result (auth/check request))
+  :handle-unauthorized   (:problem (auth/check request))
 
-  :handle-unauthorized   unauthorized-response
   ;; TODO: if none, get NXT from faucet account
   ;; to cover the transaction fee. also check a maximum
   ;; limit of transactions per day.
@@ -229,10 +207,18 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
-               (views/render-page views/simple-form-template
-                                  {:title "Create wallet"
-                                   :heading "Create a new wallet"
-                                   :form-spec wallet-create-form})))
+               (if (:result (auth/check request))
+                 ;; user has already a wallet? then show balance
+                 (views/render-page
+                  balance-template {:title "Balance"
+                                    :wallet (:wallet (auth/check request))}
+                  )
+                 ;; else propose to create a wallet
+                 (views/render-page views/simple-form-template
+                                    {:title "Create wallet"
+                                     :heading "Create a new wallet"
+                                     :form-spec wallet-create-form}))
+               ))
 
 (defn parse-hybrid-form [form-spec {:keys [request] :as ctx}]
   (case (::content-type ctx)
@@ -328,7 +314,7 @@
 
                       "application/x-www-form-urlencoded"
                       (let [confirmation (::confirmation ctx)]
-                        {:location (str "/wallet/create/" (:_id confirmation))})
+                        {:location (str "/wallets/" (:_id confirmation))})
 
                       ;; TODO: handle default case
                       ))
@@ -338,7 +324,7 @@
                       (case (::content-type ctx)
                         "application/json"
                         {:body confirmation
-                         :confirm (str "/wallet/create/" (:_id confirmation))}
+                         :confirm (str "/wallets/" (:_id confirmation))}
 
                         ;; TODO: handle default case
                         ))))
@@ -384,15 +370,17 @@
                             secret (get-in new-wallet [:blockchain-secrets :STUB])
                             secret-without-cookie (dissoc secret :cookie)
                             cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
-                        (utils/log! ::ACK :cookie cookie-data)
-                        (utils/log! ::ACK :secret secret)
-                        (utils/log! ::ACK :wallet (pr-str new-wallet))
 
-                            ;; nxt-data (nxt/getAccountId
-                            ;;           {:secret (fxc/unlock-secret
-                            ;;                     param/encryption
-                            ;;                     secret-without-cookie
-                            ;;                     (:cookie secret))})]
+                        ;; (utils/log! ::ACK :cookie cookie-data)
+                        ;; (utils/log! ::ACK :secret secret)
+                        ;; (utils/log! ::ACK :wallet (pr-str new-wallet))
+
+                        ;; nxt-data (nxt/getAccountId
+                        ;;           {:secret (fxc/unlock-secret
+                        ;;                     param/encryption
+                        ;;                     secret-without-cookie
+                        ;;                     (:cookie secret))})]
+
                         ;; delete the confirmation entry from the db
                         (storage/remove-by-id db "confirms" (:_id params))
 
@@ -416,6 +404,23 @@
                        :id (::confirmation ctx)})))
 
 
+(defresource balance-show [request]
+  :service-available?    {::db (get-in request [:config :db-connection])}
+  :allowed-methods       [:get]
+  :available-media-types ["text/html"]
+  :authorized?           (:result (auth/check request))
+  :handle-unauthorized   (:problem (auth/check request))
+
+  :handle-ok (fn [ctx]
+               ;; (utils/log! 'ACK 'balance-show (clojure.pprint/pprint wallet))
+                 (views/render-page
+                  balance-template {:title "Balance"
+                                    :wallet (:wallet (auth/check request))}
+                 ))
+  )
+  
+
+  
 ;; Reminder, but NEVER show nxtpass!
 ;; {:nxtpass (fxc/unlock-secret
 ;;            param/encryption
