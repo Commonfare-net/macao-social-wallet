@@ -79,7 +79,7 @@
      blockchain-secrets  ;; list of secrets enabling the access to private blockchain operations
      ])
 
-(def find-wallet-form-spec
+(def participants-form-spec
   {:fields [{:name :field
              :type :select
              :options ["name" "email"]}
@@ -88,7 +88,7 @@
    :action "/participants/find"
    :method "get"})
 
-(defresource find-wallet-form [request]
+(defresource participants-form [request]
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
   :authorized?           (:result (auth/check request))
@@ -98,15 +98,8 @@
   :handle-ok             (views/render-page views/simple-form-template
                                   {:title "Find wallet"
                                    :heading "Search for a wallet"
-                                   :form-spec find-wallet-form-spec}))
+                                   :form-spec participants-form-spec}))
 
-(defn find-wallets [db query]
-  (storage/find-by-key db "wallets" query))
-
-(defn request->wallet-query [{:keys [params] :as request}]
-  (if-let [{:keys [field value]} (utils/select-all-or-nothing params [:field :value])]
-    {(keyword field) value}
-    {}))
 
 (defn render-wallet [wallet]
   [:li {:style "margin: 1em"}
@@ -121,6 +114,13 @@
      [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]
     ]])
 
+(defn balance-template [{:keys [wallet] :as content}]
+   (if (empty? wallet)
+     [:span (str "No wallet found")]
+     [:ul {:style "list-style-type: none;"}
+      (render-wallet wallet)])
+   )
+
 (defn participants-template [{:keys [wallets] :as content}]
   [:div
    (if (empty? wallets)
@@ -129,14 +129,14 @@
       (for [wallet wallets]
         (render-wallet wallet))])])
 
-(defn balance-template [{:keys [wallet] :as content}]
-   (if (empty? wallet)
-     [:span (str "No wallet found")]
-     [:ul {:style "list-style-type: none;"}
-      (render-wallet wallet)])
-   )
 
-(defresource participants [request]
+(defn request->wallet-query [{:keys [params] :as request}]
+  (if-let [{:keys [field value]} (utils/select-all-or-nothing params [:field :value])]
+    {(keyword field) value}
+    {}))
+
+
+(defresource participants-find [request]
   :service-available?    {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
@@ -146,7 +146,7 @@
   :handle-ok             (fn [ctx]
                            (let [wallets (->> request
                                               request->wallet-query
-                                              (find-wallets (::db ctx)))]
+                                              (storage/find-by-key (::db ctx) "wallets"))]
                              (views/render-page participants-template {:title "wallets"
                                                                        :wallets wallets}))))
 
@@ -205,7 +205,7 @@
             {:name :email :type :email}]
    :validations [[:required [:name :email]]]})
 
-(defresource create-form [request]
+(defresource get-create [request]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
@@ -242,7 +242,7 @@
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})
 
-(defresource create [request]
+(defresource post-create [request]
   ;; Files a request to create a wallet, accepting a json structure
   ;; containing name and email. Checks if the name doesn't already
   ;; exists, if succesful returns a json structure containing the
@@ -331,7 +331,7 @@
                         ;; TODO: handle default case
                         ))))
 
-(defresource confirm-create-form [request confirmation]
+(defresource get-create-confirm [request confirmation]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
@@ -341,7 +341,7 @@
                  :heading "Please confirm the creation of your wallet"
                  :form-spec {:submit-label "Confirm"}})))
 
-(defresource confirm-create [request confirmation]
+(defresource post-create-confirm [request confirmation]
   :allowed-methods [:post]
   :available-media-types ["text/html"]
   :exists? (fn [ctx]

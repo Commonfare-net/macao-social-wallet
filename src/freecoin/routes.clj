@@ -103,17 +103,20 @@
   (ANY "/qrcode/:name" [name :as request] (wallet/qrcode request name))
 
   ;;  (ANY "/wallet" [request] (wallet/balance request))
-  (GET  "/wallets"                [request] (wallet/create-form request))
-  (POST "/wallets"                [request] (wallet/create request))
+  (GET  "/wallets"                [request] (wallet/get-create request))
+  (POST "/wallets"                [request] (wallet/post-create request))
   (GET  "/wallets/:confirmation"  [confirmation :as request]
-        (wallet/confirm-create-form request confirmation))
+        (wallet/get-create-confirm request confirmation))
   (POST "/wallets/:confirmation" [confirmation :as request]
-        (wallet/confirm-create request confirmation))
+        (wallet/post-create-confirm request confirmation))
 
   ;; Search function
-  (GET "/participants" [request] (wallet/find-wallet-form request))
-  (GET "/participants/find" [request] (wallet/participants request))
-  (GET "/participants/all" [request] (wallet/participants request))
+  (GET "/participants" [request] (wallet/participants-form request))
+  ;; this will read field and value, url encoded
+  (GET "/participants/find" [request] (wallet/participants-find request))
+  ;; all is simply find without arguments
+  (GET "/participants/all"  [request] (wallet/participants-find request))
+
 
   ;; Money transfers (TODO)
   (ANY "/give/:recipient/:amount" [recipient amount :as request]
