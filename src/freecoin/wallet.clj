@@ -140,9 +140,9 @@
 (defn render-wallet [wallet]
   [:li {:style "margin: 1em"}
    [:div {:style "border: solid 1px; padding: 1em;"}
-    [:span (str "Name: " (:name wallet))]
+    [:span (str "name: " (:name wallet))]
     [:br]
-    [:span (str "E-Mail: " (:email wallet))]
+    [:span (str "email: " (:email wallet))]
     [:br]
     [:img {:src (format "/qrcode/%s" (:name wallet))}]
     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]
