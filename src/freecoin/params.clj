@@ -33,7 +33,7 @@
 
 ;; TODO: perhaps already configured in ring?
 (def host
-  {:address "localhost"
+  {:address "fork"
    :port 8000})
 
 (def webapp

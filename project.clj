@@ -65,7 +65,7 @@
                  [autoclave "0.1.7"]
 
                  ;; json serialization and encryption
-                 [com.taoensso/nippy "2.8.0"]
+                 ;; [com.taoensso/nippy "2.8.0"]
 
                  ;; json schema validation
                  [prismatic/schema "0.4.2"]

@@ -101,8 +101,6 @@
                                    :form-spec participants-form-spec})
   )
 
-
-
 (defn render-wallet [wallet]
   [:li {:style "margin: 1em"}
    [:div {:class "card pull-left" }
@@ -165,7 +163,7 @@
                              (views/render-page participants-template {:title "wallets"
                                                                        :wallets wallets}))))
   
-(defresource img-qrcode [request id]
+(defresource qrcode [request id]
   :allowed-methods [:get]
   :available-media-types ["image/png"]
   :authorized?           (:result (auth/check request))
@@ -176,10 +174,10 @@
                  (let [wallet (auth/get-wallet request)]
                    (if (empty? wallet) ""
                        (qr/as-input-stream
-                        (qr/from (format "http://%s:%d/give/%s"
+                        (qr/from (format "http://%s:%d/send/to/%s"
                                          (:address param/host)
                                          (:port param/host)
-                                         (:_id wallet))))
+                                         (:name wallet))))
                        ))
 
                  ;; else a name is specified
@@ -189,10 +187,10 @@
 
                    (if (empty? wallet) ""
                        (qr/as-input-stream
-                        (qr/from (format "http://%s:%d/send/"
+                        (qr/from (format "http://%s:%d/send/to/%s"
                                          (:address param/host)
                                          (:port param/host)
-                                         (:accountRS wallet))))
+                                         (:name wallet))))
                        ))
                  )))
 

@@ -120,11 +120,15 @@
 
 
   ;; Transactions
-  (GET  "/send" [request] (transactions/get-transaction-form request))
+  (GET  "/send" [request] (transactions/get-transaction-form request nil))
   (POST "/send" [request] (transactions/post-transaction-form request))
-  (GET  "/send/:confirmation" [confirmation :as request]
+
+  (GET  "/send/to/:participant" [participant :as request]
+        (transactions/get-transaction-form request participant))
+
+  (GET  "/send/confirm/:confirmation" [confirmation :as request]
         (transactions/get-transaction-confirm request confirmation))
-  (POST "/send/:confirmation" [confirmation :as request]
+  (POST "/send/confirm/:confirmation" [confirmation :as request]
         (transactions/post-transaction-confirm request confirmation))
   (GET  "/transactions/all" [request] (transactions/get-all-transactions request))
 

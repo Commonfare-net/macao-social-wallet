@@ -43,13 +43,16 @@
 
 (defn render-page [template {:keys [title] :as content}]
   (page/html5
-    [:head
+    [:head [:meta {:charset "utf-8"}]
+     [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
+     [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:title title]
      (page/include-css "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css")
+     (page/include-css "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css")
      (page/include-css "/css/freecoin.css")
-
      ]
-    [:body (template content)]))
+    [:body [:div {:class "container-fluid"}
+            (template content)]]))
 
 (defn parse-hybrid-form [request form-spec content-type]
   (case content-type

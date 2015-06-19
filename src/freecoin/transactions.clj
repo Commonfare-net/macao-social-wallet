@@ -53,25 +53,55 @@
    )
   )
 
-(def transaction-form-spec
-  {:fields [{:name :amount :datatype :float}
-            {:name :recipient :type :text}]
-   :validations [[:required [:amount :recipient]]]
-                 ;; [:float [:amount]]
-                 ;; [:min-val [0.01] [:amount]]]
-   })
+(defn transaction-form-spec [recipient]
+  ;; [:float [:amount]]
+  ;; [:min-val [0.01] [:amount]]]
+  (let [validations  {:validations
+                      [[:required [:amount :recipient]]]
+                      :action "/send"
+                      :method "post"}]
 
-(defresource get-transaction-form [request]
+    (if (nil? recipient)
+      (assoc validations
+             :fields [
+                      {:name :recipient :type :text}
+                      {:name :amount :datatype :float}
+                      ]
+             :validations [[:required [:amount :recipient]]]
+             :action "/send"
+             :method "post"
+              )
+
+    ;; TODO: verify if recipient exists
+      (assoc validations
+             :fields [
+                      {:name :amount :datatype :float}
+                      {:name :recipient :type :hidden :value recipient}
+                      ]
+             :validations [[:required [:amount :recipient]]]
+             :action "/send"
+             :method "post"
+             )
+     ;; [:float [:amount]]
+    ;; [:min-val [0.01] [:amount]]]
+    ))
+
+  )
+
+
+(defresource get-transaction-form [request recipient]
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
 
   :authorized?           (:result (auth/check request))
   :unauthorized          (:problem (auth/check request))
 
-  :handle-ok             (views/render-page views/simple-form-template
-                                  {:title "Make a transaction"
-                                   :heading "Send an amount to another participant"
-                                   :form-spec transaction-form-spec}))
+  :handle-ok             (fn [ctx]
+                           (views/render-page views/simple-form-template
+                                              {:title "Make a transaction"
+                                               :heading (str "Send an amount to: " recipient)
+                                               :form-spec (transaction-form-spec recipient)}))
+  )
 
 (def response-representation
   {"application/json" "application/json"
@@ -90,7 +120,7 @@
   :allowed? (fn [ctx]
               (let [{:keys [status data problems]}
                     (views/parse-hybrid-form request
-                                             transaction-form-spec
+                                             (transaction-form-spec nil)
                                              (::content-type ctx))]
                 (case status
                   :ok [true {::user-data data}]
