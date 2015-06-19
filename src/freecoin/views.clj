@@ -29,7 +29,12 @@
 (ns freecoin.views
   (:require
    [hiccup.page :as page]
-   [formative.core :as fc]))
+   [formative.core :as fc]
+   [formative.parse :as fp]
+   [cheshire.core :as cheshire]
+   [autoclave.core :as autoclave]
+
+   ))
 
 (defn simple-form-template [{:keys [heading form-spec] :as content}]
   [:div
@@ -45,3 +50,19 @@
 
      ]
     [:body (template content)]))
+
+(defn parse-hybrid-form [request form-spec content-type]
+  (case content-type
+    "application/x-www-form-urlencoded"
+    (fp/with-fallback
+      (fn [problems] {:status :error :problems problems})
+      {:status :ok
+       :data (fp/parse-params form-spec (:params request))})
+
+    "application/json"
+    (let [data (cheshire/parse-string (autoclave/json-sanitize (slurp (:body request))) true)]
+      (fp/with-fallback
+        (fn [problems] {:status :error :problems problems})
+        {:status :ok :data (fp/parse-params form-spec data)}))
+
+    {:status :error :problems [{:keys [] :msg (str "unknown content type: " content-type)}]}))

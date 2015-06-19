@@ -106,7 +106,8 @@
   (get-balance [bk wallet] nil)
 ;;    (let [id (get-account bk wallet)]
 
-  (list-transactions [bk wallet] nil)
+  (list-transactions [bk wallet] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
+
   (get-transaction   [bk wallet txid] nil)
 
   (make-transaction  [bk wallet amount recipient secret]
@@ -120,17 +121,18 @@
          :body "Error: recipient name is ambiguous"}
 
         ;; else
-        (utils/pretty
-         (storage/insert db "transactions" {:_id (str now "-" sender-name)
-                                            :blockchain "STUB"
-                                            :timestamp now
-                                            :from sender-name
-                                            :from-id sender-id
-                                            :to recipient
-                                            :to-id (:_id (first recipient-card))
-                                            :amount amount}))
-        
-        ))
+         (storage/insert
+          db "transactions"
+          {:_id (str now "-" sender-name)
+           :blockchain "STUB"
+           :timestamp now
+           :from sender-name
+           :from-id sender-id
+           :to recipient
+           :to-id (:_id (first recipient-card))
+           :amount amount}))
+      ;; returns the data structure that was inserted
+        )
       )
 
   (create-voucher [bk wallet amount expiration secret] nil)

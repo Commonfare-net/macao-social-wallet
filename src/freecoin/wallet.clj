@@ -41,15 +41,12 @@
 
    [ring.util.io :refer [piped-input-stream]]
 
-   [cheshire.core :as cheshire]
-
    [clj.qrgen :as qr]
 
    [clavatar.core]
 
 ;;   [taoensso.nippy :as nippy]
 
-   [autoclave.core :as autoclave]
 
    [freecoin.secretshare :as ssss]
 
@@ -92,13 +89,18 @@
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
   :authorized?           (:result (auth/check request))
+  ;; uncomment this to deny access to non-participants
+  ;; :unauthorized          (:problem (auth/check request))
+
   ;; :handle-unauthorized   {:status 200
   ;;                         :body (:problem (auth/check request))}
 
   :handle-ok             (views/render-page views/simple-form-template
                                   {:title "Find wallet"
                                    :heading "Search for a wallet"
-                                   :form-spec participants-form-spec}))
+                                   :form-spec participants-form-spec})
+  )
+
 
 
 (defn render-wallet [wallet]
@@ -162,8 +164,8 @@
                                               (storage/find-by-key (::db ctx) "wallets"))]
                              (views/render-page participants-template {:title "wallets"
                                                                        :wallets wallets}))))
-
-(defresource qrcode [request id]
+  
+(defresource img-qrcode [request id]
   :allowed-methods [:get]
   :available-media-types ["image/png"]
   :authorized?           (:result (auth/check request))
@@ -187,46 +189,12 @@
 
                    (if (empty? wallet) ""
                        (qr/as-input-stream
-                        (qr/from (format "http://%s:%d/give/%s"
+                        (qr/from (format "http://%s:%d/send/"
                                          (:address param/host)
                                          (:port param/host)
                                          (:accountRS wallet))))
                        ))
                  )))
-
-
-(defresource post-send [request amount recipient]
-  :service-available? {::db (get-in request [:config :db-connection])
-                       ::content-type (get-in request [:headers "content-type"])}
-
-  :allowed-methods [:post]
-  :available-media-types ["text/html"]
-
-  :authorized?           (:result (auth/check request))
-  :handle-unauthorized   (:problem (auth/check request))
-
-  :handle-created (fn [ctx]
-                    (let [wallet (auth/get-wallet request)
-                          db     (::db ctx)]
-
-                      (if (empty? wallet) {:status 401
-                                           :body "Wallet not found."}
-                          ;; else
-                          (blockchain/make-transaction
-                           (blockchain/new-stub db) wallet
-                           amount recipient 
-                           nil) ;; secret is not used in STUB
-                          )
-                      ))
-
-  :handle-ok (fn [ctx]
-               (views/render-page welcome-template {:title "Transaction OK"
-                                                    :wallet (auth/get-wallet request) })
-               )
-  
-  )
-
-
 
 ;; Methods:
 ;; create
@@ -256,25 +224,11 @@
                                      :form-spec wallet-create-form}))
                ))
 
-(defn parse-hybrid-form [form-spec {:keys [request] :as ctx}]
-  (case (::content-type ctx)
-    "application/x-www-form-urlencoded"
-    (fp/with-fallback
-      (fn [problems] {:status :error :problems problems})
-      {:status :ok
-       :data (fp/parse-params form-spec (:params request))})
-
-    "application/json"
-    (let [data (cheshire/parse-string (autoclave/json-sanitize (slurp (:body request))) true)]
-      (fp/with-fallback
-        (fn [problems] {:status :error :problems problems})
-        {:status :ok :data (fp/parse-params form-spec data)}))
-
-    {:status :error :problems [{:keys [] :msg (str "unknown content type: " (::content-type ctx))}]}))
 
 (def response-representation
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})
+
 
 (defresource post-create [request]
   ;; Files a request to create a wallet, accepting a json structure
@@ -295,9 +249,10 @@
   :available-media-types ["application/json"]
 
   :allowed? (fn [ctx]
-              (let [{:keys [status data problems]} (parse-hybrid-form
-                                                    wallet-create-form
-                                                    ctx)]
+              (let [{:keys [status data problems]}
+                    (views/parse-hybrid-form request
+                     wallet-create-form
+                     (::content-type ctx))]
                 (case status
                   :ok
                   ;; TODO: optimize using redis k/v for this unauthenticated lookup

@@ -22,6 +22,9 @@
 (defn find-by-key [connection coll needle]
   (mc/find-maps (:db connection) coll needle))
 
+(defn find-all [connection coll]
+  (mc/find-maps (:db connection) coll))
+
 (defn find-one [connection coll needle]
   (mc/find-one-as-map (:db connection) coll needle))
 

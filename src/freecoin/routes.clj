@@ -45,6 +45,7 @@
 
    [freecoin.nxt :as nxt]
    [freecoin.wallet :as wallet]
+   [freecoin.transactions :as transactions]
 
    ;; SPIKE: learning about Mozilla persona
    ;; [freecoin.persona-spike :as persona-spike]
@@ -118,9 +119,14 @@
   (GET "/participants/all"  [request] (wallet/participants-find request))
 
 
-  ;; Money transfers (TODO)
-  (ANY "/send/:amount/:recipient" [amount recipient :as request]
-       (wallet/post-send request amount recipient))
+  ;; Transactions
+  (GET  "/send" [request] (transactions/get-transaction-form request))
+  (POST "/send" [request] (transactions/post-transaction-form request))
+  (GET  "/send/:confirmation" [confirmation :as request]
+        (transactions/get-transaction-confirm request confirmation))
+  (POST "/send/:confirmation" [confirmation :as request]
+        (transactions/post-transaction-confirm request confirmation))
+  (GET  "/transactions/all" [request] (transactions/get-all-transactions request))
 
   ;; 1 to 1 NXT api mapping for functions taking up to 2 args
   (ANY "/nxt/:command" [command :as request]
