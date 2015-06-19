@@ -78,6 +78,9 @@
                  [com.tiemens/secretshare "1.3.1"]
                  [jstrutz/hashids "1.0.1"]
 
+                 ;; date / time
+                 [simple-time "0.2.0"]
+
                  ;; introspection
                  ;; [org.clojure/tools.namespace "0.2.10"]
 

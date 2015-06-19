@@ -114,6 +114,19 @@
      [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]
     ]])
 
+(defn welcome-template [{:keys [wallet] :as content}]
+   (if (empty? wallet)
+     [:span (str "Error creating wallet")]
+     (let [name (:name wallet)
+           email (:email wallet)]
+       [:h1 (str "Welcome " name)]
+       [:p (str "We have sent an email to the address " email "with recommendations on how to store your wallet safely")]
+       [:p "You can access " [:a {:href "/" } "your balance here." ]]
+       [:ul {:style "list-style-type: none;"}
+        (render-wallet wallet)])
+     )
+   )
+
 (defn balance-template [{:keys [wallet] :as content}]
    (if (empty? wallet)
      [:span (str "No wallet found")]
@@ -168,8 +181,10 @@
                        ))
 
                  ;; else a name is specified
-                 (let [wallet (first (storage/find-by-key (get-in request [:config :db-connection])
-                                                          "wallets" {:name id}))]
+                 (let [wallet (first (storage/find-by-key
+                                      (get-in request [:config :db-connection])
+                                      "wallets" {:name (ring.util.codec/percent-decode id)}))]
+
                    (if (empty? wallet) ""
                        (qr/as-input-stream
                         (qr/from (format "http://%s:%d/give/%s"
@@ -180,16 +195,35 @@
                  )))
 
 
-(defresource give [request recipient quantity]
-  :allowed-methods       [:get :post]
-  :available-media-types ["text/html" "application/json"]
+(defresource post-send [request amount recipient]
+  :service-available? {::db (get-in request [:config :db-connection])
+                       ::content-type (get-in request [:headers "content-type"])}
+
+  :allowed-methods [:post]
+  :available-media-types ["text/html"]
+
   :authorized?           (:result (auth/check request))
   :handle-unauthorized   (:problem (auth/check request))
 
-  ;; TODO: if none, get NXT from faucet account
-  ;; to cover the transaction fee. also check a maximum
-  ;; limit of transactions per day.
-  :handle-ok (:wallet (auth/check request))
+  :handle-created (fn [ctx]
+                    (let [wallet (auth/get-wallet request)
+                          db     (::db ctx)]
+
+                      (if (empty? wallet) {:status 401
+                                           :body "Wallet not found."}
+                          ;; else
+                          (blockchain/make-transaction
+                           (blockchain/new-stub db) wallet
+                           amount recipient 
+                           nil) ;; secret is not used in STUB
+                          )
+                      ))
+
+  :handle-ok (fn [ctx]
+               (views/render-page welcome-template {:title "Transaction OK"
+                                                    :wallet (auth/get-wallet request) })
+               )
+  
   )
 
 
@@ -342,6 +376,9 @@
                  :form-spec {:submit-label "Confirm"}})))
 
 (defresource post-create-confirm [request confirmation]
+  :service-available? {::db (get-in request [:config :db-connection])
+                       ::content-type (get-in request [:headers "content-type"])}
+
   :allowed-methods [:post]
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
@@ -361,7 +398,7 @@
                       (let [params (::params ctx)
                             db (get-in request [:config :db-connection])
                             new-wallet (blockchain/create-account
-                                        (blockchain/new-stub) ;; default blockchain
+                                        (blockchain/new-stub db) ;; default blockchain
                                         (wallet. ""
                                                  (:name params) (:email params)
                                                  nil ;; public key
@@ -385,15 +422,28 @@
                             ;; ;; insert in the secrets database
                             ;; (storage/insert db "secrets" secret-without-cookie)
 
-                            ;; insert in the wallet database
+                            ;; insert in the wallet database, use the shamir's generated UID as _id
                             (storage/insert db "wallets" (assoc new-wallet :_id (:_id secret) ))
 
                             ;; return the apikey cookie
                             (ring-response {:headers {"Location" (ctx :location)}
                                             :session {:cookie-data cookie-data}
                                             :apikey cookie-data})
-                            ;; TODO: give PINs
-                            ;; send backup (show QR, also per email?)
+
+                            ;; TODO: give PINs for backup
+
+                            ;; local backup approach: use pub/priv key
+                            ;; pair to encrypt a message
+                            ;; if the message is brought back with a
+                            ;; name, try the secret key. If works,
+                            ;; then restore the account.
+
+                            ;; blockchain backup approach:
+                            ;; use the PIN to unlock shamir's secret,
+                            ;; see if it produces a valid passphrase
+                            ;; that is recognized by the
+                            ;; blockchain. If yes, restore the account.
+                             
 
                             )))
 
@@ -404,6 +454,7 @@
                        :id (::confirmation ctx)}
                       )
                     )
+  
   )
 
                             ;; (utils/log! ::ACK :cookie cookie-data)

@@ -31,7 +31,9 @@
    [freecoin.random :as rand]
    [freecoin.params :as param]
    [freecoin.storage :as storage]
-
+   [freecoin.utils :as utils]
+   
+   [simple-time.core :as time]
    )
   )
 
@@ -62,16 +64,18 @@
     amount resipient blockchain currency])
 
 
+;; this is here jut to explore how introspection works in clojure records
+;; basically one could just explicit the string "STUB" where this is used
 (defn recname [record]
   "Return a string which is the name of the record class, uppercase. Used to identify the class type."
   (str/upper-case (last (str/split (pr-str (class record)) #"\.")))
   )
-  
+
 ;; TODO
 (defrecord nxt  [server port])
 
 ;; inherits from Blockchain and implements its methods
-(defrecord stub []
+(defrecord stub [db]
   Blockchain
   (import-account [bk wallet secrets] nil)
 
@@ -81,9 +85,7 @@
 
     (if (contains? (:blockchains wallet) (keyword (recname bk)))
       {:status ::error
-       :problem (str "Account already present in wallet: " (recname bk))}
-
-
+       :problem (str "Blockchain account already present in wallet: " (recname bk))}
 
       ;; else
       (let [secret (fxc/create-secret param/encryption (recname bk))
@@ -106,15 +108,38 @@
 
   (list-transactions [bk wallet] nil)
   (get-transaction   [bk wallet txid] nil)
-  (make-transaction  [bk wallet amount recipient secret] nil)
+
+  (make-transaction  [bk wallet amount recipient secret]
+    (let [sender-name (:name wallet)
+          sender-id (:_id wallet)
+          recipient-card (storage/find-by-key db "wallets" {:name recipient})
+          now (time/format (time/now))]
+      (if (> (count recipient-card) 1)
+        {:status 401 ;; this should never occurr really since we check
+                     ;; omonimy on creation
+         :body "Error: recipient name is ambiguous"}
+
+        ;; else
+        (utils/pretty
+         (storage/insert db "transactions" {:_id (str now "-" sender-name)
+                                            :blockchain "STUB"
+                                            :timestamp now
+                                            :from sender-name
+                                            :from-id sender-id
+                                            :to recipient
+                                            :to-id (:_id (first recipient-card))
+                                            :amount amount}))
+        
+        ))
+      )
 
   (create-voucher [bk wallet amount expiration secret] nil)
   (redeem-voucher [bk wallet voucher] nil)
   )
 
-(defn new-stub []
+(defn new-stub [db]
   "Check that the blockchain is available, then return a record"
-  (stub.)
+  (stub. db)
   )
 ;; example
 ;;  (b/create-account (b/_create "STUB" "sadsd" 444)

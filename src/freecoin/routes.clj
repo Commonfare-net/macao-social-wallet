@@ -119,8 +119,8 @@
 
 
   ;; Money transfers (TODO)
-  (ANY "/give/:recipient/:amount" [recipient amount :as request]
-       (wallet/give request recipient amount))
+  (ANY "/send/:amount/:recipient" [amount recipient :as request]
+       (wallet/post-send request amount recipient))
 
   ;; 1 to 1 NXT api mapping for functions taking up to 2 args
   (ANY "/nxt/:command" [command :as request]
