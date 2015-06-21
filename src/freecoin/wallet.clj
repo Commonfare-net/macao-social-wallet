@@ -127,11 +127,15 @@
      )
    )
 
-(defn balance-template [{:keys [wallet] :as content}]
+(defn balance-template [{:keys [wallet balance] :as content}]
    (if (empty? wallet)
      [:span (str "No wallet found")]
-     [:ul {:style "list-style-type: none;"}
-      (render-wallet wallet)])
+     [:div
+      [:ul {:style "list-style-type: none;"}
+      (render-wallet wallet)]
+      [:div {:class "balance pull-left"}
+       (str "Balance: " balance)]]
+     )
    )
 
 (defn participants-template [{:keys [wallets] :as content}]
@@ -428,11 +432,15 @@
   :handle-unauthorized   (:problem (auth/check request))
 
   :handle-ok (fn [ctx]
+               (let [wallet (auth/get-wallet request)]
                ;; (utils/log! 'ACK 'balance-show (clojure.pprint/pprint wallet))
                  (views/render-page
                   balance-template {:title "Balance"
-                                    :wallet (:wallet (auth/check request))}
-                 ))
+                                    :wallet wallet
+                                    :balance (blockchain/get-balance 
+                                              (blockchain/new-stub (::db ctx))
+                                              wallet)}
+                  )))
   )
 
 

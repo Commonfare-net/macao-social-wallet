@@ -159,7 +159,7 @@
                       "application/json" false
                       "application/x-www-form-urlencoded"
                       (let [confirmation (::confirmation ctx)]
-                        {:location (str "/send/" (:_id confirmation))})
+                        {:location (str "/send/confirm/" (:_id confirmation))})
 
                       ;; TODO: handle default case
                       ))

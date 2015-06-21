@@ -2,6 +2,7 @@
   (:require [monger.core :as mg]
             [monger.collection :as mc]
             [monger.conversion :refer [from-db-object]]
+            [monger.operators :refer :all]
             ))
 
 (defn connect [{:keys [host port db-name] :as db-config}]
@@ -30,3 +31,6 @@
 
 (defn remove-by-id [connection coll id]
   (mc/remove-by-id (:db connection) coll id))
+
+(defn aggregate [connection coll formula]
+  (mc/aggregate (:db connection) coll formula))

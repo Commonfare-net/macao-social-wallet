@@ -104,7 +104,9 @@
   (ANY "/qrcode/:name" [name :as request] (wallet/qrcode request name))
 
   ;;  (ANY "/wallet" [request] (wallet/balance request))
-  (GET  "/wallets"                [request] (wallet/get-create request))
+  (GET  "/wallets"  [request] (wallet/get-create request))
+  (GET  "/signin"   [request] (wallet/get-create request))
+  (GET  "/create"   [request] (wallet/get-create request))
   (POST "/wallets"                [request] (wallet/post-create request))
   (GET  "/wallets/:confirmation"  [confirmation :as request]
         (wallet/get-create-confirm request confirmation))
@@ -115,6 +117,7 @@
   (GET "/participants" [request] (wallet/participants-form request))
   ;; this will read field and value, url encoded
   (GET "/participants/find" [request] (wallet/participants-find request))
+  (GET "/find" [request] (wallet/participants-find request))
   ;; all is simply find without arguments
   (GET "/participants/all"  [request] (wallet/participants-find request))
 

@@ -103,7 +103,23 @@
     (get-in wallet [:blockchains (keyword (recname bk))]))
 
   (get-address [bk wallet] nil)
-  (get-balance [bk wallet] nil)
+  (get-balance [bk wallet]
+    ;; we use the aggregate function in mongodb, sort of simplified map/reduce
+    (let [received-map (first (storage/aggregate db "transactions"
+                                      [{"$group" {:_id "$to"
+                                                  :total {"$sum" "$amount"}}}
+                                       {"$match" {:_id (:name wallet)}}]))
+          sent-map  (first (storage/aggregate db "transactions"
+                                   [{"$group" {:_id "$from"
+                                               :total {"$sum" "$amount"}}}
+                                    {"$match" {:_id (:name wallet)}}]))
+          received (if (nil? received-map) 0 (:total received-map))
+          sent      (if (nil? sent-map) 0 (:total sent-map))]
+      ;; return the balance
+      (- received sent)
+      ))
+      
+
 ;;    (let [id (get-account bk wallet)]
 
   (list-transactions [bk wallet] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
