@@ -9,7 +9,8 @@
                                          [peridot "0.3.1"]
                                         ;[org.clojure/tools.trace "0.7.8"]
                                          ]
-                          :plugins [[lein-midje "3.1.3"]]}}
+                          :plugins [[lein-midje "3.1.3"]]}
+             :production [:user]}
 
   :plugins [
             [lein-ring "0.9.3"]
@@ -102,4 +103,8 @@
   :env [
         [:base-url "http://localhost:3000"]
         ]
+
+  ;; for running a production server using 'lein run'
+  :aliases {"run" ["with-profile" "production" "ring" "server"]}
+
   )
