@@ -227,9 +227,6 @@
                ))
 
 
-(def response-representation
-  {"application/json" "application/json"
-   "application/x-www-form-urlencoded" "text/html"})
 
 
 (defresource post-create [request]
@@ -259,10 +256,11 @@
                   :ok
                   ;; TODO: optimize using redis k/v for this unauthenticated lookup
                   (if (storage/find-one (::db ctx) "wallets" {:name (:name data)})
-
+                    
+                    ;; found a duplicate
                     [false {::user-data data
                             ::problems [{:keys ["name"] :msg "username already exists"}]
-                            :representation {:media-type (get response-representation
+                            :representation {:media-type (get views/response-representation
                                                               (::content-type ctx))}}]
 
                     [true {::user-data data}])
@@ -271,7 +269,7 @@
                   [false {::user-data data
                           ::problems problems
                           :representation {:media-type
-                                           (get response-representation (::content-type ctx))}}]
+                                           (get views/response-representation (::content-type ctx))}}]
 
                   ;; TODO: handle default case
                   )))

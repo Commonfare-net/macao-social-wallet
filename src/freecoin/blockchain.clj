@@ -132,7 +132,8 @@
           recipient-card (storage/find-by-key db "wallets" {:name recipient})
           now (time/format (time/now))]
       (if (> (count recipient-card) 1)
-        {:status 401 ;; this should never occurr really since we check
+        {:error true
+         :status 401 ;; this should never occurr really since we check
                      ;; omonimy on creation
          :body "Error: recipient name is ambiguous"}
 

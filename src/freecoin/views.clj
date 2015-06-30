@@ -34,12 +34,41 @@
    [cheshire.core :as cheshire]
    [autoclave.core :as autoclave]
 
+   [json-html.core :as present]
+
    ))
 
-(defn simple-form-template [{:keys [heading form-spec] :as content}]
-  [:div
-   [:h1 heading]
-   (fc/render-form form-spec)])
+(def response-representation
+  {"application/json" "application/json"
+   "application/x-www-form-urlencoded" "text/html"})
+
+
+(defn confirm-page [confirmation]
+  (page/html5
+    [:head [:meta {:charset "utf-8"}]
+     [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
+     [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
+     [:title (str "Confirm " (:action confirmation))]
+     (page/include-css "/css/bootstrap.min.css")
+     (page/include-css "/css/bootstrap-responsive.min.css")
+     (page/include-css "/css/freecoin.css")
+     (page/include-css "/css/json-html.css")
+     ]
+    [:body [:div {:class "container-fluid"}
+            [:h1 (str "Confirm " (:action confirmation))]
+            [:div {:class "form-shell form-horizontal bootstrap-form"}
+             (present/edn->html (:data confirmation))
+             [:form {:action "/confirmations" :method "post"}
+              [:input {:name "id" :type "hidden"
+                       :value (:_id confirmation)}]
+              [:fieldset {:class "fieldset-submit"}
+               [:div {:class "form-actions submit-group control-group submit-row" :id "row-field-submit"}
+                [:div {:class "empty-shell"}]
+                [:div {:class="input-shell"}
+                 [:input {:class "btn btn-primary" :id "field-submit"
+                          :name "submit" :type "submit"
+                          :value "Confirm"}]]]]]]]])
+  )
 
 (defn render-page [template {:keys [title] :as content}]
   (page/html5
@@ -47,8 +76,8 @@
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:title title]
-     (page/include-css "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css")
-     (page/include-css "//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css")
+     (page/include-css "/css/bootstrap.min.css")
+     (page/include-css "/css/bootstrap-responsive.min.css")
      (page/include-css "/css/freecoin.css")
      ]
     [:body [:div {:class "container-fluid"}
@@ -58,14 +87,20 @@
   (case content-type
     "application/x-www-form-urlencoded"
     (fp/with-fallback
-      (fn [problems] {:status :error :problems problems})
+      (fn [problems] {:status :error
+                      :problems problems})
       {:status :ok
        :data (fp/parse-params form-spec (:params request))})
 
     "application/json"
     (let [data (cheshire/parse-string (autoclave/json-sanitize (slurp (:body request))) true)]
       (fp/with-fallback
-        (fn [problems] {:status :error :problems problems})
-        {:status :ok :data (fp/parse-params form-spec data)}))
+        (fn [problems] {:status :error
+                        :problems problems})
+        {:status :ok
+         :data (fp/parse-params form-spec data)}))
 
-    {:status :error :problems [{:keys [] :msg (str "unknown content type: " content-type)}]}))
+    {:status :error
+     :problems [{:keys []
+                 :msg (str "unknown content type: " content-type)}]}
+    ))

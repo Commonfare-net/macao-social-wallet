@@ -3,6 +3,8 @@
             [monger.collection :as mc]
             [monger.conversion :refer [from-db-object]]
             [monger.operators :refer :all]
+
+            [freecoin.utils :as utils]
             ))
 
 (defn connect [{:keys [host port db-name] :as db-config}]
@@ -18,7 +20,8 @@
   (mc/insert-and-return (:db connection) coll doc))
 
 (defn find-by-id [connection coll id]
-  (mc/find-map-by-id (:db connection) coll id))
+  (if (nil? id) {:error "id is null"}
+      (mc/find-map-by-id (:db connection) coll id)))
 
 (defn find-by-key [connection coll needle]
   (mc/find-maps (:db connection) coll needle))
@@ -30,7 +33,8 @@
   (mc/find-one-as-map (:db connection) coll needle))
 
 (defn remove-by-id [connection coll id]
-  (mc/remove-by-id (:db connection) coll id))
+  (if (nil? id) {:error "id is null"}
+      (mc/remove-by-id (:db connection) coll id)))
 
 (defn aggregate [connection coll formula]
   (mc/aggregate (:db connection) coll formula))

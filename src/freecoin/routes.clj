@@ -47,6 +47,7 @@
    [freecoin.wallet :as wallet]
    [freecoin.transactions :as transactions]
 
+   [freecoin.confirmations :as confirm]
    ;; SPIKE: learning about Mozilla persona
    ;; [freecoin.persona-spike :as persona-spike]
 
@@ -117,13 +118,14 @@
   (GET "/participants" [request] (wallet/participants-form request))
   ;; this will read field and value, url encoded
   (GET "/participants/find" [request] (wallet/participants-find request))
-  (GET "/find" [request] (wallet/participants-find request))
+  (GET "/find"              [request] (wallet/participants-find request))
   ;; all is simply find without arguments
   (GET "/participants/all"  [request] (wallet/participants-find request))
 
 
   ;; Transactions
-  (GET  "/send" [request] (transactions/get-transaction-form request nil))
+  (GET  "/send"  [request] (transactions/get-transaction-form request nil))
+  (GET  "/send/" [request] (transactions/get-transaction-form request nil))
   (POST "/send" [request] (transactions/post-transaction-form request))
 
   (GET  "/send/to/:participant" [participant :as request]
@@ -134,6 +136,11 @@
   (POST "/send/confirm/:confirmation" [confirmation :as request]
         (transactions/post-transaction-confirm request confirmation))
   (GET  "/transactions/all" [request] (transactions/get-all-transactions request))
+
+  ;; Confirmations
+  (GET  "/confirmations/:code" [code :as request]
+        (confirm/get-confirm-form request code))
+  (POST "/confirmations" [request] (confirm/execute request))
 
   ;; 1 to 1 NXT api mapping for functions taking up to 2 args
   (ANY "/nxt/:command" [command :as request]

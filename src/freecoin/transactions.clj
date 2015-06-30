@@ -42,6 +42,7 @@
 
    [freecoin.blockchain :as blockchain]
    [freecoin.participants :as participant]
+   [freecoin.confirmations :as confirms]
    [freecoin.secretshare :as ssss]
    [freecoin.storage :as storage]
    [freecoin.params :as params]
@@ -144,25 +145,18 @@
   :post! (fn [ctx]
            (let [amount (get-in ctx [::user-data :amount])
                  recipient (get-in ctx [::user-data :recipient])
-                 confirmation-code (ssss/hash-encode-num
-                                    params/encryption (:integer (rand/create 16)))
-                 stored-confirmation (storage/insert
-                                      (::db ctx)
-                                      "confirms"
-                                      {:_id       confirmation-code
-                                       :amount    amount
-                                       :recipient recipient})]
-             {::confirmation stored-confirmation}))
-
+                 confirmation (confirms/create (::db ctx) "transaction"
+                                               {:amount amount
+                                                :recipient recipient})]
+             {::confirmation confirmation}))
+  
   :post-redirect? (fn [ctx]
                     (case (::content-type ctx)
                       "application/json" false
                       "application/x-www-form-urlencoded"
-                      (let [confirmation (::confirmation ctx)]
-                        {:location (str "/send/confirm/" (:_id confirmation))})
-
-                      ;; TODO: handle default case
-                      ))
+                      (::confirmation ctx)
+                      ;; default
+                      false))
 
   :handle-created (fn [ctx]
                     (let [confirmation (::confirmation ctx)]
@@ -214,15 +208,15 @@
 
                       (if (empty? wallet) {:status 401
                                            :body "Wallet not found."}
-                          ;; else
-                          (utils/pretty
+
+                            ;; else
+                          (utils/pretty 
                            (blockchain/make-transaction
                             (blockchain/new-stub db) wallet
                             (:amount params) (:recipient params)
                             nil) ;; secret is not used in STUB
-                           ))
-                      ))
-
+                           )))
+                    )
   )
 
 (defn render-transaction [tx]
