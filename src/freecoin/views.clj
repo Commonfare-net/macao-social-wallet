@@ -42,6 +42,10 @@
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})
 
+(defn simple-form-template [{:keys [heading form-spec] :as content}]
+  [:div
+   [:h1 heading]
+   (fc/render-form form-spec)])
 
 (defn confirm-page [confirmation]
   (page/html5
