@@ -56,7 +56,7 @@
   {:fields [{:name :id :type :text}]
    :validations [[:required [:id]]]}
   )
-            
+
 (defn create [db action data]
   (let [code (ssss/hash-encode-num
               params/encryption (:integer (rand/create 16)))
@@ -88,7 +88,7 @@
 
                 (if (contains? found :error)
                   [false {::error (:error found)}]
-                  
+
                   (if (empty? found)
                     [false {::error "confirmation not found"}]
                     ;; here fill in the content of the confirmation
@@ -97,11 +97,11 @@
                     ;;  :data    collection}
                     [true {::user-data found}]))
                 ))
-  
+
   :handle-forbidden (fn [ctx]
                       (ring-response {:status 404
                                       :body (::error ctx)}))
-  
+
   :handle-ok (fn [ctx] (views/confirm-button (::user-data ctx)))
   )
 
@@ -109,70 +109,120 @@
   :service-available?
   {::db (get-in request [:config :db-connection])
    ::content-type (get-in request [:headers "content-type"])}
-  
+
   :allowed-methods [:post]
   :available-media-types ["application/json"
                           "application/x-www-form-urlencoded"]
 
-  :authorized?           (:result  (auth/check request))
-  :handle-unauthorized   (:problem (auth/check request))
+  ;; :authorized?           (:result  (auth/check request))
+  ;; :handle-unauthorized   (:problem (auth/check request))
 
-  :allowed? (fn [ctx] (let [{:keys [status data problems]}
-                            (views/parse-hybrid-form
-                             request confirmation-form-spec
-                             (::content-type ctx))]
-                        (case status
-                          :ok ;; parse query result
-                          (let [found (storage/find-by-id
-                                       (::db ctx) "confirmations"
-                                       (:id data))]
-                            (if (contains? found :error)
-                              [false {::problems (:error found)}]
-                              (if (empty? found)
-                                [false {::user-data data
-                                        ::problems "confirmation not found"
-                                        :representation
-                                        {:media-type
-                                         (get views/response-representation
-                                              (::content-type ctx))}}]
-                                
-                                [true {::user-data found}])))
-                          
-                          ;; form parsing problems
-                          :error
-                          [false {::user-data data
-                                  ::problems (map pr-str problems)
-                                  :representation
-                                  {:media-type
-                                   (get views/response-representation
-                                        (::content-type ctx))}}]
-                          )))
+  ;; SEC TODO: this is an open endpoint where callers can trigger database
+  ;; queries even if not authenticated. It must be protected with
+  ;; throttling and blacklisting
+  :allowed?
+  (fn [ctx]
+    (let [{:keys [status data problems]}
+          (views/parse-hybrid-form
+           request confirmation-form-spec
+           (::content-type ctx))]
+      (case status
+        :ok ;; parse query result
+        (let [found (storage/find-by-id
+                     (::db ctx) "confirmations"
+                     (:id data))]
+          (if (contains? found :error)
+            [false {::problems (:error found)}]
+            (if (empty? found)
+              [false {::user-data data
+                      ::problems "confirmation not found"
+                      :representation
+                      {:media-type
+                       (get views/response-representation
+                            (::content-type ctx))}}]
 
-  :handle-forbidden (fn [ctx] (ring-response {:status 404
-                                              :body (::problems ctx)}))
+              [true {::user-data found}])))
 
-  :handle-created (fn [ctx]
-                    (let [confirm (::user-data ctx)
-                          action (:action confirm)
-                          data (:data confirm)
-                          db (::db ctx)]
-                      (case action
+        ;; form parsing problems
+        :error
+        [false {::user-data data
+                ::problems (map pr-str problems)
+                :representation
+                {:media-type
+                 (get views/response-representation
+                      (::content-type ctx))}}]
+        )))
 
-                        ;; process signin confirmations
-                        "signin" nil
+  :handle-forbidden (fn [ctx]
+                      (ring-response {:status 404
+                                      :body (::problems ctx)}))
 
-                        ;; process transaction confirmations
-                        "transaction"
-                        (let [wallet (auth/get-wallet request)
-                              tr (blockchain/make-transaction
-                                  (blockchain/new-stub db) wallet
-                                  (:amount data) (:recipient data)
-                                  nil)]
-                          ;; TODO: return a well formatted page
-                          tr)
-                        (ring-response
-                         {:status 404
-                          :body (pr-str "unknown action" action)}))
-                        ;; TODO:delete on success
-                        ))
+  :handle-created
+  (fn [ctx]
+    (let [confirm (::user-data ctx)
+          action (:action confirm)
+          data (:data confirm)
+          db (::db ctx)]
+      (case action
+
+        ;; process signin confirmations
+        "signin"
+        (let [new-wallet
+              (blockchain/create-account
+               (blockchain/new-stub db)
+               {:_id ""
+                :name  (:name data)
+                :email (:email data)
+                :public-key nil
+                :private-key nil
+                :blockchains {}
+                :blockchain-secrets {}})
+              secret (get-in new-wallet [:blockchain-secrets :STUB])
+              secret-without-cookie (dissoc secret :cookie)
+              cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
+          (utils/log! ::ACK 'signin cookie-data)
+
+          ;; TODO consistent error reporting
+          (if (contains? new-wallet :problem)
+            ;; TODO consistent error reporting
+            (utils/log! (::error new-wallet))
+            (let []
+              ;; insert in the wallet database, use
+              ;; the shamir's generated UID as _id
+              (storage/insert db "wallets"
+                              (assoc new-wallet :_id (:_id secret) ))
+              ;; return the apikey cookie
+              (ring-response {:headers {"Location" (ctx :location)}
+                              :session {:cookie-data cookie-data}
+                              :apikey cookie-data})
+              ;; TODO: give PINs for backup
+
+              ;; local backup approach: use pub/priv key
+              ;; pair to encrypt a message
+              ;; if the message is brought back with a
+              ;; name, try the secret key. If works,
+              ;; then restore the account.
+
+              ;; blockchain backup approach:
+              ;; use the PIN to unlock shamir's secret,
+              ;; see if it produces a valid passphrase
+              ;; that is recognized by the
+              ;; blockchain. If yes, restore the account.
+              )))
+
+        ;; process transaction confirmations
+        "transaction"
+        (let [wallet (auth/get-wallet request)
+              tr (blockchain/make-transaction
+                  (blockchain/new-stub db) wallet
+                  (:amount data) (:recipient data)
+                  nil)]
+          ;; TODO: return a well formatted page
+          tr)
+
+        (ring-response
+         {:status 404
+          :body (pr-str "unknown action" action)}))
+      ;; TODO:delete on success
+      ))
   )

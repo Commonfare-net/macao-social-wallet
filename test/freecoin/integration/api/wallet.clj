@@ -53,10 +53,10 @@
                                                               :request-method :post
                                                               :body json-body))]
                       (:status response) => 201
-                      (:body response) => (ih/json-contains {:body (contains {:name "user"
-                                                                              :email "test@test.com"
-                                                                              :_id anything})
-                                                             :confirm (contains #"^/confirmations/")})))
+                      (:body response) => (ih/json-contains
+                                           {:status 200
+                                            :location (contains #"^/confirmations/")}
+                                           )))
 
               (tabular
                (fact "returns 403 and error report if posted json data is invalid"
@@ -72,7 +72,7 @@
                {:email "valid@email.com"}      {:reason [{:keys ["name"] :msg "must not be blank"}]}
                {:name "user"}                  {:reason [{:keys ["email"] :msg "must not be blank"}]}
                {:name "user" :email "invalid"} {:reason [{:keys ["email"] :msg "must be a valid email"}]})
-              
+
               (fact "returns 403 if a wallet already exists for the given username"
                     (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
                           {response :response} (-> (:session ih/app-state)
@@ -82,7 +82,7 @@
                                                               :body json-body))]
                       (:status response) => 403
                       (:body response) => (ih/json-contains {:reason [{:keys ["name"] :msg "username already exists"}]}))))
-       
+
        (facts "with content-type application/x-www-form-urlencoded"
               (fact "when successful, initiates confirmation process"
                     (let [{response :response} (-> (:session ih/app-state)
