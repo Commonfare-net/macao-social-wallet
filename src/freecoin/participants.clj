@@ -31,8 +31,8 @@
   (:require
    [clojure.string :as str]
 
-   [formative.core :as fc]
-   [formative.parse :as fp]
+   [formidable.core :as fc]
+   [formidable.parse :as fp]
 
    [liberator.dev]
    [liberator.core :refer [resource defresource]]

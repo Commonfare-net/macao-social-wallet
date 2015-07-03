@@ -31,8 +31,8 @@
   (:require
    [clojure.string :as str]
 
-   [formative.core :as fc]
-   [formative.parse :as fp]
+   [formidable.core :as fc]
+   [formidable.parse :as fp]
 
    [liberator.dev]
    [liberator.core :refer [resource defresource]]
@@ -77,7 +77,7 @@
       (assoc validations
              :fields [
                       {:name :amount :datatype :float}
-                      {:name :recipient :type :hidden :value recipient}
+                      (fc/render-field [:input {:name :recipient :type :hidden :value recipient}])
                       ]
              :validations [[:required [:amount :recipient]]]
              :action "/send"
@@ -98,10 +98,11 @@
   :unauthorized          (:problem (auth/check request))
 
   :handle-ok             (fn [ctx]
-                           (views/render-page views/simple-form-template
-                                              {:title "Make a transaction"
-                                               :heading (str "Send an amount to: " recipient)
-                                               :form-spec (transaction-form-spec recipient)}))
+                           (views/render-template
+                            views/simple-form-template
+                            {:title "Make a transaction"
+                             :heading (str "Send an amount to: " recipient)
+                             :form-spec (transaction-form-spec recipient)}))
   )
 
 (def response-representation
@@ -175,7 +176,7 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
-               (views/render-page
+               (views/render-template
                 views/simple-form-template
                 {:title "Confirm transaction"
                  :heading "Please confirm to execute the transacton"
@@ -249,6 +250,7 @@
   :handle-ok (fn [ctx]
                (let [transactions (blockchain/list-transactions
                                    (blockchain/new-stub (::db ctx)) (auth/get-wallet request))]
-                 (views/render-page list-transactions-template {:title "Transactions"
-                                                                :transactions transactions})))
+                 (views/render-template
+                  list-transactions-template {:title "Transactions"
+                                              :transactions transactions})))
   )

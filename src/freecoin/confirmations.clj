@@ -45,6 +45,12 @@
    )
   )
 
+;; Confirmation's data structure
+;; {:_id     code
+;;  :action  name
+;;  :data    collection}
+;; where the last :data collection is identified by the :action field
+
 
 (def confirmation-form-spec
   {:fields [{:name :id :type :text}]
@@ -85,7 +91,10 @@
                   
                   (if (empty? found)
                     [false {::error "confirmation not found"}]
-                    
+                    ;; here fill in the content of the confirmation
+                    ;; {:_id     code
+                    ;;  :action  name
+                    ;;  :data    collection}
                     [true {::user-data found}]))
                 ))
   
@@ -93,7 +102,7 @@
                       (ring-response {:status 404
                                       :body (::error ctx)}))
   
-  :handle-ok (fn [ctx] (views/confirm-page (::user-data ctx)))
+  :handle-ok (fn [ctx] (views/confirm-button (::user-data ctx)))
   )
 
 (defresource execute [request]
@@ -148,13 +157,18 @@
                           data (:data confirm)
                           db (::db ctx)]
                       (case action
+
+                        ;; process signin confirmations
                         "signin" nil
+
+                        ;; process transaction confirmations
                         "transaction"
                         (let [wallet (auth/get-wallet request)
                               tr (blockchain/make-transaction
                                   (blockchain/new-stub db) wallet
                                   (:amount data) (:recipient data)
                                   nil)]
+                          ;; TODO: return a well formatted page
                           tr)
                         (ring-response
                          {:status 404

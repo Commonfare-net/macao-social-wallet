@@ -41,6 +41,7 @@
                  ;; liberator
                  [compojure "1.3.3"]
                  [ring/ring-core "1.3.2"]
+                 [ring/ring-anti-forgery "1.0.0"]
 
                  ;; authentication
                  [com.cemerick/friend "0.2.1" :exclusions [robert/hooke xml-apis]]
@@ -55,6 +56,7 @@
                  
                  ;; Form generation / validation
                  [formative "0.8.8"]
+                 [formidable "0.1.9"]
 
                  ;; json marshalling
                  [cheshire "5.4.0"]

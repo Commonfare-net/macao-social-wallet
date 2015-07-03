@@ -101,14 +101,11 @@
 
   (ANY "/"       [request] (wallet/balance-show request))
 
-  (ANY "/qrcode" [request] (wallet/qrcode request nil))
-  (ANY "/qrcode/:name" [name :as request] (wallet/qrcode request name))
+  (GET "/qrcode" [request] (wallet/qrcode request nil))
+  (GET "/qrcode/:name" [name :as request] (wallet/qrcode request name))
 
-  ;;  (ANY "/wallet" [request] (wallet/balance request))
-  (GET  "/wallets"  [request] (wallet/get-create request))
-  (GET  "/signin"   [request] (wallet/get-create request))
-  (GET  "/create"   [request] (wallet/get-create request))
-  (POST "/wallets"                [request] (wallet/post-create request))
+  (GET  "/signin" [request] (wallet/get-create  request))
+  (POST "/signin" [request] (wallet/post-create request))
   (GET  "/wallets/:confirmation"  [confirmation :as request]
         (wallet/get-create-confirm request confirmation))
   (POST "/wallets/:confirmation" [confirmation :as request]
@@ -122,20 +119,14 @@
   ;; all is simply find without arguments
   (GET "/participants/all"  [request] (wallet/participants-find request))
 
-
   ;; Transactions
-  (GET  "/send"  [request] (transactions/get-transaction-form request nil))
-  (GET  "/send/" [request] (transactions/get-transaction-form request nil))
-  (POST "/send" [request] (transactions/post-transaction-form request))
-
+  (GET  "/send" [request] (transactions/get-transaction-form request nil))
   (GET  "/send/to/:participant" [participant :as request]
         (transactions/get-transaction-form request participant))
+  (POST "/send" [request] (transactions/post-transaction-form request))
 
-  (GET  "/send/confirm/:confirmation" [confirmation :as request]
-        (transactions/get-transaction-confirm request confirmation))
-  (POST "/send/confirm/:confirmation" [confirmation :as request]
-        (transactions/post-transaction-confirm request confirmation))
-  (GET  "/transactions/all" [request] (transactions/get-all-transactions request))
+  (GET  "/transactions/all" [request]
+        (transactions/get-all-transactions request))
 
   ;; Confirmations
   (GET  "/confirmations/:code" [code :as request]

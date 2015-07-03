@@ -29,8 +29,8 @@
 (ns freecoin.views
   (:require
    [hiccup.page :as page]
-   [formative.core :as fc]
-   [formative.parse :as fp]
+   [formidable.core :as fc]
+   [formidable.parse :as fp]
    [cheshire.core :as cheshire]
    [autoclave.core :as autoclave]
 
@@ -47,21 +47,21 @@
    [:h1 heading]
    (fc/render-form form-spec)])
 
-(defn confirm-page [confirmation]
+(defn confirm-button [{:keys [action data] :as confirmation}]
   (page/html5
     [:head [:meta {:charset "utf-8"}]
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
-     [:title (str "Confirm " (:action confirmation))]
+     [:title (str "Confirm " action)]
      (page/include-css "/css/bootstrap.min.css")
      (page/include-css "/css/bootstrap-responsive.min.css")
      (page/include-css "/css/freecoin.css")
      (page/include-css "/css/json-html.css")
      ]
     [:body [:div {:class "container-fluid"}
-            [:h1 (str "Confirm " (:action confirmation))]
+            [:h1 (str "Confirm " action)]
             [:div {:class "form-shell form-horizontal bootstrap-form"}
-             (present/edn->html (:data confirmation))
+             (present/edn->html data)
              [:form {:action "/confirmations" :method "post"}
               [:input {:name "id" :type "hidden"
                        :value (:_id confirmation)}]
@@ -74,7 +74,8 @@
                           :value "Confirm"}]]]]]]]])
   )
 
-(defn render-page [template {:keys [title] :as content}]
+
+(defn render-page [{:keys [title body] :as content}]
   (page/html5
     [:head [:meta {:charset "utf-8"}]
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
@@ -83,9 +84,30 @@
      (page/include-css "/css/bootstrap.min.css")
      (page/include-css "/css/bootstrap-responsive.min.css")
      (page/include-css "/css/freecoin.css")
+     (page/include-css "/css/json-html.css")
      ]
     [:body [:div {:class "container-fluid"}
-            (template content)]]))
+            [:h1 title]
+            ;; all the rest
+            body]])
+  )
+
+
+(defn render-template [template {:keys [title] :as content}]
+  (render-page {:title (:title content)
+                :body  (template content)}
+               ))
+  ;; (page/html5
+  ;;   [:head [:meta {:charset "utf-8"}]
+  ;;    [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
+  ;;    [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
+  ;;    [:title title]
+  ;;    (page/include-css "/css/bootstrap.min.css")
+  ;;    (page/include-css "/css/bootstrap-responsive.min.css")
+  ;;    (page/include-css "/css/freecoin.css")
+  ;;    ]
+  ;;   [:body [:div {:class "container-fluid"}
+  ;;           (template content)]]))
 
 (defn parse-hybrid-form [request form-spec content-type]
   (case content-type
@@ -97,7 +119,8 @@
        :data (fp/parse-params form-spec (:params request))})
 
     "application/json"
-    (let [data (cheshire/parse-string (autoclave/json-sanitize (slurp (:body request))) true)]
+    (let [data (cheshire/parse-string
+                (autoclave/json-sanitize (slurp (:body request))) true)]
       (fp/with-fallback
         (fn [problems] {:status :error
                         :problems problems})

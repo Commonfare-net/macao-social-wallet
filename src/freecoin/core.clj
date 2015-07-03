@@ -39,6 +39,7 @@
    [ring.middleware.session.cookie :refer [cookie-store]]
    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]
+   [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
 
    [cemerick.friend :as friend]
 
@@ -74,6 +75,7 @@
         (liberator.dev/wrap-trace :header :ui)
         (wrap-db (:db-connection app-state))
         wrap-cookies
+;;        wrap-anti-forgery
         (wrap-session {:cookie-attrs (get-in app-state [:config-params :cookie-config])
                        :store (cookie-store {:key "sCWg45lZNFNESvPv"})})
         wrap-keyword-params

@@ -32,8 +32,8 @@
   (:require
    [clojure.string :as str]
 
-   [formative.core :as fc]
-   [formative.parse :as fp]
+   [formidable.core :as fc]
+   [formidable.parse :as fp]
 
    [liberator.dev]
    [liberator.core :refer [resource defresource]]
@@ -95,10 +95,11 @@
   ;; :handle-unauthorized   {:status 200
   ;;                         :body (:problem (auth/check request))}
 
-  :handle-ok             (views/render-page views/simple-form-template
-                                  {:title "Find wallet"
-                                   :heading "Search for a wallet"
-                                   :form-spec participants-form-spec})
+  :handle-ok             (views/render-template
+                          views/simple-form-template
+                          {:title "Find wallet"
+                           :heading "Search for a wallet"
+                           :form-spec participants-form-spec})
   )
 
 (defn render-wallet [wallet]
@@ -164,8 +165,9 @@
                            (let [wallets (->> request
                                               request->wallet-query
                                               (storage/find-by-key (::db ctx) "wallets"))]
-                             (views/render-page participants-template {:title "wallets"
-                                                                       :wallets wallets}))))
+                             (views/render-template
+                              participants-template {:title "wallets"
+                                                     :wallets wallets}))))
   
 (defresource qrcode [request id]
   :allowed-methods [:get]
@@ -215,15 +217,16 @@
   :handle-ok (fn [ctx]
                (if (:result (auth/check request))
                  ;; user has already a wallet? then show balance
-                 (views/render-page
+                 (views/render-template
                   balance-template {:title "Balance"
                                     :wallet (:wallet (auth/check request))}
                   )
                  ;; else propose to create a wallet
-                 (views/render-page views/simple-form-template
-                                    {:title "Create wallet"
-                                     :heading "Create a new wallet"
-                                     :form-spec wallet-create-form}))
+                 (views/render-template
+                  views/simple-form-template
+                  {:title "Create your wallet"
+                   :heading "Make this device a wallet"
+                   :form-spec wallet-create-form}))
                ))
 
 
@@ -279,12 +282,13 @@
                         "application/json" {:reason (::problems ctx)}
 
                         "application/x-www-form-urlencoded"
-                        (views/render-page views/simple-form-template
-                                           {:title "Create wallet"
-                                            :heading "Create a new wallet"
-                                            :form-spec (assoc wallet-create-form
-                                                              :problems (::problems ctx)
-                                                              :values (::user-data ctx))})))
+                        (views/render-template
+                         views/simple-form-template
+                         {:title "Create wallet"
+                          :heading "Create a new wallet"
+                          :form-spec (assoc wallet-create-form
+                                            :problems (::problems ctx)
+                                            :values (::user-data ctx))})))
 
   :post! (fn [ctx]
            (let [name (get-in ctx [::user-data :name])
@@ -305,7 +309,7 @@
 
                       "application/x-www-form-urlencoded"
                       (let [confirmation (::confirmation ctx)]
-                        {:location (str "/wallets/" (:_id confirmation))})
+                        {:location (str "/confirmations/" (:_id confirmation))})
 
                       ;; TODO: handle default case
                       ))
@@ -315,7 +319,7 @@
                       (case (::content-type ctx)
                         "application/json"
                         {:body confirmation
-                         :confirm (str "/wallets/" (:_id confirmation))}
+                         :confirm (str "/confirmations/" (:_id confirmation))}
 
                         ;; TODO: handle default case
                         ))))
@@ -324,7 +328,7 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
-               (views/render-page
+               (views/render-template
                 views/simple-form-template
                 {:title "Confirm wallet creation"
                  :heading "Please confirm the creation of your wallet"
@@ -432,7 +436,7 @@
   :handle-ok (fn [ctx]
                (let [wallet (auth/get-wallet request)]
                ;; (utils/log! 'ACK 'balance-show (clojure.pprint/pprint wallet))
-                 (views/render-page
+                 (views/render-template
                   balance-template {:title "Balance"
                                     :wallet wallet
                                     :balance (blockchain/get-balance 
