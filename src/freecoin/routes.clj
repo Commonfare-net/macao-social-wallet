@@ -106,10 +106,6 @@
 
   (GET  "/signin" [request] (wallet/get-create  request))
   (POST "/signin" [request] (wallet/post-create request))
-  (GET  "/wallets/:confirmation"  [confirmation :as request]
-        (wallet/get-create-confirm request confirmation))
-  (POST "/wallets/:confirmation" [confirmation :as request]
-        (wallet/post-create-confirm request confirmation))
 
   ;; Search function
   (GET "/participants" [request] (wallet/participants-form request))
