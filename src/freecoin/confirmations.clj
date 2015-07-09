@@ -186,7 +186,7 @@
           (if (contains? new-wallet :problem)
             ;; TODO consistent error reporting
             (utils/log! (::error new-wallet))
-            (let []
+            (do
               ;; insert in the wallet database, use
               ;; the shamir's generated UID as _id
               (storage/insert db "wallets"
