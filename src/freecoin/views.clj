@@ -53,10 +53,10 @@
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:title (str "Confirm " action)]
-     (page/include-css "/css/bootstrap.min.css")
-     (page/include-css "/css/bootstrap-responsive.min.css")
-     (page/include-css "/css/freecoin.css")
-     (page/include-css "/css/json-html.css")
+     (page/include-css "/static/css/bootstrap.min.css")
+     (page/include-css "/static/css/bootstrap-responsive.min.css")
+     (page/include-css "/static/css/freecoin.css")
+     (page/include-css "/static/css/json-html.css")
      ]
     [:body [:div {:class "container-fluid"}
             [:h1 (str "Confirm " action)]
@@ -81,10 +81,10 @@
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:title title]
-     (page/include-css "/css/bootstrap.min.css")
-     (page/include-css "/css/bootstrap-responsive.min.css")
-     (page/include-css "/css/freecoin.css")
-     (page/include-css "/css/json-html.css")
+     (page/include-css "/static/css/bootstrap.min.css")
+     (page/include-css "/static/css/bootstrap-responsive.min.css")
+     (page/include-css "/static/css/freecoin.css")
+     (page/include-css "/static/css/json-html.css")
      ]
     [:body [:div {:class "container-fluid"}
             [:h1 title]
@@ -102,9 +102,9 @@
   ;;    [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
   ;;    [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
   ;;    [:title title]
-  ;;    (page/include-css "/css/bootstrap.min.css")
-  ;;    (page/include-css "/css/bootstrap-responsive.min.css")
-  ;;    (page/include-css "/css/freecoin.css")
+  ;;    (page/include-css "/static/css/bootstrap.min.css")
+  ;;    (page/include-css "/static/css/bootstrap-responsive.min.css")
+  ;;    (page/include-css "/static/css/freecoin.css")
   ;;    ]
   ;;   [:body [:div {:class "container-fluid"}
   ;;           (template content)]]))

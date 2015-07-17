@@ -1,0 +1,18 @@
+---
+- name: install nginx
+  apt: name=nginx state=present
+
+- name: install fail2ban
+  apt: name=fail2ban state=present
+
+- name: copy over freecoin nginx config
+  copy: src="freecoin" dest="/etc/nginx/sites-available/freecoin" mode=0644
+
+- name: create symbolic link to nginx freecoin config
+  file: src="/etc/nginx/sites-available/freecoin" dest="/etc/nginx/sites-enabled/freecoin" state=link
+
+- name: remove default nginx symbolic link from sites-enabled
+  file: path="/etc/nginx/sites-enabled/default" state=absent
+
+- name: restart nginx
+  service: name=nginx state=restarted

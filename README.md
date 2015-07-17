@@ -55,6 +55,21 @@ $ ./go.sh ;; convenience script for running all tests
 ```
 See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced testing features.
 
+## Deployment
+
+WIP
+
+Deployment to a digital-ocean-like VM via:
+
+```
+$ cd ops/
+$ vagrant up dob_vm
+$ vagrant ssh-config > ../DOB_SSH_CONFIG
+$ SSH_CONFIG_FILE=DOB_SSH_CONFIG ./deploy.sh
+```
+
+Site should then be accessible at http://192.168.50.81
+
 ## Usage
 
 WIP

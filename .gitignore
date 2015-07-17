@@ -12,3 +12,4 @@ pom.xml.asc
 tests.log
 *.swp
 profiles.clj
+deploy.tar.gz

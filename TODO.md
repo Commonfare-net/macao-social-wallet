@@ -4,7 +4,7 @@ Confirmation API notes
 Creating a wallet:
 ----------
 
-"/signup"
+"/signup" --- GET signup to retrieve signup form
 
 POSTS to
 "/signup-requests" -- creates a signup-request
@@ -40,3 +40,13 @@ confirmed; post to
 
 cancelled;
 PUT to /send-confirmations --- to cancel the confirmation
+
+Deployment / Devops:
+===================
+
+- Add logging
+
+- Debug session handling / signing in in DOB_VM deployment
+
+- Deploy using Docker
+

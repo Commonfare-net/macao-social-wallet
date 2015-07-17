@@ -1,0 +1,9 @@
+---
+ - hosts: development
+
+   roles:
+    - common
+    - dev
+    - leiningen
+    - mongodb
+    - freecoin

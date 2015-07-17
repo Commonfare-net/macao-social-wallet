@@ -1,0 +1,23 @@
+---
+ - name: Fetch apt signing key
+   apt_key: keyserver=keyserver.ubuntu.com id=7F0CEB10 state=present
+
+ - name: Add 10gen Mongo repo
+   apt_repository: >
+     repo='deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.0 multiverse'
+     state=present
+
+ - name: Update apt cache
+   apt: update_cache=yes
+
+ - name: Install MongoDB
+   apt: name=mongodb-org state=latest
+
+ - name: Start mongod
+   service: name=mongod state=started
+
+ - name: set locale
+   copy: >
+     src=locale
+     dest=/etc/default/locale
+     mode=0644

@@ -10,12 +10,13 @@
                                         ;[org.clojure/tools.trace "0.7.8"]
                                          ]
                           :plugins [[lein-midje "3.1.3"]]}
-             :production [:user]}
+             :production [:user]
+             :vm {:ring {:host "192.168.50.80"}}
+             :uberjar {:aot :all
+                       :main freecoin.main}}
 
-  :plugins [
-            [lein-ring "0.9.3"]
-            [lein-environ "1.0.0"]
-            ]
+  :plugins [[lein-ring "0.9.3"]
+            [lein-environ "1.0.0"]]
 
   :ring {:reload-paths ["src"]
          :init freecoin.core/lein-ring-init

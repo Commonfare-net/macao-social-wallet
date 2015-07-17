@@ -52,13 +52,17 @@
    [freecoin.routes :as routes]
    [freecoin.params :as param]
    [freecoin.storage :as storage]
-   [freecoin.secretshare :as ssss])
-   ;; (:gen-class)
-  )
+   [freecoin.secretshare :as ssss]))
 
 (defn wrap-db [handler db-connection]
   (fn [request]
     (handler (assoc-in request [:config :db-connection] db-connection))))
+
+(defn wrap-display-session [handler]
+  (fn [request]
+    (prn "Session:")
+    (prn (:session request))
+    (handler request)))
 
 (defn handler [app-state]
   (let [host-url (str "http://" (get-in app-state [:config-params :host :address])
@@ -70,7 +74,7 @@
         ;; pf/wrap-persona-friend
         ;; (friend/authenticate {:credential-fn pf/credential-fn
         ;;                       :workflows [(partial pf/persona-workflow host-url)]})
-
+        wrap-display-session 
         ;; comment the following to deactivate debug
         (liberator.dev/wrap-trace :header :ui)
         (wrap-db (:db-connection app-state))
@@ -134,3 +138,4 @@
 
 (defn lein-ring-stop []
   (alter-var-root #'app-state disconnect-db))
+

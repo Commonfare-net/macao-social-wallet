@@ -1,0 +1,10 @@
+---
+- hosts: dob_vm
+
+  roles:
+  - common
+  - mongodb
+  - nginx
+  - ferm
+  - jre
+  - freecoin_application_config

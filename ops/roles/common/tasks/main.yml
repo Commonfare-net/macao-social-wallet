@@ -1,0 +1,3 @@
+---
+ - name: update apt
+   command: sudo apt-get update
