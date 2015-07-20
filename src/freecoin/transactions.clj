@@ -55,39 +55,14 @@
   )
 
 (defn transaction-form-spec [recipient]
-  ;; [:float [:amount]]
-  ;; [:min-val [0.01] [:amount]]]
-  (let [validations  {:validations
-                      [[:required [:amount :recipient]]]
-                      :action "/send"
-                      :method "post"}]
-
-    (if (nil? recipient)
-      (assoc validations
-             :fields [
-                      {:name :recipient :type :text}
-                      {:name :amount :datatype :float}
-                      ]
-             :validations [[:required [:amount :recipient]]]
-             :action "/send"
-             :method "post"
-              )
-
-    ;; TODO: verify if recipient exists
-      (assoc validations
-             :fields [
-                      {:name :amount :datatype :float}
-                      (fc/render-field [:input {:name :recipient :type :hidden :value recipient}])
-                      ]
-             :validations [[:required [:amount :recipient]]]
-             :action "/send"
-             :method "post"
-             )
-     ;; [:float [:amount]]
-    ;; [:min-val [0.01] [:amount]]]
-    ))
-
-  )
+  {:fields [{:name :amount :datatype :float}
+            (if recipient
+              {:name :recipient :type :hidden :value recipient}
+              {:name :recipient :type :text})]
+   :validations [[:required [:amount :recipient]]
+                 [:min-val 0.01 [:amount]]]
+   :action "/send"
+   :method "post"})
 
 
 (defresource get-transaction-form [request recipient]
@@ -125,7 +100,13 @@
                                              (transaction-form-spec nil)
                                              (::content-type ctx))]
                 (case status
-                  :ok [true {::user-data data}]
+                  :ok
+                  (if (storage/find-one (::db ctx) "wallets" {:name (:recipient data)})
+                    [true {::user-data data}]
+                    [false {::user-data data
+                            ::problems [{:keys ["recipient"] :msg "there is no recipient with that name"}]
+                            :representation {:media-type (get views/response-representation
+                                                              (::content-type ctx))}}])
 
                   :error
                   [false {::user-data data
@@ -139,7 +120,14 @@
   :handle-forbidden (fn [ctx]
                       (case (::content-type ctx)
                         "application/json" {:reason (::problems ctx)}
-                        "application/x-www-form-urlencoded" {:reason (::problems ctx)}
+                        "application/x-www-form-urlencoded"
+                        (views/render-template
+                         views/simple-form-template
+                         {:title "Make a transaction"
+                          :heading (str "Send freecoins")
+                          :form-spec (assoc (transaction-form-spec nil)
+                                            :problems (::problems ctx)
+                                            :values (::user-data ctx))})
                         ;; see also in wallet how this can be handled
                         ))
 
@@ -163,8 +151,7 @@
                     (let [confirmation (::confirmation ctx)]
                       (case (::content-type ctx)
                         "application/json"
-                        {:body confirmation
-                         :confirm (str "/send/" (:_id confirmation))}
+                        (ring-response {:headers {"Location" (:location confirmation)}})
 
                         ;; TODO: handle default case
                         )))

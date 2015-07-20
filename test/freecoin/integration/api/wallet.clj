@@ -43,11 +43,11 @@
 (facts "POST /signin"
        (against-background
         [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
-         (after :facts (ih/destroy-test-session ih/app-state))])
+         (after :facts (ih/destroy-test-sessions ih/app-state))])
 
        (facts "with content-type application/json"
               (fact "when successful, generates a wallet creation confirmation code"
-                    (let [{response :response} (-> (:session ih/app-state)
+                    (let [{response :response} (-> (get-in ih/app-state [:sessions :default])
                                                    (p/content-type "application/json")
                                                    (p/request "/signin"
                                                               :request-method :post
@@ -60,7 +60,7 @@
 
               (tabular
                (fact "returns 403 and error report if posted json data is invalid"
-                     (let [{response :response} (-> (:session ih/app-state)
+                     (let [{response :response} (-> (get-in ih/app-state [:sessions :default])
                                                     (p/content-type "application/json")
                                                     (p/request "/signin"
                                                                :request-method :post
@@ -75,7 +75,7 @@
 
               (fact "returns 403 if a wallet already exists for the given username"
                     (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
-                          {response :response} (-> (:session ih/app-state)
+                          {response :response} (-> (get-in ih/app-state [:sessions :default])
                                                    (p/content-type "application/json")
                                                    (p/request "/signin"
                                                               :request-method :post
@@ -85,7 +85,7 @@
 
        (facts "with content-type application/x-www-form-urlencoded"
               (fact "when successful, initiates confirmation process"
-                    (let [{response :response} (-> (:session ih/app-state)
+                    (let [{response :response} (-> (get-in ih/app-state [:sessions :default])
                                                    (p/content-type "application/x-www-form-urlencoded")
                                                    (p/request "/signin"
                                                               :request-method :post
@@ -95,7 +95,7 @@
 
               (tabular
                (fact "when posted data is invalid, redirects to /signin with error message"
-                     (let [{response :response} (-> (:session ih/app-state)
+                     (let [{response :response} (-> (get-in ih/app-state [:sessions :default])
                                                     (p/content-type "application/x-www-form-urlencoded")
                                                     (p/request "/signin"
                                                                :request-method :post
@@ -110,7 +110,7 @@
 
               (fact "when username not unique, redirects to /signin with error message"
                     (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
-                          {response :response} (-> (:session ih/app-state)
+                          {response :response} (-> (get-in ih/app-state [:sessions :default])
                                                    (p/content-type "application/x-www-form-urlencoded")
                                                    (p/request "/signin"
                                                               :request-method :post

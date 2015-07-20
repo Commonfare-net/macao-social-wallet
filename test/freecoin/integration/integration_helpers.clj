@@ -30,7 +30,11 @@
   (:require [midje.sweet :as midje]
             [clojure.data.json :as cl-json]
             [peridot.core :as p]
+            [ring.middleware.session.store :as rms]
+            [clojure.string :as str]
+            [freecoin.storage :as storage]
             [freecoin.integration.storage-helpers :as sh]
+            [freecoin.blockchain :as blockchain]
             [freecoin.core :as core]))
 
 ;; For whole-stack integration tests
@@ -40,23 +44,66 @@
   {:db-config sh/test-db-config
    :cookie-config {}})
 
-(defn start-test-session [app-state]
-  (assoc app-state :session (p/session (core/handler app-state))))
+(deftype TestSessionStore [store-atom]
+  rms/SessionStore
+  (read-session [_ key] @store-atom)
+  (write-session [_ _ data]
+    (reset! store-atom data)
+    :key)
+  (delete-session [_ _]
+    (reset! store-atom nil)
+    nil))
 
-(defn initialise-test-session [app-state params]
-  (alter-var-root #'app-state
-                  #(-> %
-                       (core/init params)
-                       core/connect-db
-                       start-test-session)))
+(defn test-session-store [store-atom]
+  (TestSessionStore. store-atom))
 
-(defn destroy-test-session [app-state]
+(defn start-test-session [app-state session-label]
+  (let [store-atom (atom nil)
+        session-configuration {:store (test-session-store store-atom)}
+        db-connection (:db-connection app-state)]
+    (-> app-state
+        (assoc-in [:sessions session-label]
+                  (p/session (core/handler session-configuration db-connection)))
+        (assoc-in [:session-stores session-label] store-atom))))
+
+(defn initialise-test-session
+  ([app-state params]
+   (initialise-test-session app-state params :default))
+
+  ([app-state params session-label]
+   (alter-var-root #'app-state
+                   #(-> %
+                        (core/init params)
+                        core/connect-db
+                        (start-test-session session-label)))))
+
+(defn destroy-test-sessions [app-state]
   (when (:db-connection app-state)
     (sh/clear-db (:db-connection app-state)))
   (alter-var-root #'app-state
                   #(-> %
-                       (dissoc :session)
+                       (dissoc :sessions)
                        core/disconnect-db)))
+
+(defn create-and-sign-in [app-state session-label wallet-details]
+  (let [db (:db-connection app-state)
+        session-store (get-in app-state [:session-stores session-label])
+        new-wallet (blockchain/create-account
+                    (blockchain/new-stub db)
+                    {:_id ""
+                     :name (:name wallet-details)
+                     :email (:email wallet-details)
+                     :public-key nil
+                     :private-key nil
+                     :blockchains {}
+                     :blockchain-secrets {}})
+        secret (get-in new-wallet [:blockchain-secrets :STUB])
+        secret-without-cookie (dissoc secret :cookie)
+        cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
+    (storage/insert db "wallets"
+                    (assoc new-wallet :_id (:_id secret)))
+    (reset! session-store {:cookie-data cookie-data})
+    app-state))
 
 ;; Midje checkers
 
