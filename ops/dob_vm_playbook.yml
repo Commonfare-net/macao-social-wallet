@@ -3,8 +3,6 @@
 
   roles:
   - common
-  - mongodb
   - nginx
   - ferm
-  - jre
-  - freecoin_application_config
+  - docker

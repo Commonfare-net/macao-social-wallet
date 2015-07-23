@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define "development", primary: true do |dev|
     dev.vm.network "private_network", ip: "192.168.50.80"
-    dev.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh", auto_correct: false
+    dev.vm.network :forwarded_port, guest: 22, host: 2280, id: "ssh", auto_correct: false
 
     dev.vm.synced_folder "../", "/var/freecoin"
     
@@ -27,7 +27,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define "dob_vm" do |dob|
     dob.vm.network "private_network", ip: "192.168.50.81"
-    dob.vm.network :forwarded_port, guest: 22, host: 2224, id: "ssh", auto_correct: false
+    dob.vm.network :forwarded_port, guest: 22, host: 2281, id: "ssh", auto_correct: false
+
+    dob.vm.synced_folder "../", "/var/freecoin"
     
     dob.vm.provider "virtualbox" do |vbox|
       vbox.customize ["modifyvm", :id, "--memory", digital_ocean_memory, "--cpus", 1]

@@ -1,3 +1,0 @@
----
-- name: create freecoin deployment directory
-  file: dest=/usr/local/freecoin state=directory

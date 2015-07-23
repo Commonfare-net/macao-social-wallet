@@ -192,8 +192,7 @@
               (storage/insert db "wallets"
                               (assoc new-wallet :_id (:_id secret) ))
               ;; return the apikey cookie
-              (ring-response {:headers {"Location" (ctx :location)}
-                              :session {:cookie-data cookie-data}
+              (ring-response {:session {:cookie-data cookie-data}
                               :apikey cookie-data})
               ;; TODO: give PINs for backup
 

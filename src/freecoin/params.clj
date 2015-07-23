@@ -24,27 +24,28 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.params
-  (:require [org.httpkit.client :refer [max-body-filter]])
-  
-  )
+  (:require [org.httpkit.client :refer [max-body-filter]]
+            [environ.core :as env]))
 
 (def version "software release version" "0.2")
-
 
 ;; TODO: perhaps already configured in ring?
 (def host
   {:address "fork"
    :port 8000})
 
+(defn- get-mongo-uri []
+  (when-let [mongo-ip (get env/env :mongo-port-27017-tcp-addr "localhost")
+             db-name "fxctest1"]
+    (format "mongodb://%s:27017/%s" mongo-ip db-name)))
+
 (def webapp
-  {:db-config {:host "localhost"
-               :port 27017
-               :db-name "fxctest1"}
+  {:db-config {:url (get-mongo-uri)}
+
    :host host
    :cookie-config {;; see: https://github.com/ring-clojure/ring/wiki/Cookies
                    :secure false ;restrict the cookie to HTTPS URLs if true
                    :http-only true}})
-
 
 ;; defaults
 (def encryption

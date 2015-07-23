@@ -13,3 +13,4 @@ tests.log
 *.swp
 profiles.clj
 deploy.tar.gz
+/ops/.vagrant

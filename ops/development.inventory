@@ -1,4 +1,4 @@
-default ansible_ssh_host=127.0.0.1 ansible_ssh_port=2222
+default ansible_ssh_host=127.0.0.1 ansible_ssh_port=2280
 
 [development]
 default

@@ -1,3 +1,0 @@
----
-- name: install jre
-  apt: name="default-jre" state=present

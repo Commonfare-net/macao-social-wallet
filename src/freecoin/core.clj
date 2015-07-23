@@ -58,15 +58,8 @@
   (fn [request]
     (handler (assoc-in request [:config :db-connection] db-connection))))
 
-(defn wrap-display-session [handler]
-  (fn [request]
-    (prn "Session:")
-    (prn (:session request))
-    (handler request)))
-
 (defn handler [session-configuration db-connection]
   (-> routes/app
-      ; wrap-display-session
       ;; comment the following to deactivate debug
       ;(liberator.dev/wrap-trace :header :ui)
       (wrap-db db-connection)

@@ -7,9 +7,9 @@
             [freecoin.utils :as utils]
             ))
 
-(defn connect [{:keys [host port db-name] :as db-config}]
-  (let [conn (mg/connect {:host host :port port})
-        db (mg/get-db conn db-name)]
+(defn connect [{:keys [url] :as db-config}]
+  (let [conn (mg/connect-via-uri url)
+        db (:db conn)]
     {:conn conn
      :db db}))
 

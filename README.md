@@ -57,18 +57,19 @@ See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced t
 
 ## Deployment
 
-WIP
+Deployment to a digital-ocean-like VM:
 
-Deployment to a digital-ocean-like VM via:
+1) Build using ```lein uberjar```
 
-```
-$ cd ops/
-$ vagrant up dob_vm
-$ vagrant ssh-config > ../DOB_SSH_CONFIG
-$ SSH_CONFIG_FILE=DOB_SSH_CONFIG ./deploy.sh
-```
+2) Deploy to the dob_vm with:
 
-Site should then be accessible at http://192.168.50.81
+   ```
+   $ cd ops/
+   $ vagrant up dob_vm
+   $ ./deploy_vagrant.sh
+   ```
+
+The site should then be accessible at http://192.168.50.81:5000
 
 ## Usage
 
