@@ -35,8 +35,8 @@
    :port 8000})
 
 (defn- get-mongo-uri []
-  (when-let [mongo-ip (get env/env :mongo-port-27017-tcp-addr "localhost")
-             db-name "fxctest1"]
+  (let [mongo-ip (get env/env :mongo-port-27017-tcp-addr "localhost")
+        db-name "fxctest1"]
     (format "mongodb://%s:27017/%s" mongo-ip db-name)))
 
 (def webapp

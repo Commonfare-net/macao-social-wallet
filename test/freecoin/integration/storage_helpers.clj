@@ -32,7 +32,8 @@
 
 (def test-db-config {:host "127.0.0.1"
                      :port 27017
-                     :db-name "freecoin_test_db"})
+                     :db-name "freecoin_test_db"
+                     :url "mongodb://127.0.0.1:27017/freecoin_test_db"})
 
 (defn drop-collection [db-connection collection]
   (mc/drop (:db db-connection) collection))

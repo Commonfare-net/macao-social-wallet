@@ -8,10 +8,7 @@
             ))
 
 (defn connect [{:keys [url] :as db-config}]
-  (let [conn (mg/connect-via-uri url)
-        db (:db conn)]
-    {:conn conn
-     :db db}))
+  (mg/connect-via-uri url))
 
 (defn disconnect [{:keys [conn] :as db-connection}]
   (mg/disconnect conn))
