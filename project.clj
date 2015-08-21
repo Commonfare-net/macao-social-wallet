@@ -48,8 +48,9 @@
                  [com.cemerick/friend "0.2.1" :exclusions [robert/hooke xml-apis]]
                  [persona-kit "0.1.1-SNAPSHOT" :exclusions [com.cemerick/friend]]
                  [clj-oauth "1.5.1"]
+                 [org.slf4j/slf4j-simple "1.7.12"]
                  [org.clojars.d-cent/stonecutter-oauth "0.1.8-SNAPSHOT"]
-
+                 
                  ;; http client
                  [http-kit "2.1.18"]
 

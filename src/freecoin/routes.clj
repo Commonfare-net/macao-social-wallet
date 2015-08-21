@@ -33,7 +33,7 @@
    [liberator.core :refer [resource defresource]]
 
    [liberator.representation :refer [as-response ring-response]]
-   [compojure.core :as cc :refer [defroutes ANY GET POST context]]
+   [compojure.core :as cc :refer [ANY GET POST context]]
    [compojure.route :refer [resources]]
 
    ;; [environ.core :refer [env]]
