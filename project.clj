@@ -9,7 +9,14 @@
                                          [peridot "0.3.1"]
                                         ;[org.clojure/tools.trace "0.7.8"]
                                          ]
+                          :env [
+                                [:base-url "http://localhost:8000"]
+                                [:client-id "QI7UVfyl6kepommh"]
+                                [:client-secret "iEJGGyJwrB8bfIvC"]
+                                [:auth-url "http://localhost:3000"]
+                                ]
                           :plugins [[lein-midje "3.1.3"]]}
+
              :production [:user]
              :vm {:ring {:host "192.168.50.80"}}
              :uberjar {:aot :all
@@ -110,6 +117,7 @@
         ]
 
   ;; for running a production server using 'lein run'
-  :aliases {"run" ["with-profile" "production" "ring" "server"]}
+  :aliases {"dev" ["with-profile" "dev" "ring" "server"]
+            "run" ["with-profile" "production" "ring" "server"]}
 
   )
