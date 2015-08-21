@@ -117,15 +117,3 @@
                                                               :body "name=user&email=valid@email.com"))]
                       (:status response) => 403
                       (:body response) => (contains #"Name.+: username already exists")))))
-
-(facts "About signing up via a Stonecutter SSO instance"
-       (facts "About the landing page"
-              (fact "When not signed in, displays link to sign in with stonecutter")
-              (fact "When signed in, displays user's balance"))
-       
-       (facts "About the openid callback endpoint"
-              (facts "When able to receive a valid access_token + id_token"
-                     (fact "if new user, creates a wallet and redirects to landing page")
-                     (fact "if existing user, retrieves wallet, and redirects to landing page"))
-              
-              (fact "Redirects to landing page (?) when not accessed as part of a successful openid authentication flow")))
