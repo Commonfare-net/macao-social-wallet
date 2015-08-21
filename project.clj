@@ -105,7 +105,7 @@
                  [cc.artifice/lein-gossip "0.2.1"]
                  ]
   :env [
-        [:base-url "http://localhost:3000"]
+        [:base-url "http://localhost:8000"]
         ]
 
   ;; for running a production server using 'lein run'

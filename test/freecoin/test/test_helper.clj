@@ -8,6 +8,9 @@
                              (= (:status response) 302)
                              (= (get-in response [:headers "Location"]) path))))
 
+(defn check-signed-in-as [uid]
+  (midje/chatty-checker [response] (= uid (get-in response [:session :user-id]))))
+
 (defn enlive-m->attr [enlive-m selector attr]
   (-> enlive-m (html/select selector) first :attrs attr))
 

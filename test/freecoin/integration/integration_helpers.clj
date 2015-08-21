@@ -63,7 +63,7 @@
         db-connection (:db-connection app-state)]
     (-> app-state
         (assoc-in [:sessions session-label]
-                  (p/session (core/handler session-configuration db-connection)))
+                  (p/session (core/handler session-configuration db-connection {})))
         (assoc-in [:session-stores session-label] store-atom))))
 
 (defn initialise-test-session

@@ -33,7 +33,7 @@
    [liberator.core :refer [resource defresource]]
 
    [liberator.representation :refer [as-response ring-response]]
-   [compojure.core :refer [defroutes ANY GET POST context]]
+   [compojure.core :as cc :refer [defroutes ANY GET POST context]]
    [compojure.route :refer [resources]]
 
    ;; [environ.core :refer [env]]
@@ -48,14 +48,15 @@
    [freecoin.transactions :as transactions]
 
    [freecoin.confirmations :as confirm]
+
+   ;; Handlers
+   [freecoin.handlers.sign-in :as sign-in]
    ;; SPIKE: learning about Mozilla persona
    ;; [freecoin.persona-spike :as persona-spike]
 
    ;; SPIKE: Twitter oauth example
    [freecoin.twitter :as twitter]
    ))
-
-
 
 (defn redirect-home [_]
   (liberator.representation/ring-response
@@ -76,72 +77,78 @@
   )
 
 ;; routes
-(defroutes app
+(defn app [sso-configuration]
+  (cc/routes
+   ;; embedded resources from resources/public
+   (compojure.route/resources "/")
 
-  ;; embedded resources from resources/public
-  (compojure.route/resources "/")
+   ;; debug
+   (ANY "/echo" [request] (echo request))
 
-  ;; debug
-  (ANY "/echo" [request] (echo request))
+   (ANY "/version" [] (resource
+                       :available-media-types ["text/html" "application/json"]
+                       :exists? {::hello  {:Freecoin "D-CENT"
+                                           :version param/version
+                                           :license "AGPLv3"
+                                           :os-name (.. System getProperties (get "os.name"))
+                                           :os-version (.. System getProperties (get "os.version"))
+                                           :os-arch (.. System getProperties (get "os.arch"))}}
 
-  (ANY "/version" [] (resource
-                      :available-media-types ["text/html" "application/json"]
-                      :exists? {::hello  {:Freecoin "D-CENT"
-                                          :version param/version
-                                          :license "AGPLv3"
-                                          :os-name (.. System getProperties (get "os.name"))
-                                          :os-version (.. System getProperties (get "os.version"))
-                                          :os-arch (.. System getProperties (get "os.arch"))}}
+                       :handle-ok #(util/pretty (::hello %))
+                       :handle-create #(::hello %)
+                       ))
 
-                      :handle-ok #(util/pretty (::hello %))
-                      :handle-create #(::hello %)
-                      ))
+   ;; Wallet operations
 
-  ;; Wallet operations
+   (ANY "/"       [request] (wallet/balance-show request))
 
-  (ANY "/"       [request] (wallet/balance-show request))
+   (GET "/qrcode" [request] (wallet/qrcode request nil))
+   (GET "/qrcode/:name" [name :as request] (wallet/qrcode request name))
 
-  (GET "/qrcode" [request] (wallet/qrcode request nil))
-  (GET "/qrcode/:name" [name :as request] (wallet/qrcode request name))
+   (GET  "/signin" [request] (wallet/get-create  request))
+   (POST "/signin" [request] (wallet/post-create request))
 
-  (GET  "/signin" [request] (wallet/get-create  request))
-  (POST "/signin" [request] (wallet/post-create request))
+   ;; Search function
+   (GET "/participants" [request] (wallet/participants-form request))
+   ;; this will read field and value, url encoded
+   (GET "/participants/find" [request] (wallet/participants-find request))
+   (GET "/find"              [request] (wallet/participants-find request))
+   ;; all is simply find without arguments
+   (GET "/participants/all"  [request] (wallet/participants-find request))
 
-  ;; Search function
-  (GET "/participants" [request] (wallet/participants-form request))
-  ;; this will read field and value, url encoded
-  (GET "/participants/find" [request] (wallet/participants-find request))
-  (GET "/find"              [request] (wallet/participants-find request))
-  ;; all is simply find without arguments
-  (GET "/participants/all"  [request] (wallet/participants-find request))
+   ;; Transactions
+   (GET  "/send" [request] (transactions/get-transaction-form request nil))
+   (GET  "/send/to/:participant" [participant :as request]
+         (transactions/get-transaction-form request participant))
+   (POST "/send" [request] (transactions/post-transaction-form request))
 
-  ;; Transactions
-  (GET  "/send" [request] (transactions/get-transaction-form request nil))
-  (GET  "/send/to/:participant" [participant :as request]
-        (transactions/get-transaction-form request participant))
-  (POST "/send" [request] (transactions/post-transaction-form request))
+   (GET  "/transactions/all" [request]
+         (transactions/get-all-transactions request))
 
-  (GET  "/transactions/all" [request]
-        (transactions/get-all-transactions request))
+   ;; Confirmations
+   (GET  "/confirmations/:code" [code :as request]
+         (confirm/get-confirm-form request code))
+   (POST "/confirmations" [request] (confirm/execute request))
 
-  ;; Confirmations
-  (GET  "/confirmations/:code" [code :as request]
-        (confirm/get-confirm-form request code))
-  (POST "/confirmations" [request] (confirm/execute request))
+   ;; 1 to 1 NXT api mapping for functions taking up to 2 args
+   (ANY "/nxt/:command" [command :as request]
+        (nxt/api request {"requestType" command}))
+   (ANY "/nxt/:cmd1/:key1/:val1" [cmd1 key1 val1 :as request]
+        (nxt/api request {"requestType" cmd1 key1 val1}))
+   (ANY "/nxt/:cmd1/:key1/:val1/:key2/:val2"
+        [cmd1 key1 val1 key2 val2 :as request]
+        (nxt/api request {"requestType" cmd1 key1 val1 key2 val2}))
 
-  ;; 1 to 1 NXT api mapping for functions taking up to 2 args
-  (ANY "/nxt/:command" [command :as request]
-       (nxt/api request {"requestType" command}))
-  (ANY "/nxt/:cmd1/:key1/:val1" [cmd1 key1 val1 :as request]
-       (nxt/api request {"requestType" cmd1 key1 val1}))
-  (ANY "/nxt/:cmd1/:key1/:val1/:key2/:val2"
-       [cmd1 key1 val1 key2 val2 :as request]
-       (nxt/api request {"requestType" cmd1 key1 val1 key2 val2}))
+   ;; Persona spike
+   ;; persona-spike/routes
 
-  ;; Persona spike
-  ;; persona-spike/routes
+   ;; Twitter oauth example
+   (context "/twitter" [] twitter/routes)
 
-  ;; Twitter oauth example
-  (context "/twitter" [] twitter/routes)
+   ;; Signing in using Stonecutter
+   (GET "/landing-page" [request] sign-in/landing-page)
+   (ANY "/sign-in-with-sso" [request] (sign-in/sign-in sso-configuration))
+   (GET "/sso-callback" [request] (sign-in/sso-callback sso-configuration))
+   )
 
   ) ; end of routes

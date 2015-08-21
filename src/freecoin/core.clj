@@ -49,8 +49,11 @@
    ;; [persona-kit.uris :as pu]
 
    [compojure.core :refer [defroutes ANY]]
+   [stonecutter-oauth.client :as soc]
+   
    [freecoin.routes :as routes]
    [freecoin.params :as param]
+   [freecoin.config :as config]
    [freecoin.storage :as storage]
    [freecoin.secretshare :as ssss]))
 
@@ -58,10 +61,10 @@
   (fn [request]
     (handler (assoc-in request [:config :db-connection] db-connection))))
 
-(defn handler [session-configuration db-connection]
-  (-> routes/app
+(defn handler [session-configuration db-connection sso-configuration]
+  (-> (routes/app sso-configuration)
       ;; comment the following to deactivate debug
-      ;(liberator.dev/wrap-trace :header :ui)
+      ;; (liberator.dev/wrap-trace :header :ui)
       (wrap-db db-connection)
       wrap-cookies
       ;;        wrap-anti-forgery
@@ -92,7 +95,12 @@
     (let [session-configuration {:cookie-attrs (get-in app-state [:config-params :cookie-config])
                                  :store (cookie-store {:key "sCWg45lZNFNESvPv"})}
           db-connection (:db-connection app-state)
-          server (server/run-server (handler session-configuration db-connection)
+          config-m (config/create-config)
+          sso-configuration (soc/configure (config/auth-url config-m)
+                                           (config/client-id config-m)
+                                           (config/client-secret config-m)
+                                           (str (config/base-url config-m) "/sso-callback"))
+          server (server/run-server (handler session-configuration db-connection sso-configuration)
                                     {:port 8000})]
       (assoc app-state :server server))))
 
@@ -124,9 +132,14 @@
   (alter-var-root #'lein-ring-handler
                   (fn [_] (let [session-configuration {:cookie-attrs (get-in app-state [:config-params :cookie-config])
                                                        :store (cookie-store {:key "sCWg45lZNFNESvPv"})}
-                                db-connection (:db-connection app-state)]
+                                db-connection (:db-connection app-state)
+                                config-m (config/create-config)
+                                sso-configuration (soc/configure (config/auth-url config-m)
+                                                                 (config/client-id config-m)
+                                                                 (config/client-secret config-m)
+                                                                 (str (config/base-url config-m) "/sso-callback"))]
                             (prn "Restarting server....")
-                            (handler session-configuration db-connection)))))
+                            (handler session-configuration db-connection sso-configuration)))))
 
 (defn lein-ring-stop []
   (alter-var-root #'app-state disconnect-db))
