@@ -3,6 +3,8 @@
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
             [stonecutter-oauth.client :as sc]
+            [freecoin.storage :as storage]
+            [freecoin.integration.storage-helpers :as sh]
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.sign-in :as fs]))
 
@@ -14,6 +16,8 @@
 (def public-key "PUBLICK_KEY") ;; TODO: load this from jwk file
 
 (def test-sso-config (sc/configure sso-url client-id client-secret callback-uri))
+
+(def db-connection (atom nil))
 
 (facts "About signing up via a Stonecutter SSO instance"
        (facts "About the landing page"
@@ -32,18 +36,26 @@
                                                    "&response_type=code"
                                                    "&redirect_uri=" callback-uri)]
                response => (th/check-redirects-to expected-authorisation-url)))
-       
+
        (facts "About the openid callback endpoint"
+              (against-background
+               [(before :facts (do (reset! db-connection (storage/connect sh/test-db-config))
+                                   (sh/clear-db @db-connection)))
+                (after :facts (do (storage/disconnect @db-connection)))])
+              
               (facts "When token request yields a valid access_token + id_token"
                      (against-background
                       (sc/request-access-token! ...sso-config... ...auth-code...) => {:access_token ...access-token...
-                                                                                      :user-info {:user-id ...user-id...}})
+                                                                                      :user-info {:user-id "stonecutter-user-id"
+                                                                                                  :email "test@email.com"
+                                                                                                  :email_verified true}})
                      (fact "if new user, creates a wallet and redirects to landing page"
-                           (let [callback-handler (fs/sso-callback ...sso-config...)
+                           (let [callback-handler (fs/sso-callback @db-connection ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
-                             response => (th/check-signed-in-as ...user-id...)))
+                             response => (th/check-signed-in-as "stonecutter-user-id")
+                             (storage/find-by-key @db-connection "wallets" {:email "test@email.com"}) =not=> nil?))
                      
                      (fact "if existing user, retrieves wallet, and redirects to landing page"))
               

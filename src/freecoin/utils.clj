@@ -25,7 +25,7 @@
 
 (ns freecoin.utils
   (:require
-   [liberator.dev]
+   [liberator.dev :as dev]
    [json-html.core :as present]
    [hiccup.page :as page]
 
@@ -44,7 +44,7 @@
 
 (defn trace []
   (format "<a href=\"%s\">Trace</a>"
-          (liberator.dev/current-trace-url))
+          (dev/current-trace-url))
   )
 
 (defn trunc [s n]

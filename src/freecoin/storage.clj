@@ -3,9 +3,7 @@
             [monger.collection :as mc]
             [monger.conversion :refer [from-db-object]]
             [monger.operators :refer :all]
-
-            [freecoin.utils :as utils]
-            ))
+            [freecoin.utils :as utils]))
 
 (defn connect [{:keys [url] :as db-config}]
   (mg/connect-via-uri url))

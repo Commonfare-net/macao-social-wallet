@@ -62,7 +62,8 @@
     (handler (assoc-in request [:config :db-connection] db-connection))))
 
 (defn handler [session-configuration db-connection sso-configuration]
-  (-> (routes/app sso-configuration)
+  (prn sso-configuration)
+  (-> (routes/app db-connection sso-configuration)
       ;; comment the following to deactivate debug
       ;; (liberator.dev/wrap-trace :header :ui)
       (wrap-db db-connection)

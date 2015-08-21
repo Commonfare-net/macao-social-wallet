@@ -105,6 +105,15 @@
   :handle-ok (fn [ctx] (views/confirm-button (::user-data ctx)))
   )
 
+(defn empty-wallet [name email]
+  {:_id ""
+   :name  name
+   :email email
+   :public-key nil
+   :private-key nil
+   :blockchains {}
+   :blockchain-secrets {}})
+
 (defresource execute [request]
   :service-available?
   {::db (get-in request [:config :db-connection])
@@ -167,30 +176,24 @@
 
         ;; process signin confirmations
         "signin"
-        (let [new-wallet
+        (let [new-account
               (blockchain/create-account
                (blockchain/new-stub db)
-               {:_id ""
-                :name  (:name data)
-                :email (:email data)
-                :public-key nil
-                :private-key nil
-                :blockchains {}
-                :blockchain-secrets {}})
-              secret (get-in new-wallet [:blockchain-secrets :STUB])
+               (empty-wallet (:name data) (:email data)))
+              secret (get-in new-account [:blockchain-secrets :STUB])
               secret-without-cookie (dissoc secret :cookie)
               cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
           (utils/log! ::ACK 'signin cookie-data)
 
           ;; TODO consistent error reporting
-          (if (contains? new-wallet :problem)
+          (if (contains? new-account :problem)
             ;; TODO consistent error reporting
-            (utils/log! (::error new-wallet))
+            (utils/log! (::error new-account))
             (do
               ;; insert in the wallet database, use
               ;; the shamir's generated UID as _id
               (storage/insert db "wallets"
-                              (assoc new-wallet :_id (:_id secret) ))
+                              (assoc new-account :_id (:_id secret)))
               ;; return the apikey cookie
               (ring-response {:session {:cookie-data cookie-data}
                               :apikey cookie-data})
