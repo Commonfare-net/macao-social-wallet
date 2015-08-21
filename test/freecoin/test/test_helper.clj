@@ -4,7 +4,7 @@
             [freecoin.helper :as fh]))
 
 (defn check-redirects-to [path]
-  (midje/checker [response] (and
+  (midje/chatty-checker [response] (and
                              (= (:status response) 302)
                              (= (get-in response [:headers "Location"]) path))))
 
