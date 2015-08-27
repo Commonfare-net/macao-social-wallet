@@ -51,17 +51,12 @@
                         (assoc new-account :_id (:_id secret)))
         cookie-data))))
 
-
 (lc/defresource sso-callback [db-connection sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
-             (prn "Inside sso-callback =================")
-             (let [code (get-in ctx [:request :params :code])]
-               (prn code)
-               (prn sso-config)
+             (when-let [code (get-in ctx [:request :params :code])]
                (when-let [token-response (soc/request-access-token! sso-config code)]
-                 (prn token-response)
                  (let [user-id (get-in token-response [:user-info :user-id])
                        email (get-in token-response [:user-info :email])
                        email-verified (get-in token-response [:user-info :email_verified])
@@ -75,4 +70,5 @@
                (lr/ring-response
                 (-> (r/redirect "/landing-page")
                     (assoc-in [:session :cookie-data] (::cookie-data ctx))
-                    (assoc-in [:session :user-id] (::user-id ctx))))))
+                    (assoc-in [:session :user-id] (::user-id ctx)))))
+  :handle-not-found (lr/ring-response (r/redirect "/landing-page")))

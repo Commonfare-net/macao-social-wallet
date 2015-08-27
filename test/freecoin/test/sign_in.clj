@@ -8,7 +8,6 @@
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.sign-in :as fs]))
 
-
 (def sso-url "SSO_URL")
 (def client-id "CLIENT_ID")
 (def client-secret "CLIENT_SECRET")
@@ -57,6 +56,19 @@
                              response => (th/check-signed-in-as "stonecutter-user-id")
                              (storage/find-by-key @db-connection "wallets" {:email "test@email.com"}) =not=> nil?))
                      
-                     (fact "if existing user, retrieves wallet, and redirects to landing page"))
+                     (fact "if user exists, retrieves wallet, and redirects to landing page"
+                           ;; TODO: Requires method to allow client to retrieve a wallet secret
+                           ))
               
-              (fact "Redirects to landing page (?) when not accessed as part of a successful openid authentication flow")))
+              (fact "When authorisation code is not provided, redirects to landing page"
+                    (let [callback-handler (fs/sso-callback @db-connection ...sso-config...)
+                          response (callback-handler (rmr/request :get "/sso-callback"))]
+                      response => (th/check-redirects-to "/landing-page")))
+              
+              (fact "When token response fails, redirects to landing page"
+                    (against-background
+                     (sc/request-access-token! ...sso-config... ...invalid-auth-code...) => nil)
+                    (let [callback-handler (fs/sso-callback @db-connection ...sso-config...)
+                          response (callback-handler (-> (rmr/request :get "/sso-callback")
+                                                         (assoc :params {:code ...invalid-auth-code...})))]
+                      response => (th/check-redirects-to "/landing-page")))))
