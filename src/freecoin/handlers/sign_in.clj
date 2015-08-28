@@ -25,13 +25,19 @@
                (lr/ring-response (soc/authorisation-redirect-response sso-config))))
 
 (defn empty-wallet [name email]
-  {:_id ""
-   :name  name
-   :email email
-   :public-key nil
-   :private-key nil
-   :blockchains {}
-   :blockchain-secrets {}})
+
+  {:_id ""            ;; unique id
+   :name  name        ;; identifier, case insensitive, space counts
+   :email email       ;; verified email account
+   :info nil          ;; misc information text on the account
+   :creation-date nil ;; date on which the wallet was created
+   :last-login nil    ;; last time this participant logged in succesfully
+   :last-login-ip nil ;; connection ip address of the last succesful login
+   :failed-logins nil ;; how many consecutive failed logins were attempted
+   :public-key nil    ;; public asymmetric key for off-the-blockchain encryption
+   :private-key nil   ;; private asymmetric key for off-the-blockchain encryption
+   :blockchains {}       ;; list of blockchains and public account ids
+   :blockchain-keys {}}) ;; list of keys for private blockchain operations
 
 (defn create-wallet [db-connection name email]
   (let [new-account
