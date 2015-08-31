@@ -54,18 +54,24 @@
 (lc/defresource sso-callback [db-connection sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
+  :allowed? (fn [ctx]
+              (when-let [code (get-in ctx [:request :params :code])]
+                (try
+                  (when-let [token-response (soc/request-access-token! sso-config code)]
+                    {::token-response token-response})
+                  (catch Exception e nil))))
+  :handle-forbidden (lr/ring-response (r/redirect "/landing-page"))
   :exists? (fn [ctx]
-             (when-let [code (get-in ctx [:request :params :code])]
-               (when-let [token-response (soc/request-access-token! sso-config code)]
-                 (let [user-id (get-in token-response [:user-info :user-id])
-                       email (get-in token-response [:user-info :email])
-                       email-verified (get-in token-response [:user-info :email_verified])
-                       name (first (s/split email #"@"))]
-                   (when-let [wallet-cookie (create-wallet db-connection name email)]
-                     {::user-id user-id
-                      ::email email
-                      ::email-verified email-verified
-                      ::cookie-data wallet-cookie})))))
+             (let [token-response (::token-response ctx)
+                   user-id (get-in token-response [:user-info :user-id])
+                   email (get-in token-response [:user-info :email])
+                   email-verified (get-in token-response [:user-info :email_verified])
+                   name (first (s/split email #"@"))]
+               (when-let [wallet-cookie (create-wallet db-connection name email)]
+                 {::user-id user-id
+                  ::email email
+                  ::email-verified email-verified
+                  ::cookie-data wallet-cookie})))
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (-> (r/redirect "/landing-page")

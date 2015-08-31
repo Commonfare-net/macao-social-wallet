@@ -8,7 +8,7 @@
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.sign-in :as fs]))
 
-(def sso-url "SSO_URL")
+(def sso-url "http://SSO_URL")
 (def client-id "CLIENT_ID")
 (def client-secret "CLIENT_SECRET")
 (def callback-uri "CALLBACK_URI")
@@ -67,7 +67,7 @@
               
               (fact "When token response fails, redirects to landing page"
                     (against-background
-                     (sc/request-access-token! ...sso-config... ...invalid-auth-code...) => nil)
+                     (sc/request-access-token! ...sso-config... ...invalid-auth-code...) =throws=> (Exception. "Something went wrong"))
                     (let [callback-handler (fs/sso-callback @db-connection ...sso-config...)
                           response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                          (assoc :params {:code ...invalid-auth-code...})))]
