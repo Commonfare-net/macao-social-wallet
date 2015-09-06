@@ -27,6 +27,7 @@
 
 (ns freecoin.db.wallet
   (:require [freecoin.db.uuid :as uuid]
+            [freecoin.blockchain :as blockchain]
             [freecoin.db.mongo :as mongo]))
 
 (def empty-wallet {:public-key nil
@@ -40,3 +41,6 @@
 
 (defn fetch [wallet-store uid]
   (mongo/fetch wallet-store uid))
+
+(defn add-blockchain-to-wallet-with-id! [wallet-store blockchain uid]
+  (mongo/update! wallet-store uid (partial blockchain/create-account blockchain)))

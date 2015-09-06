@@ -69,4 +69,19 @@
        (run-store-and-query-tests (m/create-memory-store) "in-memory")
        (run-store-and-query-tests (create-empty-test-store @db) "mongo"))
 
+(defn run-update-tests [store type]
+  (facts {:midje/name (format "can update records for %s store" type)}
+         (let [record {:key "key" :to-update 1}]
+           (fact "record is updated and stored"
+                 (let [stored-record (m/store! store :key record)
+                       updated-record (m/update! store "key" #(update-in % [:to-update] inc))
+                       retrieved-record (m/fetch store "key")]
+                   (:to-update stored-record) => 1
+                   (:to-update updated-record) => 2
+                   (:to-update retrieved-record) => 2)))))
+
+(facts "run update tests for both in-memory and mongo stores"
+       (run-update-tests (m/create-memory-store) "in-memory")
+       (run-update-tests (create-empty-test-store @db) "mongo"))
+
 (disconnect)

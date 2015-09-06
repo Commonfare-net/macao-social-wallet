@@ -29,9 +29,10 @@
   (:require [midje.sweet :refer :all]
             [freecoin.db.uuid :as uuid]
             [freecoin.db.mongo :as fm]
+            [freecoin.blockchain :as fb]
             [freecoin.db.wallet :as wallet]))
 
-(facts "can create and fetch an empty wallet"
+(facts "Can create and fetch an empty wallet"
        (against-background (uuid/uuid) => "a-uuid")
        (let [wallet-store (fm/create-memory-store)]
          (wallet/new-empty-wallet! wallet-store) => (just {:uid "a-uuid"
@@ -44,3 +45,13 @@
                                                         :private-key nil
                                                         :blockchains {}
                                                         :blockchain-secrets {}})))
+
+(fact "Can add a new blockchain to a wallet"
+      (let [wallet-store (fm/create-memory-store)
+            blockchain (fb/create-in-memory-blockchain :bk)
+            wallet (wallet/new-empty-wallet! wallet-store)
+            updated-wallet (wallet/add-blockchain-to-wallet-with-id! wallet-store
+                                                                     blockchain
+                                                                     (:uid wallet))]
+        (:blockchains updated-wallet) => (contains {:bk anything})
+        (:blockchain-secrets updated-wallet) => (contains {:bk anything})))

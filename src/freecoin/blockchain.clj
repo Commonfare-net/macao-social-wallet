@@ -96,8 +96,8 @@
     {:pre [(contains? wallet :name)]}
 
     (if (contains? (:blockchains wallet) (keyword (recname bk)))
-      {:status ::error
-       :problem (str "Blockchain account already present in wallet: " (recname bk))}
+      ;; Just return the wallet if an account for this blockchain is already present
+      wallet
 
       ;; else
       (let [secret (fxc/create-secret param/encryption (recname bk))
@@ -177,3 +177,39 @@
 ;; (defrecord account
 ;;     [_id public-key private-key
 ;;      blockchains blockchain-keys])
+
+;;; in-memory blockchain for testing
+(defrecord InMemoryBlockchain [blockchain-label transactions-atom accounts-atom]
+  Blockchain
+  ;; account
+  (import-account [bk wallet secret] nil)
+  (create-account [bk wallet]
+    (if (contains? (:blockchains wallet) blockchain-label)
+      wallet
+      (let [secret (fxc/create-secret param/encryption blockchain-label)]
+        (-> wallet
+            (assoc-in [:blockchains blockchain-label] (:_id secret))
+            (assoc-in [:blockchain-secrets blockchain-label] secret)))))
+
+  (get-account [bk wallet] (get-in wallet [:blockchains blockchain-label]))
+  
+  (get-address [bk wallet] nil)
+  (get-balance [bk wallet] ;; TODO
+    )
+
+  ;; transactions
+  (list-transactions [bk wallet] ;; TODO
+    )
+  (get-transaction   [bk wallet txid] nil)
+  (make-transaction  [bk wallet amount recipient secret] ;; TODO
+    )
+
+  ;; vouchers
+  (create-voucher [bk wallet amount expiration secret])
+  (redeem-voucher [bk wallet voucher]))
+
+(defn create-in-memory-blockchain
+  ([label] (create-in-memory-blockchain label (atom {}) (atom {})))
+  
+  ([label transactions-atom accounts-atom]
+   (InMemoryBlockchain. label transactions-atom accounts-atom)))

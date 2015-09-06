@@ -35,6 +35,8 @@
 (defprotocol FreecoinStore
   (store! [e k item]
     "Store item against the key k")
+  (update! [e k update-fn]
+    "Update the item found using key k by running the update-fn on it and storing it")
   (fetch [e k]
     "Retrieve item based on primary id")
   (query [e query]
@@ -45,10 +47,18 @@
   (store! [this k item]
     (-> (mc/insert-and-return mongo-db coll (assoc item :_id (k item)))
         (dissoc :_id)))
+
+  (update! [this k update-fn]
+    (when-let [item (mc/find-map-by-id mongo-db coll k)]
+      (let [updated-item (update-fn item)]
+        (-> (mc/save-and-return mongo-db coll updated-item)
+            (dissoc :_id)))))
+  
   (fetch [this k]
     (when k
       (-> (mc/find-map-by-id mongo-db coll k)
           (dissoc :_id))))
+
   (query [this query]
     (->> (mc/find-maps mongo-db coll query)
          (map #(dissoc % :_id)))))
@@ -61,7 +71,15 @@
   (store! [this k item]
     (do (swap! data assoc (k item) item)
         item))
+
+  (update! [this k update-fn]
+    (when-let [item (@data k)]
+      (let [updated-item (update-fn item)]
+        (swap! data assoc k updated-item)
+        updated-item)))
+
   (fetch [this k] (@data k))
+
   (query [this query]
     (filter #(= query (select-keys % (keys query))) (vals @data))))
 
