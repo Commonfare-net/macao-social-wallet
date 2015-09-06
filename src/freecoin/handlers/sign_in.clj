@@ -83,7 +83,7 @@
         {:wallet new-account
          :wallet-access-key wallet-access-key}))))
 
-(lc/defresource sso-callback [db-connection participant-store sso-config]
+(lc/defresource sso-callback [db-connection participant-store wallet-store blockchain sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :allowed? (fn [ctx]
@@ -95,15 +95,15 @@
   :handle-forbidden (lr/ring-response (r/redirect "/landing-page"))
   :exists? (fn [ctx]
              (let [token-response (::token-response ctx)
-                   user-id (get-in token-response [:user-info :user-id])
+                   sso-id (get-in token-response [:user-info :user-id])
                    email (get-in token-response [:user-info :email])
                    email-verified (get-in token-response [:user-info :email_verified])
                    name (first (s/split email #"@"))]
-               (if-let [participant (participant/fetch-by-sso-id participant-store user-id)]
+               (if-let [participant (participant/fetch-by-sso-id participant-store sso-id)]
                  {::uid (:uid participant)
-                  ::wallet-id nil}
+                  ::wallet-id (:wallet-id participant)}
                  (when-let [{:keys [wallet wallet-access-key]} (create-wallet db-connection name email)]
-                   (let [participant (participant/store! participant-store user-id name email wallet)]
+                   (let [participant (participant/store! participant-store sso-id name email wallet)]
                      {::uid (:uid participant)
                       ::cookie-data wallet-access-key})))))
   :handle-ok (fn [ctx]
