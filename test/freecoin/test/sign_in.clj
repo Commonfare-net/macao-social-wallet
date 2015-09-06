@@ -3,8 +3,11 @@
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
             [stonecutter-oauth.client :as sc]
+            [freecoin.db.uuid :as uuid]
             [freecoin.storage :as storage]
             [freecoin.integration.storage-helpers :as sh]
+            [freecoin.db.mongo :as fm]
+            [freecoin.db.participant :as p]
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.sign-in :as fs]))
 
@@ -13,6 +16,8 @@
 (def client-secret "CLIENT_SECRET")
 (def callback-uri "CALLBACK_URI")
 (def public-key "PUBLICK_KEY") ;; TODO: load this from jwk file
+
+(def empty-wallet {})
 
 (def test-sso-config (sc/configure sso-url client-id client-secret callback-uri))
 
@@ -49,26 +54,36 @@
                                                                                                   :email "test@email.com"
                                                                                                   :email_verified true}})
                      (fact "if new user, creates a wallet and redirects to landing page"
-                           (let [callback-handler (fs/sso-callback @db-connection ...sso-config...)
+                           (against-background (uuid/uuid) => "a-uuid")
+                           (let [participant-store (fm/create-memory-store)
+                                 callback-handler (fs/sso-callback @db-connection participant-store ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
-                             response => (th/check-signed-in-as "stonecutter-user-id")
+                             response => (th/check-signed-in-as "a-uuid")
                              (storage/find-by-key @db-connection "wallets" {:email "test@email.com"}) =not=> nil?))
                      
-                     (fact "if user exists, retrieves wallet, and redirects to landing page"
-                           ;; TODO: Requires method to allow client to retrieve a wallet secret
-                           ))
+                     (fact "if user exists, signs user in and redirects to landing page"
+                           (let [participant-store (fm/create-memory-store)
+                                 participant (p/store! participant-store "stonecutter-user-id" "test" "test@email.com" empty-wallet)
+                                 callback-handler (fs/sso-callback @db-connection participant-store ...sso-config...)
+                                 response (callback-handler (-> (rmr/request :get "/sso-callback")
+                                                                (assoc :params {:code ...auth-code...})))]
+                             response => (th/check-redirects-to "/landing-page")
+                             response => (th/check-signed-in-as (:uid participant))
+                             (storage/find-by-key @db-connection "wallets" {:email "test@email.com"}) => empty?)))
               
               (fact "When authorisation code is not provided, redirects to landing page"
-                    (let [callback-handler (fs/sso-callback @db-connection ...sso-config...)
+                    (let [participant-store (fm/create-memory-store)
+                          callback-handler (fs/sso-callback @db-connection participant-store ...sso-config...)
                           response (callback-handler (rmr/request :get "/sso-callback"))]
                       response => (th/check-redirects-to "/landing-page")))
               
               (fact "When token response fails, redirects to landing page"
                     (against-background
                      (sc/request-access-token! ...sso-config... ...invalid-auth-code...) =throws=> (Exception. "Something went wrong"))
-                    (let [callback-handler (fs/sso-callback @db-connection ...sso-config...)
+                    (let [participant-store (fm/create-memory-store)
+                          callback-handler (fs/sso-callback @db-connection participant-store ...sso-config...)
                           response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                          (assoc :params {:code ...invalid-auth-code...})))]
                       response => (th/check-redirects-to "/landing-page")))))

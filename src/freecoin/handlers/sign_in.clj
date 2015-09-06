@@ -5,6 +5,7 @@
             [clojure.string :as s]
             [stonecutter-oauth.client :as soc]
             [stonecutter-oauth.jwt :as sjwt]
+            [freecoin.db.participant :as participant]
             [freecoin.storage :as storage]
             [freecoin.blockchain :as blockchain]
             [freecoin.utils :as utils]
@@ -46,8 +47,8 @@
          (empty-wallet name email))
         secret (get-in new-account [:blockchain-secrets :STUB])
         secret-without-cookie (dissoc secret :cookie)
-        cookie-data (s/join "::" [(:cookie secret) (:_id secret)])]
-    (utils/log! ::ACK 'signin cookie-data)
+        wallet-access-key (s/join "::" [(:cookie secret) (:_id secret)])]
+    (utils/log! ::ACK 'signin new-account)
     
     (if (contains? new-account :problem)
       (do
@@ -55,9 +56,10 @@
       (do
         (storage/insert db-connection "wallets"
                         (assoc new-account :_id (:_id secret)))
-        cookie-data))))
+        {:wallet new-account
+         :wallet-access-key wallet-access-key}))))
 
-(lc/defresource sso-callback [db-connection sso-config]
+(lc/defresource sso-callback [db-connection participant-store sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :allowed? (fn [ctx]
@@ -73,14 +75,16 @@
                    email (get-in token-response [:user-info :email])
                    email-verified (get-in token-response [:user-info :email_verified])
                    name (first (s/split email #"@"))]
-               (when-let [wallet-cookie (create-wallet db-connection name email)]
-                 {::user-id user-id
-                  ::email email
-                  ::email-verified email-verified
-                  ::cookie-data wallet-cookie})))
+               (if-let [participant (participant/fetch-by-sso-id participant-store user-id)]
+                 {::uid (:uid participant)
+                  ::wallet-id nil}
+                 (when-let [{:keys [wallet wallet-access-key]} (create-wallet db-connection name email)]
+                   (let [participant (participant/store! participant-store user-id name email wallet)]
+                     {::uid (:uid participant)
+                      ::cookie-data wallet-access-key})))))
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (-> (r/redirect "/landing-page")
                     (assoc-in [:session :cookie-data] (::cookie-data ctx))
-                    (assoc-in [:session :user-id] (::user-id ctx)))))
+                    (assoc-in [:session :signed-in-uid] (::uid ctx)))))
   :handle-not-found (lr/ring-response (r/redirect "/landing-page")))

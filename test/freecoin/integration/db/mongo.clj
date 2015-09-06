@@ -26,7 +26,27 @@
   (m/create-mongo-store db coll))
 
 ;; SETUP
+;; TODO: Use background to ensure correct teardown
 (connect)
+
+(defn run-store-and-fetch-tests [store type]
+  (facts {:midje/name (format "can store records, then fetch by primary id for %s store" type)}
+         (let [record-1 {:primary-field "pf1" :another-field "b"}
+               record-2 {:primary-field "pf2" :another-field "c"}]
+           (m/store! store :primary-field record-1)
+           (m/store! store :primary-field record-2)
+           (tabular
+            (fact "fetch returns correct result"
+                  (m/fetch store ?k) => ?result)
+            ?k       ?result
+            "pf1"    record-1
+            "pf2"    record-2
+            "xx"     nil
+            nil      nil))))
+
+(facts "run store and fetch tests for both in-memory and mongo stores"
+       (run-store-and-fetch-tests (m/create-memory-store) "in-memory")
+       (run-store-and-fetch-tests (create-empty-test-store @db) "mongo"))
 
 (defn run-store-and-query-tests [store type]
   (facts {:midje/name (format "can store records, then query with a query map for %s store" type)}
@@ -48,3 +68,5 @@
 (facts "run store and query tests for both in-memory and mongo stores"
        (run-store-and-query-tests (m/create-memory-store) "in-memory")
        (run-store-and-query-tests (create-empty-test-store @db) "mongo"))
+
+(disconnect)

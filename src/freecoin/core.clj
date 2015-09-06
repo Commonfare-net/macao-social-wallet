@@ -50,7 +50,8 @@
 
    [compojure.core :refer [defroutes ANY]]
    [stonecutter-oauth.client :as soc]
-   
+
+   [freecoin.db.mongo :as fm]
    [freecoin.routes :as routes]
    [freecoin.params :as param]
    [freecoin.config :as config]
@@ -62,16 +63,16 @@
     (handler (assoc-in request [:config :db-connection] db-connection))))
 
 (defn handler [session-configuration db-connection sso-configuration]
-  (prn sso-configuration)
-  (-> (routes/app db-connection sso-configuration)
-      ;; comment the following to deactivate debug
-      ;; (liberator.dev/wrap-trace :header :ui)
-      (wrap-db db-connection)
-      wrap-cookies
-      ;;        wrap-anti-forgery
-      (wrap-session session-configuration)
-      wrap-keyword-params
-      wrap-params))
+  (let [participant-store (fm/create-memory-store)]
+    (-> (routes/app db-connection participant-store sso-configuration)
+        ;; comment the following to deactivate debug
+        ;; (liberator.dev/wrap-trace :header :ui)
+        (wrap-db db-connection)
+        wrap-cookies
+        ;;        wrap-anti-forgery
+        (wrap-session session-configuration)
+        wrap-keyword-params
+        wrap-params)))
 
 (defonce app-state {})
 

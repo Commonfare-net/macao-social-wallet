@@ -77,7 +77,7 @@
   )
 
 ;; routes
-(defn app [db-connection sso-configuration]
+(defn app [db-connection participant-store sso-configuration]
   (cc/routes
    ;; embedded resources from resources/public
    (compojure.route/resources "/")
@@ -148,7 +148,7 @@
    ;; Signing in using Stonecutter
    (GET "/landing-page" [request] sign-in/landing-page)
    (ANY "/sign-in-with-sso" [request] (sign-in/sign-in sso-configuration))
-   (GET "/sso-callback" [request] (sign-in/sso-callback db-connection sso-configuration))
+   (GET "/sso-callback" [request] (sign-in/sso-callback db-connection participant-store sso-configuration))
    )
 
   ) ; end of routes

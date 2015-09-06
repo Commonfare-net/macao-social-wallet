@@ -34,6 +34,8 @@
 (defprotocol FreecoinStore
   (store! [e k item]
     "Store item against the key k")
+  (fetch [e k]
+    "Retrieve item based on primary id")
   (query [e query]
     "Items are returned using a query map"))
 
@@ -42,6 +44,10 @@
   (store! [this k item]
     (-> (mc/insert-and-return mongo-db coll (assoc item :_id (k item)))
         (dissoc :_id)))
+  (fetch [this k]
+    (when k
+      (-> (mc/find-map-by-id mongo-db coll k)
+          (dissoc :_id))))
   (query [this query]
     (->> (mc/find-maps mongo-db coll query)
          (map #(dissoc % :_id)))))
@@ -54,6 +60,7 @@
   (store! [this k item]
     (do (swap! data assoc (k item) item)
         item))
+  (fetch [this k] (@data k))
   (query [this query]
     (filter #(= query (select-keys % (keys query))) (vals @data))))
 
