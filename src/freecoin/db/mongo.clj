@@ -30,6 +30,7 @@
             [monger.core :as mongo]))
 
 (def ^:private participant-collection "participants")
+(def ^:private wallet-collection "wallets")
 
 (defprotocol FreecoinStore
   (store! [e k item]
@@ -72,3 +73,6 @@
 
 (defn create-participant-store [db]
   (create-mongo-store db participant-collection))
+
+(defn create-wallet-store [db]
+  (create-mongo-store db wallet-collection))

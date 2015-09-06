@@ -101,15 +101,12 @@
 
       ;; else
       (let [secret (fxc/create-secret param/encryption (recname bk))
-            new-bk-pub (assoc-in wallet
-                                 [:blockchains (keyword (recname bk))]
-                                 (:_id secret))]
-        (assoc-in new-bk-pub
-                  [:blockchain-keys (keyword (recname bk))]
-                  secret)
-      ;; TODO: wrap all this with symmetric encryption using secrets
-        ))
-    )
+            blockchain-type (keyword (recname bk))]
+        (-> wallet
+            (assoc-in [:blockchains blockchain-type] (:_id secret))
+            (assoc-in [:blockchain-keys blockchain-type] secret))
+        ;; TODO: wrap all this with symmetric encryption using secrets
+        )))
 
   (get-account [bk wallet]
     (get-in wallet [:blockchains (keyword (recname bk))]))

@@ -1,3 +1,30 @@
+;; Freecoin - digital social currency toolkit
+
+;; part of Decentralized Citizen Engagement Technologies (D-CENT)
+;; R&D funded by the European Commission (FP7/CAPS 610349)
+
+;; Copyright (C) 2015 Dyne.org foundation
+;; Copyright (C) 2015 Thoughtworks, Inc.
+
+;; Sourcecode designed, written and maintained by
+;; Denis Roio <jaromil@dyne.org>
+
+;; With contributions by
+;; Duncan Mortimer <dmortime@thoughtworks.com>
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 (ns freecoin.handlers.sign-in
   (:require [liberator.core :as lc]
             [liberator.representation :as lr]
@@ -6,6 +33,7 @@
             [stonecutter-oauth.client :as soc]
             [stonecutter-oauth.jwt :as sjwt]
             [freecoin.db.participant :as participant]
+            [freecoin.db.wallet :as wallet]
             [freecoin.storage :as storage]
             [freecoin.blockchain :as blockchain]
             [freecoin.utils :as utils]
@@ -26,7 +54,6 @@
                (lr/ring-response (soc/authorisation-redirect-response sso-config))))
 
 (defn empty-wallet [name email]
-
   {:_id ""            ;; unique id
    :name  name        ;; identifier, case insensitive, space counts
    :email email       ;; verified email account
@@ -41,15 +68,12 @@
    :blockchain-keys {}}) ;; list of keys for private blockchain operations
 
 (defn create-wallet [db-connection name email]
-  (let [new-account
-        (blockchain/create-account
-         (blockchain/new-stub db-connection)
-         (empty-wallet name email))
+  (let [new-account (blockchain/create-account
+                     (blockchain/new-stub db-connection)
+                     wallet/empty-wallet)
         secret (get-in new-account [:blockchain-secrets :STUB])
         secret-without-cookie (dissoc secret :cookie)
         wallet-access-key (s/join "::" [(:cookie secret) (:_id secret)])]
-    (utils/log! ::ACK 'signin new-account)
-    
     (if (contains? new-account :problem)
       (do
         (utils/log! (::error new-account)))
