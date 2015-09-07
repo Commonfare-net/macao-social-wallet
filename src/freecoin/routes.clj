@@ -152,4 +152,4 @@
      ;; Signing in using Stonecutter
      (GET "/landing-page" [request] sign-in/landing-page)
      (ANY "/sign-in-with-sso" [request] (sign-in/sign-in sso-configuration))
-     (GET "/sso-callback" [request] (sign-in/sso-callback db-connection wallet-store blockchain sso-configuration)))))
+     (GET "/sso-callback" [request] (sign-in/sso-callback wallet-store blockchain sso-configuration)))))

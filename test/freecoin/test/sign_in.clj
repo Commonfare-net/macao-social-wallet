@@ -72,11 +72,12 @@
                            (against-background (uuid/uuid) => "a-uuid")
                            (let [wallet-store (fm/create-memory-store)
                                  blockchain (fb/create-in-memory-blockchain :bk)
-                                 callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
+                                 callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
                              response => (th/check-signed-in-as "a-uuid")
+                             response => th/check-has-wallet-key
                              (entry-count wallet-store) => 1))
                      
                      (fact "if user exists, signs user in and redirects to landing page without creating a new wallet"
@@ -84,17 +85,18 @@
                                  wallet (w/new-empty-wallet! wallet-store
                                                              "stonecutter-user-id" "name" "test@email.com")
                                  blockchain (fb/create-in-memory-blockchain :bk)
-                                 callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
+                                 callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
                              response => (th/check-signed-in-as (:uid wallet))
+                             response =not=> th/check-has-wallet-key
                              (entry-count wallet-store) => 1)))
               
               (fact "When authorisation code is not provided, redirects to landing page"
                     (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
-                          callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
+                          callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                           response (callback-handler (rmr/request :get "/sso-callback"))]
                       response => (th/check-redirects-to "/landing-page")))
               
@@ -103,7 +105,7 @@
                      (sc/request-access-token! ...sso-config... ...invalid-auth-code...) =throws=> (Exception. "Something went wrong"))
                     (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
-                          callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
+                          callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                           response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                          (assoc :params {:code ...invalid-auth-code...})))]
                       response => (th/check-redirects-to "/landing-page")))))

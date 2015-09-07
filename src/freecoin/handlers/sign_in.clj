@@ -85,7 +85,7 @@
   (when-let [empty-wallet (wallet/new-empty-wallet! wallet-store sso-id name email)]
     (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid empty-wallet))))
 
-(lc/defresource sso-callback [db-connection wallet-store blockchain sso-config]
+(lc/defresource sso-callback [wallet-store blockchain sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :allowed? (fn [ctx]
@@ -107,7 +107,7 @@
                     ::cookie-data (wallet->access-key blockchain wallet)}))))
   :handle-ok (fn [ctx]
                (lr/ring-response
-                (-> (r/redirect "/landing-page")
-                    (assoc-in [:session :cookie-data] (::cookie-data ctx))
-                    (assoc-in [:session :signed-in-uid] (::uid ctx)))))
+                (cond-> (r/redirect "/landing-page")
+                  (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
+                  true (assoc-in [:session :signed-in-uid] (::uid ctx)))))
   :handle-not-found (lr/ring-response (r/redirect "/landing-page")))
