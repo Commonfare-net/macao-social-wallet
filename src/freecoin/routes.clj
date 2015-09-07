@@ -80,8 +80,8 @@
 
 ;; routes
 (defn app [db-connection sso-configuration]
-  (let [wallet-store (fm/create-memory-store)
-        blockchain (fb/create-in-memory-blockchain :bk)]
+  (let [wallet-store (fm/create-wallet-store (:db db-connection))
+        blockchain (fb/new-stub (:db db-connection))]
     (cc/routes
      ;; embedded resources from resources/public
      (compojure.route/resources "/")

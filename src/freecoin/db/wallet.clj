@@ -36,10 +36,10 @@
                    :blockchain-secrets {}})
 
 (defn new-empty-wallet! [wallet-store sso-id name email]
-  (let [participant {:name name :email email}
-        wallet (-> empty-wallet
+  (let [wallet (-> empty-wallet
                    (assoc :uid (uuid/uuid))
-                   (assoc :participant participant)
+                   (assoc :name name)
+                   (assoc :email email)
                    (assoc :sso-id sso-id))]
     (mongo/store! wallet-store :uid wallet)))
 

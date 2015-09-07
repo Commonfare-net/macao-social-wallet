@@ -40,7 +40,8 @@
                                          "sso-id" "name" "test@email.com")
                => (just {:uid "a-uuid"
                          :sso-id "sso-id"
-                         :participant {:name "name" :email "test@email.com"}
+                         :name "name"
+                         :email "test@email.com"
                          :public-key nil
                          :private-key nil
                          :blockchains {}
@@ -49,7 +50,8 @@
                (wallet/fetch wallet-store "a-uuid")
                => (just {:uid "a-uuid"
                          :sso-id "sso-id"
-                         :participant {:name "name" :email "test@email.com"}
+                         :name "name"
+                         :email "test@email.com"
                          :public-key nil
                          :private-key nil
                          :blockchains {}
@@ -59,7 +61,8 @@
                (wallet/fetch-by-sso-id wallet-store "sso-id")
                => (just {:uid "a-uuid"
                          :sso-id "sso-id"
-                         :participant {:name "name" :email "test@email.com"}
+                         :name "name"
+                         :email "test@email.com"
                          :public-key nil
                          :private-key nil
                          :blockchains {}
