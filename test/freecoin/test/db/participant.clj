@@ -31,19 +31,17 @@
             [freecoin.db.mongo :as fm]
             [freecoin.db.participant :as participant]))
 
-(def wallet {})
-
 (facts "can store then retrieve a participant"
        (against-background (uuid/uuid) => "a-uuid")
        (let [participant-store (fm/create-memory-store)]
          (fact "can store a participant"
                (participant/store! participant-store
-                                               "sso-id" "Fred" "test@email.com" wallet)
+                                   "sso-id" "Fred" "test@email.com" "wallet-uuid")
                => (just {:uid "a-uuid"
                          :sso-id "sso-id"
                          :email "test@email.com"
                          :name "Fred"
-                         :wallet wallet}))
+                         :wallet "wallet-uuid"}))
          
          (fact "can fetch participant"
                (participant/fetch participant-store "a-uuid")
@@ -51,7 +49,7 @@
                          :sso-id "sso-id"
                          :email "test@email.com"
                          :name "Fred"
-                         :wallet wallet}))
+                         :wallet "wallet-uuid"}))
 
          (fact "can retrieve participant by sso-id"
                (participant/fetch-by-sso-id participant-store "sso-id")
@@ -59,4 +57,4 @@
                          :sso-id "sso-id"
                          :email "test@email.com"
                          :name "Fred"
-                         :wallet wallet}))))
+                         :wallet "wallet-uuid"}))))

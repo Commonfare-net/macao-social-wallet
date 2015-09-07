@@ -29,12 +29,12 @@
   (:require [freecoin.db.uuid :as uuid]
             [freecoin.db.mongo :as mongo]))
 
-(defn store! [participant-store sso-id name email wallet]
+(defn store! [participant-store sso-id name email wallet-id]
   (mongo/store! participant-store :uid {:uid (uuid/uuid)
                                         :sso-id sso-id
                                         :name name
                                         :email email
-                                        :wallet wallet}))
+                                        :wallet wallet-id}))
 
 (defn fetch [participant-store uid]
   (mongo/fetch participant-store uid))

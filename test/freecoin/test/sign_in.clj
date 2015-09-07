@@ -9,8 +9,10 @@
             [freecoin.db.mongo :as fm]
             [freecoin.blockchain :as fb]
             [freecoin.db.participant :as p]
+            [freecoin.db.wallet :as w]
             [freecoin.test.test-helper :as th]
-            [freecoin.handlers.sign-in :as fs]))
+            [freecoin.handlers.sign-in :as fs])
+  (:import [freecoin.db.mongo MemoryStore]))
 
 (def sso-url "http://SSO_URL")
 (def client-id "CLIENT_ID")
@@ -23,6 +25,19 @@
 (def test-sso-config (sc/configure sso-url client-id client-secret callback-uri))
 
 (def db-connection (atom nil))
+
+
+(defprotocol TestStore
+  (entry-count [s]
+    "Total number of entries in the store"))
+
+(defprotocol TestStore
+  (entry-count [s]
+    "Total number of entries in the store"))
+
+(extend-protocol TestStore
+  MemoryStore
+  (entry-count [this] (count @(:data this))))
 
 (facts "About signing up via a Stonecutter SSO instance"
        (facts "About the landing page"
@@ -64,19 +79,19 @@
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
                              response => (th/check-signed-in-as "a-uuid")
-                             (storage/find-by-key @db-connection "wallets" {:email "test@email.com"}) =not=> nil?))
+                             (entry-count wallet-store) => 1))
                      
-                     (fact "if user exists, signs user in and redirects to landing page"
+                     (fact "if user exists, signs user in and redirects to landing page without creating a new wallet"
                            (let [participant-store (fm/create-memory-store)
                                  wallet-store (fm/create-memory-store)
                                  blockchain (fb/create-in-memory-blockchain :bk)
-                                 participant (p/store! participant-store "stonecutter-user-id" "test" "test@email.com" empty-wallet)
+                                 participant (p/store! participant-store "stonecutter-user-id" "test" "test@email.com" nil)
                                  callback-handler (fs/sso-callback @db-connection participant-store wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
                              response => (th/check-signed-in-as (:uid participant))
-                             (storage/find-by-key @db-connection "wallets" {:email "test@email.com"}) => empty?)))
+                             (entry-count wallet-store) => 0)))
               
               (fact "When authorisation code is not provided, redirects to landing page"
                     (let [participant-store (fm/create-memory-store)

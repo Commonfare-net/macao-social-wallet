@@ -38,6 +38,9 @@
   )
 
 (defprotocol Blockchain
+  ;; blockchain identifier
+  (label [bk])
+  
   ;; account
   (import-account [bk wallet secret])
   (create-account [bk wallet])
@@ -89,6 +92,8 @@
 ;; inherits from Blockchain and implements its methods
 (defrecord stub [db]
   Blockchain
+  (label [bk] (keyword (recname bk)))
+  
   (import-account [bk wallet secrets] nil)
 
   ;; return an updated wallet map
@@ -181,6 +186,9 @@
 ;;; in-memory blockchain for testing
 (defrecord InMemoryBlockchain [blockchain-label transactions-atom accounts-atom]
   Blockchain
+  ;; identifier
+  (label [bk] blockchain-label)
+  
   ;; account
   (import-account [bk wallet secret] nil)
   (create-account [bk wallet]

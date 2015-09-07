@@ -67,21 +67,27 @@
    :blockchains {}       ;; list of blockchains and public account ids
    :blockchain-keys {}}) ;; list of keys for private blockchain operations
 
-(defn create-wallet [db-connection name email]
-  (let [new-account (blockchain/create-account
-                     (blockchain/new-stub db-connection)
-                     wallet/empty-wallet)
-        secret (get-in new-account [:blockchain-secrets :STUB])
-        secret-without-cookie (dissoc secret :cookie)
-        wallet-access-key (s/join "::" [(:cookie secret) (:_id secret)])]
-    (if (contains? new-account :problem)
-      (do
-        (utils/log! (::error new-account)))
-      (do
-        (storage/insert db-connection "wallets"
-                        (assoc new-account :_id (:_id secret)))
-        {:wallet new-account
-         :wallet-access-key wallet-access-key}))))
+(defn wallet->access-key [blockchain wallet]
+  (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]
+    (s/join "::" [(:cookie secret) (:_id secret)])))
+
+(defn sign-up-new-participant [participant-store wallet-store blockchain sso-id name email]
+  ;; TODO: 2015-09-07 DM - The current implementation of the
+  ;; blockchain 'create-account' method includes the 'cookie' part of
+  ;; the secret with the wallet when the blockchain account is
+  ;; created.  By my understanding, the participant's access token
+  ;; should be given only to the participant when the wallet is
+  ;; created, and not stored. A small refactoring of
+  ;; freecoin.db.wallet and freecoin.blockchain would probably be the
+  ;; cleanest way to implement this, giving blockchain the
+  ;; responsibility of creating the account and secrets for accessing
+  ;; it, and the db.wallet the responsibility for adding the
+  ;; appropriate data to the wallet itself.
+  (when-let [empty-wallet (wallet/new-empty-wallet! wallet-store)]
+    (when-let [participant (participant/store! participant-store sso-id name email (:uid empty-wallet))]
+      (when-let [wallet-with-account (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid empty-wallet))]
+        {:participant participant
+         :wallet wallet-with-account}))))
 
 (lc/defresource sso-callback [db-connection participant-store wallet-store blockchain sso-config]
   :allowed-methods [:get]
@@ -97,15 +103,13 @@
              (let [token-response (::token-response ctx)
                    sso-id (get-in token-response [:user-info :user-id])
                    email (get-in token-response [:user-info :email])
-                   email-verified (get-in token-response [:user-info :email_verified])
                    name (first (s/split email #"@"))]
                (if-let [participant (participant/fetch-by-sso-id participant-store sso-id)]
-                 {::uid (:uid participant)
-                  ::wallet-id (:wallet-id participant)}
-                 (when-let [{:keys [wallet wallet-access-key]} (create-wallet db-connection name email)]
-                   (let [participant (participant/store! participant-store sso-id name email wallet)]
-                     {::uid (:uid participant)
-                      ::cookie-data wallet-access-key})))))
+                 (let [wallet (wallet/fetch wallet-store (:wallet participant))]
+                   {::uid (:uid participant)})
+                 (when-let [{:keys [participant wallet]} (sign-up-new-participant participant-store wallet-store blockchain sso-id name email)]
+                   {::uid (:uid participant)
+                    ::cookie-data (wallet->access-key blockchain wallet)}))))
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (-> (r/redirect "/landing-page")

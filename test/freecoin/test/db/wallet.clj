@@ -46,7 +46,7 @@
                                                         :blockchains {}
                                                         :blockchain-secrets {}})))
 
-(fact "Can add a new blockchain to a wallet"
+(fact "Can add a new blockchain to an existing wallet"
       (let [wallet-store (fm/create-memory-store)
             blockchain (fb/create-in-memory-blockchain :bk)
             wallet (wallet/new-empty-wallet! wallet-store)
