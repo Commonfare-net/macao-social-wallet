@@ -80,8 +80,7 @@
 
 ;; routes
 (defn app [db-connection sso-configuration]
-  (let [participant-store  (fm/create-memory-store)
-        wallet-store (fm/create-memory-store)
+  (let [wallet-store (fm/create-memory-store)
         blockchain (fb/create-in-memory-blockchain :bk)]
     (cc/routes
      ;; embedded resources from resources/public
@@ -153,4 +152,4 @@
      ;; Signing in using Stonecutter
      (GET "/landing-page" [request] sign-in/landing-page)
      (ANY "/sign-in-with-sso" [request] (sign-in/sign-in sso-configuration))
-     (GET "/sso-callback" [request] (sign-in/sso-callback db-connection participant-store wallet-store blockchain sso-configuration)))))
+     (GET "/sso-callback" [request] (sign-in/sso-callback db-connection wallet-store blockchain sso-configuration)))))

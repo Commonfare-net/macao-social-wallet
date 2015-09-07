@@ -8,7 +8,6 @@
             [freecoin.integration.storage-helpers :as sh]
             [freecoin.db.mongo :as fm]
             [freecoin.blockchain :as fb]
-            [freecoin.db.participant :as p]
             [freecoin.db.wallet :as w]
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.sign-in :as fs])
@@ -71,10 +70,9 @@
                                                                                                   :email_verified true}})
                      (fact "if new user, creates a wallet and redirects to landing page"
                            (against-background (uuid/uuid) => "a-uuid")
-                           (let [participant-store (fm/create-memory-store)
-                                 wallet-store (fm/create-memory-store)
+                           (let [wallet-store (fm/create-memory-store)
                                  blockchain (fb/create-in-memory-blockchain :bk)
-                                 callback-handler (fs/sso-callback @db-connection participant-store wallet-store blockchain ...sso-config...)
+                                 callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
@@ -82,32 +80,30 @@
                              (entry-count wallet-store) => 1))
                      
                      (fact "if user exists, signs user in and redirects to landing page without creating a new wallet"
-                           (let [participant-store (fm/create-memory-store)
-                                 wallet-store (fm/create-memory-store)
+                           (let [wallet-store (fm/create-memory-store)
+                                 wallet (w/new-empty-wallet! wallet-store
+                                                             "stonecutter-user-id" "name" "test@email.com")
                                  blockchain (fb/create-in-memory-blockchain :bk)
-                                 participant (p/store! participant-store "stonecutter-user-id" "test" "test@email.com" nil)
-                                 callback-handler (fs/sso-callback @db-connection participant-store wallet-store blockchain ...sso-config...)
+                                 callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
                              response => (th/check-redirects-to "/landing-page")
-                             response => (th/check-signed-in-as (:uid participant))
-                             (entry-count wallet-store) => 0)))
+                             response => (th/check-signed-in-as (:uid wallet))
+                             (entry-count wallet-store) => 1)))
               
               (fact "When authorisation code is not provided, redirects to landing page"
-                    (let [participant-store (fm/create-memory-store)
-                          wallet-store (fm/create-memory-store)
+                    (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
-                          callback-handler (fs/sso-callback @db-connection participant-store wallet-store blockchain ...sso-config...)
+                          callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
                           response (callback-handler (rmr/request :get "/sso-callback"))]
                       response => (th/check-redirects-to "/landing-page")))
               
               (fact "When token response fails, redirects to landing page"
                     (against-background
                      (sc/request-access-token! ...sso-config... ...invalid-auth-code...) =throws=> (Exception. "Something went wrong"))
-                    (let [participant-store (fm/create-memory-store)
-                          wallet-store (fm/create-memory-store)
+                    (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
-                          callback-handler (fs/sso-callback @db-connection participant-store wallet-store blockchain ...sso-config...)
+                          callback-handler (fs/sso-callback @db-connection wallet-store blockchain ...sso-config...)
                           response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                          (assoc :params {:code ...invalid-auth-code...})))]
                       response => (th/check-redirects-to "/landing-page")))))

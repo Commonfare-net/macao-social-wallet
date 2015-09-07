@@ -35,21 +35,40 @@
 (facts "Can create and fetch an empty wallet"
        (against-background (uuid/uuid) => "a-uuid")
        (let [wallet-store (fm/create-memory-store)]
-         (wallet/new-empty-wallet! wallet-store) => (just {:uid "a-uuid"
-                                                           :public-key nil
-                                                           :private-key nil
-                                                           :blockchains {}
-                                                           :blockchain-secrets {}})
-         (wallet/fetch wallet-store "a-uuid") => (just {:uid "a-uuid"
-                                                        :public-key nil
-                                                        :private-key nil
-                                                        :blockchains {}
-                                                        :blockchain-secrets {}})))
+         (fact "can create a wallet"
+               (wallet/new-empty-wallet! wallet-store
+                                         "sso-id" "name" "test@email.com")
+               => (just {:uid "a-uuid"
+                         :sso-id "sso-id"
+                         :participant {:name "name" :email "test@email.com"}
+                         :public-key nil
+                         :private-key nil
+                         :blockchains {}
+                         :blockchain-secrets {}}))
+         (fact "can fetch the wallet by its uid"
+               (wallet/fetch wallet-store "a-uuid")
+               => (just {:uid "a-uuid"
+                         :sso-id "sso-id"
+                         :participant {:name "name" :email "test@email.com"}
+                         :public-key nil
+                         :private-key nil
+                         :blockchains {}
+                         :blockchain-secrets {}}))
+         
+         (fact "can fetch wallet by sso-id"
+               (wallet/fetch-by-sso-id wallet-store "sso-id")
+               => (just {:uid "a-uuid"
+                         :sso-id "sso-id"
+                         :participant {:name "name" :email "test@email.com"}
+                         :public-key nil
+                         :private-key nil
+                         :blockchains {}
+                         :blockchain-secrets {}}))))
 
 (fact "Can add a new blockchain to an existing wallet"
       (let [wallet-store (fm/create-memory-store)
             blockchain (fb/create-in-memory-blockchain :bk)
-            wallet (wallet/new-empty-wallet! wallet-store)
+            wallet (wallet/new-empty-wallet! wallet-store "sso-id" "name" "test@email.com")
             updated-wallet (wallet/add-blockchain-to-wallet-with-id! wallet-store
                                                                      blockchain
                                                                      (:uid wallet))]

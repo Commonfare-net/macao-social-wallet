@@ -29,7 +29,6 @@
   (:require [monger.collection :as mc]
             [monger.core :as mongo]))
 
-(def ^:private participant-collection "participants")
 (def ^:private wallet-collection "wallets")
 
 (defprotocol FreecoinStore
@@ -88,9 +87,6 @@
   ([] (create-memory-store {}))
   ([data]
    (MemoryStore. (atom data))))
-
-(defn create-participant-store [db]
-  (create-mongo-store db participant-collection))
 
 (defn create-wallet-store [db]
   (create-mongo-store db wallet-collection))

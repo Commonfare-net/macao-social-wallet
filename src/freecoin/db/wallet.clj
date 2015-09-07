@@ -35,12 +35,19 @@
                    :blockchains {}
                    :blockchain-secrets {}})
 
-(defn new-empty-wallet! [wallet-store]
-  (let [wallet (assoc empty-wallet :uid (uuid/uuid))]
+(defn new-empty-wallet! [wallet-store sso-id name email]
+  (let [participant {:name name :email email}
+        wallet (-> empty-wallet
+                   (assoc :uid (uuid/uuid))
+                   (assoc :participant participant)
+                   (assoc :sso-id sso-id))]
     (mongo/store! wallet-store :uid wallet)))
 
 (defn fetch [wallet-store uid]
   (mongo/fetch wallet-store uid))
+
+(defn fetch-by-sso-id [wallet-store sso-id]
+  (first (mongo/query wallet-store {:sso-id sso-id})))
 
 (defn add-blockchain-to-wallet-with-id! [wallet-store blockchain uid]
   (mongo/update! wallet-store uid (partial blockchain/create-account blockchain)))

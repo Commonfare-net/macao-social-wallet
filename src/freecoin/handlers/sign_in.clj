@@ -32,7 +32,6 @@
             [clojure.string :as s]
             [stonecutter-oauth.client :as soc]
             [stonecutter-oauth.jwt :as sjwt]
-            [freecoin.db.participant :as participant]
             [freecoin.db.wallet :as wallet]
             [freecoin.storage :as storage]
             [freecoin.blockchain :as blockchain]
@@ -71,7 +70,7 @@
   (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]
     (s/join "::" [(:cookie secret) (:_id secret)])))
 
-(defn sign-up-new-participant [participant-store wallet-store blockchain sso-id name email]
+(defn sign-up [wallet-store blockchain sso-id name email]
   ;; TODO: 2015-09-07 DM - The current implementation of the
   ;; blockchain 'create-account' method includes the 'cookie' part of
   ;; the secret with the wallet when the blockchain account is
@@ -83,13 +82,10 @@
   ;; responsibility of creating the account and secrets for accessing
   ;; it, and the db.wallet the responsibility for adding the
   ;; appropriate data to the wallet itself.
-  (when-let [empty-wallet (wallet/new-empty-wallet! wallet-store)]
-    (when-let [participant (participant/store! participant-store sso-id name email (:uid empty-wallet))]
-      (when-let [wallet-with-account (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid empty-wallet))]
-        {:participant participant
-         :wallet wallet-with-account}))))
+  (when-let [empty-wallet (wallet/new-empty-wallet! wallet-store sso-id name email)]
+    (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid empty-wallet))))
 
-(lc/defresource sso-callback [db-connection participant-store wallet-store blockchain sso-config]
+(lc/defresource sso-callback [db-connection wallet-store blockchain sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :allowed? (fn [ctx]
@@ -104,11 +100,10 @@
                    sso-id (get-in token-response [:user-info :user-id])
                    email (get-in token-response [:user-info :email])
                    name (first (s/split email #"@"))]
-               (if-let [participant (participant/fetch-by-sso-id participant-store sso-id)]
-                 (let [wallet (wallet/fetch wallet-store (:wallet participant))]
-                   {::uid (:uid participant)})
-                 (when-let [{:keys [participant wallet]} (sign-up-new-participant participant-store wallet-store blockchain sso-id name email)]
-                   {::uid (:uid participant)
+               (if-let [wallet (wallet/fetch-by-sso-id wallet-store sso-id)]
+                 {::uid (:uid wallet)}
+                 (when-let [wallet (sign-up wallet-store blockchain sso-id name email)]
+                   {::uid (:uid wallet)
                     ::cookie-data (wallet->access-key blockchain wallet)}))))
   :handle-ok (fn [ctx]
                (lr/ring-response
