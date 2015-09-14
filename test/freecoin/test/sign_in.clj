@@ -25,11 +25,6 @@
 
 (def db-connection (atom nil))
 
-
-(defprotocol TestStore
-  (entry-count [s]
-    "Total number of entries in the store"))
-
 (defprotocol TestStore
   (entry-count [s]
     "Total number of entries in the store"))
@@ -41,11 +36,22 @@
 (facts "About signing up via a Stonecutter SSO instance"
        (facts "About the landing page"
               (fact "When not signed in, displays link to sign in with stonecutter"
-                    (let [response (fs/landing-page (rmr/request :get "/"))]
+                    (let [wallet-store (fm/create-memory-store)
+                          blockchain (fb/create-in-memory-blockchain :bk)
+                          landing-page-handler (fs/landing-page wallet-store blockchain)
+                          response (landing-page-handler (rmr/request :get "/"))]
                       (:status response) => 200
                       (-> (:body response) (html/html-snippet [:body])) => (th/links-to? [:.clj--sign-in-link] "/sign-in-with-sso")))
               
-              (fact "When signed in, displays users balance"))
+              (fact "When signed in, displays users balance"
+                    (let [wallet-store (fm/create-memory-store)
+                          blockchain (fb/create-in-memory-blockchain :bk)
+                          wallet (w/new-empty-wallet! wallet-store "stonecutter-user-id" "name" "test@email.com")
+                          updated-wallet (w/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid wallet))
+                          landing-page-handler (fs/landing-page wallet-store blockchain)
+                          response (landing-page-handler (-> (rmr/request :get "/")
+                                                             (assoc :session {:signed-in-uid (:uid wallet)})))]
+                      (:body response) => (contains #"Balance:\s*0"))))
 
        (fact "the sign-in endpoint redirects to the stonecutter authorisation url"
              (let [sign-in-handler (fs/sign-in test-sso-config)

@@ -202,8 +202,7 @@
   (get-account [bk wallet] (get-in wallet [:blockchains blockchain-label]))
   
   (get-address [bk wallet] nil)
-  (get-balance [bk wallet] ;; TODO
-    )
+  (get-balance [bk wallet] 0)
 
   ;; transactions
   (list-transactions [bk wallet] ;; TODO

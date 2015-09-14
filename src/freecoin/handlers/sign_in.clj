@@ -37,14 +37,29 @@
             [freecoin.blockchain :as blockchain]
             [freecoin.utils :as utils]
             [freecoin.views :as fv]
-            [freecoin.views.landing-page :as landing-page]))
+            [freecoin.views.landing-page :as landing-page]
+            [freecoin.views.balance-page :as balance-page]))
 
-(lc/defresource landing-page
+(defn context->signed-in-uid [ctx]
+  (get-in ctx [:request :session :signed-in-uid]))
+
+(lc/defresource landing-page [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (-> {:sign-in-url "/sign-in-with-sso"}
-                 landing-page/landing-page
-                 fv/render-page))
+  :exists? (fn [ctx]
+             (if-let [uid (context->signed-in-uid ctx)]
+               (let [wallet (wallet/fetch wallet-store uid)]
+                 {::wallet wallet 
+                  ::balance (blockchain/get-balance blockchain wallet)})
+               {}))
+  :handle-ok (fn [ctx]
+               (if-let [wallet (::wallet ctx)]
+                 (-> {:wallet wallet :balance (::balance ctx)}
+                     balance-page/balance-page
+                     fv/render-page)
+                 (-> {:sign-in-url "/sign-in-with-sso"}
+                     landing-page/landing-page
+                     fv/render-page))))
 
 (lc/defresource sign-in [sso-config]
   :allowed-methods [:get]
