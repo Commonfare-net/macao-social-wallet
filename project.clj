@@ -17,7 +17,15 @@
                                 ]
                           :plugins [[lein-midje "3.1.3"]]}
 
-             :production [:user]
+             :production [:user :dcent]
+             :dcent {:env [
+                           [:base-url "http://localhost:8000"]
+                           [:client-id "freecoin"]
+                           [:client-secret "freecoin-secret"]
+                           [:auth-url "http://sso.dcentproject.eu:3000"]
+                           ]
+                     }
+
              :vm {:ring {:host "192.168.50.80"}}
              :uberjar {:aot :all
                        :main freecoin.main}}

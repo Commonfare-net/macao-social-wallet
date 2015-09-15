@@ -134,7 +134,7 @@ Sending among participants is optional and depends from the monetary system sett
  - TODO
    - GET  /send/:participant/:amount
    - POST /send
-   
+
 ## GET /send/:participant/:amount
 
 Send `amount` to `participant`, return a human readable response with a `txid` linking to the transaction, the `amount` and the recipient `participant`.
@@ -175,7 +175,7 @@ Using vouchers is possible to make intuitive a POS transaction:
   - POST /voucher/create
   - GET /voucher/claim/:voucher-id
   - POST /voucher/claim
-  
+
 ## GET /voucher/create/:amount
 
 Create a signed voucher of `amount` ready to be given, returns human readable stash-id and QR image.
@@ -258,25 +258,25 @@ Slices form a 2x9 array of SSSS keys which are vertically associated.
 Example:
 
 
-    P = Participant (single wallet)
-    O = Organization (online clearing house server)
-    B = Backup (cold storage, third party)
+    P = Participant (passcard keys)
+    O = Organization (online portal)
+    B = Auditor (secondary online portal and/or cold storage)
 
          :HI        :LO
-    FXC1_random_FXC_random_1 - P     } cookie
+    FXC1_random_FXC_random_1 - P     } participant's web cookie
 
-    FXC1_random_FXC_random_2 - P     } participant's backup
-    FXC1_random_FXC_random_3 - P     } participant's backup
+    FXC1_random_FXC_random_2 - P     } participant's passcard
+    FXC1_random_FXC_random_3 - P     } participant's passcard
 
-    FXC1_random_FXC_random_4 - O & P } participant's backup
+    FXC1_random_FXC_random_4 - O & P } participant's passcard
+    FXC1_random_FXC_random_5 - O     } organization
+    FXC1_random_FXC_random_6 - O     } organization
 
-    FXC1_random_FXC_random_5 - O
-    FXC1_random_FXC_random_6 - O
+    FXC1_random_FXC_random_7 - O & B } auditor
+    FXC1_random_FXC_random_8 - B     } auditor
+    FXC1_random_FXC_random_9 - B     } auditor
 
-    FXC1_random_FXC_random_7 - O & B } backup organization
-
-    FXC1_random_FXC_random_8 - B     } backup organization
-    FXC1_random_FXC_random_9 - B     } backup organization
+This distribution allows the organization to serve access to blockchain operations accepting a single FXC slice stored in the participant's web browser cookie that was set upon authentication.  The participant has also a QRCode and/or SIMcard and/or USB key where other slices of the key are stored and can be combined with those of the auditor for blockchain access. Of course also the organization can grant access to participants via the use of a physical key.
 
 
 The random is a long integer encoded using hashid using an alphabet that is fine tuned to not include any ambiguous character and eventually be communicated between humans without the use of computers. The salt used to hashid encode is semi-secret and is communicated to all parties.

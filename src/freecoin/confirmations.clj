@@ -106,13 +106,26 @@
   )
 
 (defn empty-wallet [name email]
-  {:_id ""
-   :name  name
-   :email email
-   :public-key nil
-   :private-key nil
-   :blockchains {}
-   :blockchain-secrets {}})
+;;     [_id
+;;      name
+;;      email
+;;      public-key
+;;      private-key
+;;      blockchains
+;;      blockchain-keys
+
+  {:_id ""            ;; unique id
+   :name  name        ;; identifier, case insensitive, space counts
+   :email email       ;; verified email account
+   :info nil          ;; misc information text on the account
+   :creation-date nil ;; date on which the wallet was created
+   :last-login nil    ;; last time this participant logged in succesfully
+   :last-login-ip nil ;; connection ip address of the last succesful login
+   :failed-logins nil ;; how many consecutive failed logins were attempted
+   :public-key nil    ;; public asymmetric key for off-the-blockchain encryption
+   :private-key nil   ;; private asymmetric key for off-the-blockchain encryption
+   :blockchains {}       ;; list of blockchains and public account ids
+   :blockchain-keys {}}) ;; list of keys for private blockchain operations
 
 (defresource execute [request]
   :service-available?
@@ -180,7 +193,7 @@
               (blockchain/create-account
                (blockchain/new-stub db)
                (empty-wallet (:name data) (:email data)))
-              secret (get-in new-account [:blockchain-secrets :STUB])
+              secret (get-in new-account [:blockchain-keys :STUB])
               secret-without-cookie (dissoc secret :cookie)
               cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
           (utils/log! ::ACK 'signin cookie-data)

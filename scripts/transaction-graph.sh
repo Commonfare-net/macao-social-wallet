@@ -27,4 +27,5 @@ for t in $txarr; do
 done
 graphviz+="}\n"
 
-print $graphviz | circo -Tpng -o $dbname.png
+print $graphviz > $dbname.dot
+cat $dbname.dot | circo -Tpng -o $dbname.png

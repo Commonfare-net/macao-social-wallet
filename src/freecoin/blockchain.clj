@@ -56,12 +56,24 @@
   (redeem-voucher [bk wallet voucher])
   )
 
-(defrecord voucher [_id expiration sender
-                    amount blockchain currency])
+(defrecord voucher
+    [_id
+     expiration
+     sender
+     amount
+     blockchain
+     currency])
 
 (defrecord transaction
-    [_id emission broadcast signed sender
-    amount resipient blockchain currency])
+    [_id
+     emission
+     broadcast
+     signed
+     sender
+     amount
+     recipient
+     blockchain
+     currency])
 
 
 ;; this is here jut to explore how introspection works in clojure records
@@ -93,7 +105,7 @@
                                  [:blockchains (keyword (recname bk))]
                                  (:_id secret))]
         (assoc-in new-bk-pub
-                  [:blockchain-secrets (keyword (recname bk))]
+                  [:blockchain-keys (keyword (recname bk))]
                   secret)
       ;; TODO: wrap all this with symmetric encryption using secrets
         ))
@@ -167,4 +179,4 @@
 
 ;; (defrecord account
 ;;     [_id public-key private-key
-;;      blockchains blockchain-secrets])
+;;      blockchains blockchain-keys])
