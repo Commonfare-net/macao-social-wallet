@@ -69,16 +69,15 @@
                 ;; (:body response) => (contains #"Sorry, you are not signed in")))
 
         (facts "when user is authenticated"
-               (against-background
-                (auth/check anything) => {:result true})
-
                (facts "without query string"
                       (fact "retrieves all existing wallets"
                             (let [_ (doseq [n (range 10)]
                                       (->> {:name (str "name-" n)
                                             :email (str "email-" n "@test.com")}
                                            (storage/insert (:db-connection ih/app-state) "wallets")))
-                                  {response :response} (-> (get-in ih/app-state [:sessions :default])
+                                  {response :response} (-> ih/app-state
+                                                           (ih/create-and-sign-in :default wallet1)
+                                                           (get-in [:sessions :default])
                                                            (p/request "/participants/all"))]
                               (:status response) => 200
                               (:body response) => (contains #"name-0")
@@ -90,7 +89,9 @@
                        (fact "Retrieves a wallet by name or by email address"
                              (let [_ (storage/insert (:db-connection ih/app-state) "wallets" wallet1)
                                    _ (storage/insert (:db-connection ih/app-state) "wallets" wallet2)
-                                   {response :response} (-> (get-in ih/app-state [:sessions :default])
+                                   {response :response} (-> ih/app-state
+                                                            (ih/create-and-sign-in :default wallet1)
+                                                            (get-in [:sessions :default])
                                                             (p/request (str "/participants/find?field=" ?field "&value=" ?value)))]
                                (:status response) => 200
                                (:body response) => (contains (re-pattern (str "name.+" (:name ?found))))
@@ -101,7 +102,9 @@
                        "name"   "user2"  wallet2    wallet1)
 
                       (fact "Responds with a 200 and reports no result when no wallets found"
-                            (let [{response :response} (-> (get-in ih/app-state [:sessions :default])
+                            (let [{response :response} (-> ih/app-state
+                                                           (ih/create-and-sign-in :default wallet1)
+                                                           (get-in [:sessions :default])
                                                            (p/request (str "/participants/find?field=name&value=user")))]
                               (:status response) => 200
                               (:body response) => (contains #"No participant found")))))))

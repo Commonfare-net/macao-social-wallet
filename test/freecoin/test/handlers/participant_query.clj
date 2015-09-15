@@ -25,26 +25,40 @@
 (facts "about the participant query form"
        (fact "can be accessed by signed-in users"
              (let [wallet-store (fm/create-memory-store)
-                   wallet (w/new-empty-wallet! wallet-store "stonecutter-user-id" "name" "test@email.com")
+                   wallet (w/new-empty-wallet! wallet-store
+                                               "stonecutter-user-id" "name" "test@email.com")
                    query-form-handler (pq/query-form wallet-store)
-                   response (query-form-handler (-> (th/create-request :get "/participants-query" {})
-                                                    (assoc :session {:signed-in-uid (:uid wallet)})))]
+                   response (-> (th/create-request
+                                 :get "/participants-query"
+                                 {} (th/authenticated-session (:uid wallet)))
+                                query-form-handler)]
                (:status response) => 200))
 
        (fact "can not be accessed when user is not signed in"
              (let [wallet-store (fm/create-memory-store)
                    query-form-handler (pq/query-form wallet-store)
-                   response (query-form-handler (th/create-request :get "/participants-query" {}))]
+                   response (-> (th/create-request :get "/participants-query" {})
+                                query-form-handler)]
                (:status response) => 401)))
 
 (facts "about the participants query handler"
+       (fact "can not be accessed when user is not signed in"
+             (let [wallet-store (fm/create-memory-store)
+                   participants-handler (pq/participants wallet-store)
+                   response (-> (th/create-request :get "/participants" {})
+                                participants-handler)]
+               (:status response) => 401))
+       
        (fact "without any query parameters, lists all participants"
              (let [wallet-store (fm/create-memory-store)
                    wallets (doall (->> (range 5)
                                        (map index->wallet-data)
                                        (map (partial create-wallet wallet-store))))
                    participants-handler (pq/participants wallet-store)
-                   response (participants-handler (th/create-request :get "/participants" {}))]
+                   response (-> (th/create-request
+                                 :get "/participants"
+                                 {} (th/authenticated-session (:uid (first wallets))))
+                                participants-handler)]
                (:status response) => 200
                (-> (:body response) html/html-snippet) => (th/element-count [:.clj--participant__item] 5)))
 
@@ -58,8 +72,10 @@
                     wallets (doall (map (partial create-wallet wallet-store) wallet-data))
                     participants-handler (pq/participants wallet-store)
                     query-m {:field ?field :value ?value}
-                    response (participants-handler (th/create-request :get "/participants"
-                                                                      query-m))]
+                    response (-> (th/create-request
+                                  :get "/participants"
+                                  query-m (th/authenticated-session (:uid (first wallets))))
+                                 participants-handler)]
                 (-> (:body response) html/html-snippet)
                 => (th/element-count [:.clj--participant__item] ?expected-count)))
         

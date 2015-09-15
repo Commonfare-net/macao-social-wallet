@@ -54,6 +54,9 @@
     {}))
 
 (lc/defresource participants [wallet-store]
+  :authorized? (fn [ctx]
+                 (when-let [uid (ch/context->signed-in-uid ctx)]
+                   (when (wallet/fetch wallet-store uid) true)))
   :exists? (fn [ctx]
              {::wallets (->> ctx :request
                              request->wallet-query

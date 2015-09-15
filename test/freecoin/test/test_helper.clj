@@ -4,9 +4,16 @@
             [net.cgrand.enlive-html :as html]
             [freecoin.helper :as fh]))
 
-(defn create-request [method path query-m]
-  (-> (request/request method path query-m)
-      (assoc :params query-m)))
+(defn create-request
+  ([method path query-m]
+   (create-request method path query-m {}))
+  ([method path query-m session]
+   (-> (request/request method path query-m)
+       (assoc :params query-m)
+       (assoc :session session))))
+
+(defn authenticated-session [uid]
+  {:signed-in-uid uid})
 
 (defn check-redirects-to [path]
   (midje/chatty-checker [response] (and
