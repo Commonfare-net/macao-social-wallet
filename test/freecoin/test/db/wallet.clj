@@ -68,6 +68,35 @@
                          :blockchains {}
                          :blockchain-secrets {}}))))
 
+(defn create-wallet [wallet-store wallet-data]
+  (let [{:keys [sso-id name email]} wallet-data]
+    (wallet/new-empty-wallet! wallet-store sso-id name email)))
+
+(defn populate-wallet-store [wallet-store]
+  (let [wallets-data [{:name "James Jones" :email "james@jones.com" :sso-id "sso-id-1"}
+                      {:name "James Jones" :email "jim@jones.com" :sso-id "sso-id-2"}
+                      {:name "Sarah Lastname" :email "sarah@email.com" :sso-id "sso-id-3"}]]
+    (doall (map (partial create-wallet wallet-store) wallets-data))))
+
+(facts "Can query wallet collection"
+       (let [wallet-store (fm/create-memory-store)
+             wallets (populate-wallet-store wallet-store)]
+         
+         (fact "without parameters, returns all wallets"
+               (wallet/query wallet-store) => (n-of anything 3))
+
+         (tabular
+          (fact "accepts an optional query map argument"
+                (wallet/query wallet-store ?query-m) => (n-of anything ?expected-count))
+          ?query-m                                      ?expected-count
+          {:name "James Jones"}                         2
+          {:name "Sarah Lastname"}                      1
+          {:name "Bob Nothere"}                         0
+          {:email "james@jones.com"}                    1
+          {:email "bob@nothere.com"}                    0
+          {:name "James Jones" :email "jim@jones.com"}  1
+          {:something "else"}                           0)))
+
 (fact "Can add a new blockchain to an existing wallet"
       (let [wallet-store (fm/create-memory-store)
             blockchain (fb/create-in-memory-blockchain :bk)

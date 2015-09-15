@@ -25,33 +25,26 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.db.wallet
-  (:require [freecoin.db.uuid :as uuid]
-            [freecoin.blockchain :as blockchain]
-            [freecoin.db.mongo :as mongo]))
+(ns freecoin.views.participants-list)
 
-(def empty-wallet {:public-key nil
-                   :private-key nil
-                   :blockchains {}
-                   :blockchain-secrets {}})
+(defn render-participant [wallet]
+  [:li {:style "margin: 1em" :class "clj--participant__item"}
+   [:div {:class "card pull-left" }
+    [:span (str "name: " (:name wallet))]
+    [:br]
+    [:span (str "email: " (:email wallet))]
+    [:br]
+    [:span {:class "qrcode pull-left"}
+     [:img {:src (format "/qrcode/%s" (:name wallet))} ]]
+    [:span {:class "gravatar pull-right"}
+     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]]])
 
-(defn new-empty-wallet! [wallet-store sso-id name email]
-  (let [wallet (-> empty-wallet
-                   (assoc :uid (uuid/uuid))
-                   (assoc :name name)
-                   (assoc :email email)
-                   (assoc :sso-id sso-id))]
-    (mongo/store! wallet-store :uid wallet)))
-
-(defn fetch [wallet-store uid]
-  (mongo/fetch wallet-store uid))
-
-(defn fetch-by-sso-id [wallet-store sso-id]
-  (first (mongo/query wallet-store {:sso-id sso-id})))
-
-(defn query
-  ([wallet-store] (query wallet-store {}))
-  ([wallet-store query-m] (mongo/query wallet-store query-m)))
-
-(defn add-blockchain-to-wallet-with-id! [wallet-store blockchain uid]
-  (mongo/update! wallet-store uid (partial blockchain/create-account blockchain)))
+(defn participants-list [content]
+  (let [wallets (:wallets content)]
+    {:body [:div
+            (if (empty? wallets)
+              [:span (str "No participant found")]
+              [:ul {:style "list-style-type: none;"}
+               (for [wallet wallets]
+                 (render-participant wallet))])]
+     :title "Participants"}))

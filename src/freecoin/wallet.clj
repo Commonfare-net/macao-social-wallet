@@ -157,7 +157,6 @@
     {(keyword field) value}
     {}))
 
-
 (defresource participants-find [request]
   :service-available?    {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]

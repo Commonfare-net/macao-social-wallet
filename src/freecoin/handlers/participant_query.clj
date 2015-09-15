@@ -25,33 +25,31 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.db.wallet
-  (:require [freecoin.db.uuid :as uuid]
-            [freecoin.blockchain :as blockchain]
-            [freecoin.db.mongo :as mongo]))
+(ns freecoin.handlers.participant-query
+  (:require [liberator.core :as lc]
+            [liberator.representation :as lr]
+            [ring.util.response :as r]
+            [clojure.string :as s]
+            [freecoin.utils :as utils]
+            [freecoin.db.wallet :as wallet]
+            [freecoin.storage :as storage]
+            [freecoin.views :as fv]
+            [freecoin.views.participants-list :as participants-list]))
 
-(def empty-wallet {:public-key nil
-                   :private-key nil
-                   :blockchains {}
-                   :blockchain-secrets {}})
+(defn context->wallet-query [context]
+  (if-let [{:keys [field value]} (-> context
+                                     (get-in [:request :params])
+                                     (utils/select-all-or-nothing [:field :value]))]
+    {(keyword field) value}
+    {}))
 
-(defn new-empty-wallet! [wallet-store sso-id name email]
-  (let [wallet (-> empty-wallet
-                   (assoc :uid (uuid/uuid))
-                   (assoc :name name)
-                   (assoc :email email)
-                   (assoc :sso-id sso-id))]
-    (mongo/store! wallet-store :uid wallet)))
+(lc/defresource participants [wallet-store]
+  :exists? (fn [ctx]
+             {::wallets (->> ctx
+                             context->wallet-query
+                             (wallet/query wallet-store))})
+  :handle-ok (fn [ctx]
+               (-> {:wallets (::wallets ctx)}
+                   participants-list/participants-list
+                   fv/render-page)))
 
-(defn fetch [wallet-store uid]
-  (mongo/fetch wallet-store uid))
-
-(defn fetch-by-sso-id [wallet-store sso-id]
-  (first (mongo/query wallet-store {:sso-id sso-id})))
-
-(defn query
-  ([wallet-store] (query wallet-store {}))
-  ([wallet-store query-m] (mongo/query wallet-store query-m)))
-
-(defn add-blockchain-to-wallet-with-id! [wallet-store blockchain uid]
-  (mongo/update! wallet-store uid (partial blockchain/create-account blockchain)))

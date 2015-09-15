@@ -116,7 +116,6 @@
      (GET "/participants" [request] (wallet/participants-form request))
      ;; this will read field and value, url encoded
      (GET "/participants/find" [request] (wallet/participants-find request))
-     (GET "/find"              [request] (wallet/participants-find request))
      ;; all is simply find without arguments
      (GET "/participants/all"  [request] (wallet/participants-find request))
 

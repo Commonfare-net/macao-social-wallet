@@ -1,7 +1,12 @@
 (ns freecoin.test.test-helper
   (:require [midje.sweet :as midje]
+            [ring.mock.request :as request]
             [net.cgrand.enlive-html :as html]
             [freecoin.helper :as fh]))
+
+(defn create-request [method path query-m]
+  (-> (request/request method path query-m)
+      (assoc :params query-m)))
 
 (defn check-redirects-to [path]
   (midje/chatty-checker [response] (and
@@ -48,3 +53,7 @@
 (defn has-class? [selector css-class]
   (fn [enlive-m]
     ((midje/contains css-class) (enlive-m->attr enlive-m selector :class))))
+
+(defn element-count [selector n]
+  (fn [enlive-m]
+    ((midje/n-of midje/anything n) (html/select enlive-m selector))))

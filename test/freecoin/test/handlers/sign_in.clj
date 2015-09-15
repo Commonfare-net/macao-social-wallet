@@ -1,4 +1,4 @@
-(ns freecoin.test.sign-in
+(ns freecoin.test.handlers.sign-in
   (:require [midje.sweet :refer :all]
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
