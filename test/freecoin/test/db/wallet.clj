@@ -45,7 +45,7 @@
                          :public-key nil
                          :private-key nil
                          :blockchains {}
-                         :blockchain-secrets {}}))
+                         :blockchain-keys {}}))
          (fact "can fetch the wallet by its uid"
                (wallet/fetch wallet-store "a-uuid")
                => (just {:uid "a-uuid"
@@ -55,7 +55,7 @@
                          :public-key nil
                          :private-key nil
                          :blockchains {}
-                         :blockchain-secrets {}}))
+                         :blockchain-keys {}}))
          
          (fact "can fetch wallet by sso-id"
                (wallet/fetch-by-sso-id wallet-store "sso-id")
@@ -66,7 +66,7 @@
                          :public-key nil
                          :private-key nil
                          :blockchains {}
-                         :blockchain-secrets {}}))))
+                         :blockchain-keys {}}))))
 
 (defn create-wallet [wallet-store wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
@@ -105,4 +105,4 @@
                                                                      blockchain
                                                                      (:uid wallet))]
         (:blockchains updated-wallet) => (contains {:bk anything})
-        (:blockchain-secrets updated-wallet) => (contains {:bk anything})))
+        (:blockchain-keys updated-wallet) => (contains {:bk anything})))

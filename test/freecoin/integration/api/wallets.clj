@@ -37,10 +37,10 @@
             [freecoin.auth :as auth]))
 
 (def wallet1
-  {:name "user1" :email "valid1@email.com"})
+  {:sso-id "user1-sso-id" :name "user1" :email "valid1@email.com"})
 
 (def wallet2
-  {:name "user2" :email "valid2@email.com"})
+  {:sso-id "user2-sso-id" :name "user2" :email "valid2@email.com"})
 
 (against-background
  [(before :facts (ih/initialise-test-session ih/app-state ih/test-app-params))
@@ -54,14 +54,12 @@
                 ;; (:body response) => (contains #"Sorry, you are not signed in")))
 
         (fact "Renders the find wallet form when user is authorised"
-              (against-background
-               (auth/check anything) => {:result true})
-              (let [{response :response} (-> (get-in ih/app-state [:sessions :default])
+              (let [{response :response} (-> ih/app-state
+                                             (ih/create-and-sign-in :default wallet1)
+                                             (get-in [:sessions :default])
                                              (p/request (str "/participants")))]
                 (:status response) => 200
-                (:body response) => (contains #"Search for a wallet")))
-        )
-
+                (:body response) => (contains #"Search for a wallet"))))
 
  (facts "GET /participants"
         (fact "Responds with 401 when user is not authenticated"

@@ -27,36 +27,27 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.core
-  (:require
-   [org.httpkit.server :as server]
-   [liberator.core :refer [resource defresource]]
+  (:require [org.httpkit.server :as server]
+            [liberator.core :refer [resource defresource]]
 
-   ;; comment the following to deactivate debug
-   [liberator.dev]
+            ;; comment the following to deactivate debug
+            [liberator.dev]
 
-   [ring.middleware.cookies :refer [wrap-cookies]]
-   [ring.middleware.session :refer [wrap-session]]
-   [ring.middleware.session.cookie :refer [cookie-store]]
-   [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-   [ring.middleware.params :refer [wrap-params]]
-   [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-
-   [cemerick.friend :as friend]
-
-   ;; For Mozilla persona spike
-   ;; [persona-kit.middleware :as pm]
-   ;; [persona-kit.friend :as pf]
-   ;; [persona-kit.uris :as pu]
-
-   [compojure.core :refer [defroutes ANY]]
-   [stonecutter-oauth.client :as soc]
-
-   [freecoin.db.mongo :as fm]
-   [freecoin.routes :as routes]
-   [freecoin.params :as param]
-   [freecoin.config :as config]
-   [freecoin.storage :as storage]
-   [freecoin.secretshare :as ssss]))
+            [ring.middleware.cookies :refer [wrap-cookies]]
+            [ring.middleware.session :refer [wrap-session]]
+            [ring.middleware.session.cookie :refer [cookie-store]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+            [cemerick.friend :as friend]
+            [compojure.core :refer [defroutes ANY]]
+            [stonecutter-oauth.client :as soc]
+            [freecoin.db.mongo :as fm]
+            [freecoin.routes :as routes]
+            [freecoin.params :as param]
+            [freecoin.config :as config]
+            [freecoin.storage :as storage]
+            [freecoin.secretshare :as ssss]))
 
 (defn wrap-db [handler db-connection]
   (fn [request]
@@ -74,9 +65,6 @@
       wrap-params))
 
 (defonce app-state {})
-
-;; (alter-var-root #'pu/*login-uri* (constantly "/persona/login"))
-;; (alter-var-root #'pu/*logout-uri* (constantly "/persona/logout"))
 
 (defn connect-db [app-state]
   (if (:db-connection app-state)

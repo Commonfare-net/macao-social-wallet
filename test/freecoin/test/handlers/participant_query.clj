@@ -23,9 +23,19 @@
     {:sso-id sso-id :name name :email email}))
 
 (facts "about the participant query form"
-       (fact "can be accessed whether or not you are signed in"
-             (let [response (pq/query-form (th/create-request :get "/participants-query" {}))]
-               (:status response) => 200)))
+       (fact "can be accessed by signed-in users"
+             (let [wallet-store (fm/create-memory-store)
+                   wallet (w/new-empty-wallet! wallet-store "stonecutter-user-id" "name" "test@email.com")
+                   query-form-handler (pq/query-form wallet-store)
+                   response (query-form-handler (-> (th/create-request :get "/participants-query" {})
+                                                    (assoc :session {:signed-in-uid (:uid wallet)})))]
+               (:status response) => 200))
+
+       (fact "can not be accessed when user is not signed in"
+             (let [wallet-store (fm/create-memory-store)
+                   query-form-handler (pq/query-form wallet-store)
+                   response (query-form-handler (th/create-request :get "/participants-query" {}))]
+               (:status response) => 401)))
 
 (facts "about the participants query handler"
        (fact "without any query parameters, lists all participants"

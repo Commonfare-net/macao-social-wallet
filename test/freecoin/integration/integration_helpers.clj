@@ -33,6 +33,8 @@
             [ring.middleware.session.store :as rms]
             [clojure.string :as str]
             [freecoin.storage :as storage]
+            [freecoin.db.mongo :as fm]
+            [freecoin.db.wallet :as wallet]
             [freecoin.integration.storage-helpers :as sh]
             [freecoin.blockchain :as blockchain]
             [freecoin.core :as core]))
@@ -86,23 +88,18 @@
                        core/disconnect-db)))
 
 (defn create-and-sign-in [app-state session-label wallet-details]
-  (let [db (:db-connection app-state)
+  (let [{:keys [sso-id name email]} wallet-details
+        db (:db-connection app-state)
+        wallet-store (fm/create-wallet-store (:db db))
+        blockchain (blockchain/new-stub db)
         session-store (get-in app-state [:session-stores session-label])
-        new-wallet (blockchain/create-account
-                    (blockchain/new-stub db)
-                    {:_id ""
-                     :name (:name wallet-details)
-                     :email (:email wallet-details)
-                     :public-key nil
-                     :private-key nil
-                     :blockchains {}
-                     :blockchain-keys {}})
-        secret (get-in new-wallet [:blockchain-keys :STUB])
+        wallet (wallet/new-empty-wallet! wallet-store sso-id name email)
+        wallet-with-blockchain (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid wallet))
+        secret (get-in wallet-with-blockchain [:blockchain-keys :STUB])
         secret-without-cookie (dissoc secret :cookie)
         cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
-    (storage/insert db "wallets"
-                    (assoc new-wallet :_id (:_id secret)))
-    (reset! session-store {:cookie-data cookie-data})
+    (reset! session-store {:signed-in-uid (:uid wallet-with-blockchain)
+                           :cookie-data cookie-data})
     app-state))
 
 ;; Midje checkers

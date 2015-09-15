@@ -49,6 +49,7 @@
    [freecoin.random :as rand]
    [freecoin.views :as views]
    [freecoin.utils :as utils]
+   [freecoin.context-helpers :as ch]
    [freecoin.auth :as auth]
 
    )
@@ -84,19 +85,19 @@
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})
 
-(defresource post-transaction-form [request]
-  :service-available? {::db (get-in request [:config :db-connection])
-                       ::content-type (get-in request [:headers "content-type"])}
+(defresource post-transaction-form [wallet-store]
+  :service-available? (fn [ctx] {::db (get-in ctx [:request :config :db-connection])
+                                 ::content-type (get-in ctx [:request :headers "content-type"])})
 
   :allowed-methods       [:post]
   :available-media-types ["application/json"]
 
-  :authorized?           (:result  (auth/check request))
-  :unauthorized          (:problem (auth/check request))
+  :authorized?           (fn [ctx] (:result  (auth/check wallet-store (ch/context->signed-in-uid ctx))))
+  :unauthorized          (fn [ctx] (:problem (auth/check wallet-store (ch/context->signed-in-uid ctx))))
 
   :allowed? (fn [ctx]
               (let [{:keys [status data problems]}
-                    (views/parse-hybrid-form request
+                    (views/parse-hybrid-form (:request ctx) 
                                              (transaction-form-spec nil)
                                              (::content-type ctx))]
                 (case status

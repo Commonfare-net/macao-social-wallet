@@ -53,6 +53,7 @@
 
    ;; Handlers
    [freecoin.handlers.sign-in :as sign-in]
+   [freecoin.handlers.participant-query :as participant-query]
    ;; SPIKE: learning about Mozilla persona
    ;; [freecoin.persona-spike :as persona-spike]
 
@@ -113,17 +114,17 @@
      (POST "/signin" [request] (wallet/post-create request))
 
      ;; Search function
-     (GET "/participants" [request] (wallet/participants-form request))
+     (GET "/participants" [request] (participant-query/query-form wallet-store))
      ;; this will read field and value, url encoded
-     (GET "/participants/find" [request] (wallet/participants-find request))
+     (GET "/participants/find" [request] (participant-query/participants wallet-store))
      ;; all is simply find without arguments
-     (GET "/participants/all"  [request] (wallet/participants-find request))
+     (GET "/participants/all"  [request] (participant-query/participants wallet-store))
 
      ;; Transactions
      (GET  "/send" [request] (transactions/get-transaction-form request nil))
      (GET  "/send/to/:participant" [participant :as request]
            (transactions/get-transaction-form request participant))
-     (POST "/send" [request] (transactions/post-transaction-form request))
+     (POST "/send" [request] (transactions/post-transaction-form wallet-store))
 
      (GET  "/transactions/all" [request]
            (transactions/get-all-transactions request))
@@ -141,12 +142,6 @@
      (ANY "/nxt/:cmd1/:key1/:val1/:key2/:val2"
           [cmd1 key1 val1 key2 val2 :as request]
           (nxt/api request {"requestType" cmd1 key1 val1 key2 val2}))
-
-     ;; Persona spike
-     ;; persona-spike/routes
-
-     ;; Twitter oauth example
-     (context "/twitter" [] twitter/routes)
 
      ;; Signing in using Stonecutter
      (GET "/landing-page" [request] (sign-in/landing-page wallet-store blockchain))

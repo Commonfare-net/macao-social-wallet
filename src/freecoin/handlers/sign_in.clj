@@ -36,18 +36,16 @@
             [freecoin.storage :as storage]
             [freecoin.blockchain :as blockchain]
             [freecoin.utils :as utils]
+            [freecoin.context-helpers :as ch]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
             [freecoin.views.balance-page :as balance-page]))
-
-(defn context->signed-in-uid [ctx]
-  (get-in ctx [:request :session :signed-in-uid]))
 
 (lc/defresource landing-page [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
-             (if-let [uid (context->signed-in-uid ctx)]
+             (if-let [uid (ch/context->signed-in-uid ctx)]
                (let [wallet (wallet/fetch wallet-store uid)]
                  {::wallet wallet 
                   ::balance (blockchain/get-balance blockchain wallet)})
@@ -66,20 +64,6 @@
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
                (lr/ring-response (soc/authorisation-redirect-response sso-config))))
-
-(defn empty-wallet [name email]
-  {:_id ""            ;; unique id
-   :name  name        ;; identifier, case insensitive, space counts
-   :email email       ;; verified email account
-   :info nil          ;; misc information text on the account
-   :creation-date nil ;; date on which the wallet was created
-   :last-login nil    ;; last time this participant logged in succesfully
-   :last-login-ip nil ;; connection ip address of the last succesful login
-   :failed-logins nil ;; how many consecutive failed logins were attempted
-   :public-key nil    ;; public asymmetric key for off-the-blockchain encryption
-   :private-key nil   ;; private asymmetric key for off-the-blockchain encryption
-   :blockchains {}       ;; list of blockchains and public account ids
-   :blockchain-keys {}}) ;; list of keys for private blockchain operations
 
 (defn wallet->access-key [blockchain wallet]
   (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]

@@ -36,10 +36,10 @@
             [freecoin.storage :as storage]))
 
 (def donor-wallet
-  {:name "donor" :email "donor@email.com"})
+  {:sso-id "donor-sso-id" :name "donor" :email "donor@email.com"})
 
 (def recipient-wallet
-  {:name "recipient" :email "recipient@email.com"})
+  {:sso-id "recipient-sso-id" :name "recipient" :email "recipient@email.com"})
 
 (def json-body (json/generate-string {:recipient "recipient"
                                       :amount "10.0"}))

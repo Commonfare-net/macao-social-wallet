@@ -99,14 +99,14 @@
   ;; return an updated wallet map
   (create-account [bk wallet]
     {:pre [(contains? wallet :name)]}
-
+    
     (if (contains? (:blockchains wallet) (keyword (recname bk)))
       ;; Just return the wallet if an account for this blockchain is already present
       wallet
 
       ;; else
       (let [secret (fxc/create-secret param/encryption (recname bk))
-            blockchain-type (keyword (recname bk))]
+            blockchain-type (label bk)]
         (-> wallet
             (assoc-in [:blockchains blockchain-type] (:_id secret))
             (assoc-in [:blockchain-keys blockchain-type] secret))
@@ -197,7 +197,7 @@
       (let [secret (fxc/create-secret param/encryption blockchain-label)]
         (-> wallet
             (assoc-in [:blockchains blockchain-label] (:_id secret))
-            (assoc-in [:blockchain-secrets blockchain-label] secret)))))
+            (assoc-in [:blockchain-keys blockchain-label] secret)))))
 
   (get-account [bk wallet] (get-in wallet [:blockchains blockchain-label]))
   

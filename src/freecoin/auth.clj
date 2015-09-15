@@ -26,14 +26,10 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.auth
-  (:require
-
-   [clojure.string :as str]
-
-   [freecoin.storage :as storage]
-   [freecoin.utils :as util]
-   )
-  )
+  (:require [clojure.string :as str]
+            [freecoin.storage :as storage]
+            [freecoin.db.wallet :as wallet]
+            [freecoin.utils :as util]))
 
 ;; TODO:  use throw/catch exceptions
 ;; which will then go to :handle-exception
@@ -91,13 +87,23 @@
          secret))
    ))
 
-(defn check [request]
-  (let [apikey (get-apikey request)]
-    (if (empty? apikey) {:result false
-                         :problem "Authorization failed: no cookie found in session."}
-        (let [wallet (get-wallet request apikey)]
-          (if (empty? wallet) {:result false
-                               :problem "Authorization failed: wallet not found in database."}
-              {:result true
-               :wallet wallet
-               :apikey apikey})))))
+(defn check
+  ([wallet-store uid]
+   (if-let [wallet (wallet/fetch wallet-store uid)]
+     {:result true
+      :wallet wallet}
+     {:result false
+      :problem "Authorization failed: wallet not found in database."}))
+  
+  ([request]
+   (let [apikey (get-apikey request)]
+     (if (empty? apikey)
+       {:result false
+        :problem "Authorization failed: no cookie found in session."}
+       (let [wallet (get-wallet request apikey)]
+         (if (empty? wallet)
+           {:result false
+            :problem "Authorization failed: wallet not found in database."}
+           {:result true
+            :wallet wallet
+            :apikey apikey}))))))
