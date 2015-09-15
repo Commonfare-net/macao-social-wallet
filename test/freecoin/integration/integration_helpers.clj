@@ -96,8 +96,8 @@
                      :public-key nil
                      :private-key nil
                      :blockchains {}
-                     :blockchain-secrets {}})
-        secret (get-in new-wallet [:blockchain-secrets :STUB])
+                     :blockchain-keys {}})
+        secret (get-in new-wallet [:blockchain-keys :STUB])
         secret-without-cookie (dissoc secret :cookie)
         cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
     (storage/insert db "wallets"
