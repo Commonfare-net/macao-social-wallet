@@ -22,7 +22,10 @@
         email (str "wallet-" index "@email.com")]
     {:sso-id sso-id :name name :email email}))
 
-(facts "about the participant query form")
+(facts "about the participant query form"
+       (fact "can be accessed whether or not you are signed in"
+             (let [response (pq/query-form (th/create-request :get "/participants-query" {}))]
+               (:status response) => 200)))
 
 (facts "about the participants query handler"
        (fact "without any query parameters, lists all participants"

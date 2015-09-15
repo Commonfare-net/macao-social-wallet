@@ -34,18 +34,7 @@
    [cheshire.core :as cheshire]
    [autoclave.core :as autoclave]
 
-   [json-html.core :as present]
-
-   ))
-
-(def response-representation
-  {"application/json" "application/json"
-   "application/x-www-form-urlencoded" "text/html"})
-
-(defn simple-form-template [{:keys [heading form-spec] :as content}]
-  [:div
-   [:h1 heading]
-   (fc/render-form form-spec)])
+   [json-html.core :as present]))
 
 (defn confirm-button [{:keys [action data] :as confirmation}]
   (page/html5
@@ -56,26 +45,33 @@
      (page/include-css "/static/css/bootstrap.min.css")
      (page/include-css "/static/css/bootstrap-responsive.min.css")
      (page/include-css "/static/css/freecoin.css")
-     (page/include-css "/static/css/json-html.css")
-     ]
-    [:body [:div {:class "container-fluid"}
-            [:h1 (str "Confirm " action)]
-            [:div {:class "form-shell form-horizontal bootstrap-form"}
-             (present/edn->html data)
-             [:form {:action "/confirmations" :method "post"}
-              [:input {:name "id" :type "hidden"
-                       :value (:_id confirmation)}]
-              [:fieldset {:class "fieldset-submit"}
-               [:div {:class "form-actions submit-group control-group submit-row" :id "row-field-submit"}
-                [:div {:class "empty-shell"}]
-                [:div {:class="input-shell"}
-                 [:input {:class "btn btn-primary" :id "field-submit"
-                          :name "submit" :type "submit"
-                          :value "Confirm"}]]]]]]]])
-  )
+     (page/include-css "/static/css/json-html.css")]
+    [:body
+     [:div {:class "container-fluid"}
+      [:h1 (str "Confirm " action)]
+      [:div {:class "form-shell form-horizontal bootstrap-form"}
+       (present/edn->html data)
+       [:form {:action "/confirmations" :method "post"}
+        [:input {:name "id" :type "hidden"
+                 :value (:_id confirmation)}]
+        [:fieldset {:class "fieldset-submit"}
+         [:div {:class "form-actions submit-group control-group submit-row" :id "row-field-submit"}
+          [:div {:class "empty-shell"}]
+          [:div {:class="input-shell"}
+           [:input {:class "btn btn-primary" :id "field-submit"
+                    :name "submit" :type "submit"
+                    :value "Confirm"}]]]]]]]]))
 
+(def response-representation
+  {"application/json" "application/json"
+   "application/x-www-form-urlencoded" "text/html"})
 
-(defn render-page [{:keys [title body] :as content}]
+(defn simple-form-template [{:keys [heading form-spec] :as content}]
+  [:div
+   [:h1 heading]
+   (fc/render-form form-spec)])
+
+(defn render-page [{:keys [title heading body] :as content}]
   (page/html5
     [:head [:meta {:charset "utf-8"}]
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
@@ -84,30 +80,15 @@
      (page/include-css "/static/css/bootstrap.min.css")
      (page/include-css "/static/css/bootstrap-responsive.min.css")
      (page/include-css "/static/css/freecoin.css")
-     (page/include-css "/static/css/json-html.css")
-     ]
-    [:body [:div {:class "container-fluid"}
-            [:h1 title]
-            ;; all the rest
-            body]])
-  )
-
+     (page/include-css "/static/css/json-html.css")]
+    [:body
+     [:div {:class "container-fluid"}
+      [:h1 (or heading title)]
+      body]]))
 
 (defn render-template [template {:keys [title] :as content}]
   (render-page {:title (:title content)
-                :body  (template content)}
-               ))
-  ;; (page/html5
-  ;;   [:head [:meta {:charset "utf-8"}]
-  ;;    [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
-  ;;    [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
-  ;;    [:title title]
-  ;;    (page/include-css "/static/css/bootstrap.min.css")
-  ;;    (page/include-css "/static/css/bootstrap-responsive.min.css")
-  ;;    (page/include-css "/static/css/freecoin.css")
-  ;;    ]
-  ;;   [:body [:div {:class "container-fluid"}
-  ;;           (template content)]]))
+                :body  (template content)}))
 
 (defn parse-hybrid-form [request form-spec content-type]
   (case content-type
@@ -129,5 +110,4 @@
 
     {:status :error
      :problems [{:keys []
-                 :msg (str "unknown content type: " content-type)}]}
-    ))
+                 :msg (str "unknown content type: " content-type)}]}))

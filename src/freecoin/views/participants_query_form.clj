@@ -1,0 +1,17 @@
+(ns freecoin.views.participants-query-form
+  (:require [freecoin.views :as fv]
+            [formidable.core :as fc]))
+
+(def participants-form-spec
+  {:fields [{:name :field
+             :type :select
+             :options ["name" "email"]}
+            {:name :value :type :text}]
+   :validations [[:required [:field :value]]]
+   :action "/participants/find"
+   :method "get"})
+
+(defn build [_content]
+  {:title "Find wallet"
+   :heading "Search for a wallet"
+   :body (fc/render-form participants-form-spec)})

@@ -34,19 +34,25 @@
             [freecoin.db.wallet :as wallet]
             [freecoin.storage :as storage]
             [freecoin.views :as fv]
+            [freecoin.views.participants-query-form :as participants-query-form]
             [freecoin.views.participants-list :as participants-list]))
 
-(defn context->wallet-query [context]
-  (if-let [{:keys [field value]} (-> context
-                                     (get-in [:request :params])
+(lc/defresource query-form
+  :handle-ok (fn [ctx]
+               (-> {}
+                   participants-query-form/build
+                   fv/render-page)))
+
+(defn request->wallet-query [request]
+  (if-let [{:keys [field value]} (-> request :params
                                      (utils/select-all-or-nothing [:field :value]))]
     {(keyword field) value}
     {}))
 
 (lc/defresource participants [wallet-store]
   :exists? (fn [ctx]
-             {::wallets (->> ctx
-                             context->wallet-query
+             {::wallets (->> ctx :request
+                             request->wallet-query
                              (wallet/query wallet-store))})
   :handle-ok (fn [ctx]
                (-> {:wallets (::wallets ctx)}
