@@ -46,7 +46,7 @@
   (create-account [bk])
 
   (get-address [bk wallet])
-  (get-balance [bk wallet])
+  (get-balance [bk account-id])
 
   ;; transactions
   (list-transactions [bk wallet])
@@ -102,16 +102,16 @@
       ))
 
   (get-address [bk wallet] nil)
-  (get-balance [bk wallet]
+  (get-balance [bk account-id]
     ;; we use the aggregate function in mongodb, sort of simplified map/reduce
     (let [received-map (first (storage/aggregate db "transactions"
                                       [{"$group" {:_id "$to"
                                                   :total {"$sum" "$amount"}}}
-                                       {"$match" {:_id (:name wallet)}}]))
+                                       {"$match" {:_id account-id}}]))
           sent-map  (first (storage/aggregate db "transactions"
                                    [{"$group" {:_id "$from"
                                                :total {"$sum" "$amount"}}}
-                                    {"$match" {:_id (:name wallet)}}]))
+                                    {"$match" {:_id account-id}}]))
           received (if (nil? received-map) 0 (:total received-map))
           sent      (if (nil? sent-map) 0 (:total sent-map))]
       ;; return the balance
@@ -175,7 +175,7 @@
        :account-secret secret}))
 
   (get-address [bk wallet] nil)
-  (get-balance [bk wallet] 0) ;; TODO: Will be implemented when driving out transaction code
+  (get-balance [bk account-id] 0) ;; TODO: Will be implemented when driving out transaction code
 
   ;; transactions
   (list-transactions [bk wallet] ;; TODO

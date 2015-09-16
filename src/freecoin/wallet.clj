@@ -335,14 +335,15 @@
 
   :handle-ok
   (fn [ctx]
-    (let [wallet (auth/get-wallet request)]
+    (let [wallet (auth/get-wallet request)
+          account-id (get-in wallet [:blockchain :STUB])]
       ;; (utils/log! 'ACK 'balance-show (clojure.pprint/pprint wallet))
       (views/render-template
        balance-template {:title "Balance"
                          :wallet wallet
                          :balance (blockchain/get-balance
                                    (blockchain/new-stub (::db ctx))
-                                   wallet)}
+                                   account-id)}
        )))
   )
 

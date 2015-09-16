@@ -46,9 +46,10 @@
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
              (if-let [uid (ch/context->signed-in-uid ctx)]
-               (let [wallet (wallet/fetch wallet-store uid)]
-                 {::wallet wallet 
-                  ::balance (blockchain/get-balance blockchain wallet)})
+               (let [wallet (wallet/fetch wallet-store uid)
+                     account-id (get-in wallet [:blockchain (blockchain/label blockchain)])]
+                 {::wallet wallet
+                  ::balance (blockchain/get-balance blockchain account-id)})
                {}))
   :handle-ok (fn [ctx]
                (if-let [wallet (::wallet ctx)]
