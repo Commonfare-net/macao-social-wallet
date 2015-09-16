@@ -43,9 +43,8 @@
   
   ;; account
   (import-account [bk wallet secret])
-  (create-account [bk wallet])
+  (create-account [bk])
 
-  (get-account [bk wallet])
   (get-address [bk wallet])
   (get-balance [bk wallet])
 
@@ -78,7 +77,6 @@
      blockchain
      currency])
 
-
 ;; this is here jut to explore how introspection works in clojure records
 ;; basically one could just explicit the string "STUB" where this is used
 (defn recname [record]
@@ -87,7 +85,7 @@
   )
 
 ;; TODO
-(defrecord nxt  [server port])
+(defrecord nxt [server port])
 
 ;; inherits from Blockchain and implements its methods
 (defrecord stub [db]
@@ -96,25 +94,12 @@
   
   (import-account [bk wallet secrets] nil)
 
-  ;; return an updated wallet map
-  (create-account [bk wallet]
-    {:pre [(contains? wallet :name)]}
-    
-    (if (contains? (:blockchains wallet) (keyword (recname bk)))
-      ;; Just return the wallet if an account for this blockchain is already present
-      wallet
-
-      ;; else
-      (let [secret (fxc/create-secret param/encryption (recname bk))
-            blockchain-type (label bk)]
-        (-> wallet
-            (assoc-in [:blockchains blockchain-type] (:_id secret))
-            (assoc-in [:blockchain-keys blockchain-type] secret))
-        ;; TODO: wrap all this with symmetric encryption using secrets
-        )))
-
-  (get-account [bk wallet]
-    (get-in wallet [:blockchains (keyword (recname bk))]))
+  (create-account [bk]
+    (let [secret (fxc/create-secret param/encryption (recname bk))]
+      {:account-id (:_id secret)
+       :account-secret secret}
+      ;; TODO: wrap all this with symmetric encryption using secrets
+      ))
 
   (get-address [bk wallet] nil)
   (get-balance [bk wallet]
@@ -133,9 +118,6 @@
       (- received sent)
       ))
       
-
-;;    (let [id (get-account bk wallet)]
-
   (list-transactions [bk wallet] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
 
   (get-transaction   [bk wallet txid] nil)
@@ -174,10 +156,6 @@
   "Check that the blockchain is available, then return a record"
   (stub. db)
   )
-;; example
-;;  (b/create-account (b/_create "STUB" "sadsd" 444)
-;;                    (w/new "csdaz" "ca@sdasd") {})
-
 
 ;; (defrecord account
 ;;     [_id public-key private-key
@@ -191,16 +169,11 @@
   
   ;; account
   (import-account [bk wallet secret] nil)
-  (create-account [bk wallet]
-    (if (contains? (:blockchains wallet) blockchain-label)
-      wallet
-      (let [secret (fxc/create-secret param/encryption blockchain-label)]
-        (-> wallet
-            (assoc-in [:blockchains blockchain-label] (:_id secret))
-            (assoc-in [:blockchain-keys blockchain-label] secret)))))
+  (create-account [bk]
+    (let [secret (fxc/create-secret param/encryption blockchain-label)]
+      {:account-id (:_id secret)
+       :account-secret secret}))
 
-  (get-account [bk wallet] (get-in wallet [:blockchains blockchain-label]))
-  
   (get-address [bk wallet] nil)
   (get-balance [bk wallet] 0) ;; TODO: Will be implemented when driving out transaction code
 

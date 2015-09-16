@@ -70,17 +70,6 @@
     (s/join "::" [(:cookie secret) (:_id secret)])))
 
 (defn sign-up [wallet-store blockchain sso-id name email]
-  ;; TODO: 2015-09-07 DM - The current implementation of the
-  ;; blockchain 'create-account' method includes the 'cookie' part of
-  ;; the secret with the wallet when the blockchain account is
-  ;; created.  By my understanding, the participant's access token
-  ;; should be given only to the participant when the wallet is
-  ;; created, and not stored. A small refactoring of
-  ;; freecoin.db.wallet and freecoin.blockchain would probably be the
-  ;; cleanest way to implement this, giving blockchain the
-  ;; responsibility of creating the account and secrets for accessing
-  ;; it, and the db.wallet the responsibility for adding the
-  ;; appropriate data to the wallet itself.
   (when-let [empty-wallet (wallet/new-empty-wallet! wallet-store sso-id name email)]
     (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid empty-wallet))))
 

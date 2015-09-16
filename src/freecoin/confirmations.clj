@@ -189,17 +189,13 @@
 
         ;; process signin confirmations
         "signin"
-        (let [new-account
-              (blockchain/create-account
-               (blockchain/new-stub db)
-               (empty-wallet (:name data) (:email data)))
-              secret (get-in new-account [:blockchain-keys :STUB])
-              secret-without-cookie (dissoc secret :cookie)
-              cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
+        (let [{:keys [account-id account-secret]} (blockchain/create-account (blockchain/new-stub db))
+              secret-without-cookie (dissoc account-secret :cookie)
+              cookie-data (str/join "::" [(:cookie account-secret) account-id])]
           (utils/log! ::ACK 'signin cookie-data)
 
           ;; TODO consistent error reporting
-          (if (contains? new-account :problem)
+          #_(if false ;(contains? new-account :problem) ;; WIP DM 20150816 - refactoring blockchain
             ;; TODO consistent error reporting
             (utils/log! (::error new-account))
             (do
@@ -223,7 +219,9 @@
               ;; see if it produces a valid passphrase
               ;; that is recognized by the
               ;; blockchain. If yes, restore the account.
-              )))
+              ))
+          (ring-response {:session {:cookie-data cookie-data}
+                          :apikey cookie-data}))
 
         ;; process transaction confirmations
         "transaction"

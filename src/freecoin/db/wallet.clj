@@ -59,5 +59,13 @@
   ([wallet-store] (query wallet-store {}))
   ([wallet-store query-m] (mongo/query wallet-store query-m)))
 
+(defn- wip-insert-account [blockchain-label account-id account-secret wallet]
+  (-> wallet
+      (assoc-in [:blockchains blockchain-label] account-id)
+      (assoc-in [:blockchain-keys blockchain-label] account-secret)))
+
 (defn add-blockchain-to-wallet-with-id! [wallet-store blockchain uid]
-  (mongo/update! wallet-store uid (partial blockchain/create-account blockchain)))
+  (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
+        blockchain-label (blockchain/label blockchain)]
+    (mongo/update! wallet-store uid
+                   (partial wip-insert-account blockchain-label account-id account-secret))))
