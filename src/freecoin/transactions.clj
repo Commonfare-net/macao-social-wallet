@@ -35,17 +35,15 @@
    [formidable.parse :as fp]
 
    [liberator.dev]
-   [liberator.core :refer [resource defresource]]
-   [liberator.representation :refer [as-response ring-response]]
+   [liberator.core :refer [defresource]]
+   [liberator.representation :refer [ring-response]]
 
    [simple-time.core :as time]
 
    [freecoin.blockchain :as blockchain]
    [freecoin.confirmations :as confirms]
-   [freecoin.secretshare :as ssss]
    [freecoin.storage :as storage]
    [freecoin.params :as params]
-   [freecoin.random :as rand]
    [freecoin.views :as views]
    [freecoin.utils :as utils]
    [freecoin.context-helpers :as ch]

@@ -3,3 +3,5 @@
 (defn context->signed-in-uid [ctx]
   (get-in ctx [:request :session :signed-in-uid]))
 
+(defn context->cookie-data [ctx]
+  (get-in ctx [:request :session :cookie-data]))
