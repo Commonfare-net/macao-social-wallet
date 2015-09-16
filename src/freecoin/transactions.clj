@@ -204,9 +204,7 @@
                             (blockchain/new-stub db) wallet
                             (:amount params) (:recipient params)
                             nil) ;; secret is not used in STUB
-                           )))
-                    )
-  )
+                           )))))
 
 (defn render-transaction [tx]
   (let [date (time/parse (:timestamp tx))]

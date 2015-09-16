@@ -22,7 +22,6 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 (ns freecoin.blockchain
   (:require
    [clojure.string :as str]
@@ -33,30 +32,27 @@
    [freecoin.storage :as storage]
    [freecoin.utils :as utils]
    
-   [simple-time.core :as time]
-   )
-  )
+   [simple-time.core :as time]))
 
 (defprotocol Blockchain
   ;; blockchain identifier
   (label [bk])
   
   ;; account
-  (import-account [bk wallet secret])
+  (import-account [bk account-id secret])
   (create-account [bk])
 
-  (get-address [bk wallet])
+  (get-address [bk account-id])
   (get-balance [bk account-id])
 
   ;; transactions
-  (list-transactions [bk wallet])
-  (get-transaction   [bk wallet txid])
-  (make-transaction  [bk wallet amount recipient secret])
+  (list-transactions [bk account-id])
+  (get-transaction   [bk account-id txid])
+  (make-transaction  [bk from-account-id amount to-account-id secret])
 
   ;; vouchers
-  (create-voucher [bk wallet amount expiration secret])
-  (redeem-voucher [bk wallet voucher])
-  )
+  (create-voucher [bk account-id amount expiration secret])
+  (redeem-voucher [bk account-id voucher]))
 
 (defrecord voucher
     [_id
@@ -92,7 +88,7 @@
   Blockchain
   (label [bk] (keyword (recname bk)))
   
-  (import-account [bk wallet secrets] nil)
+  (import-account [bk account-id secrets] nil)
 
   (create-account [bk]
     (let [secret (fxc/create-secret param/encryption (recname bk))]
@@ -101,7 +97,7 @@
       ;; TODO: wrap all this with symmetric encryption using secrets
       ))
 
-  (get-address [bk wallet] nil)
+  (get-address [bk account-id] nil)
   (get-balance [bk account-id]
     ;; we use the aggregate function in mongodb, sort of simplified map/reduce
     (let [received-map (first (storage/aggregate db "transactions"
@@ -118,39 +114,25 @@
       (- received sent)
       ))
       
-  (list-transactions [bk wallet] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
+  (list-transactions [bk account-id] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
 
-  (get-transaction   [bk wallet txid] nil)
+  (get-transaction   [bk account-id txid] nil)
 
-  (make-transaction  [bk wallet amount recipient secret]
-    (let [sender-name (:name wallet)
-          sender-id (:_id wallet)
-          recipient-card (storage/find-by-key db "wallets" {:name recipient})
-          now (time/format (time/now))]
-      (if (> (count recipient-card) 1)
-        {:error true
-         :status 401 ;; this should never occurr really since we check
-                     ;; omonimy on creation
-         :body "Error: recipient name is ambiguous"}
+  (make-transaction  [bk from-account-id amount to-account-id secret]
+    (let [now (time/format (time/now))]
+      ;; TODO: Keep track of accounts to verify validity of from- and
+      ;; to- accounts
+      (storage/insert db "transactions"
+       {:_id (str now "-" from-account-id)
+        :blockchain "STUB"
+        :timestamp now
+        :from-id from-account-id
+        :to-id to-account-id
+        :amount amount})))
 
-        ;; else
-         (storage/insert
-          db "transactions"
-          {:_id (str now "-" sender-name)
-           :blockchain "STUB"
-           :timestamp now
-           :from sender-name
-           :from-id sender-id
-           :to recipient
-           :to-id (:_id (first recipient-card))
-           :amount amount}))
-      ;; returns the data structure that was inserted
-        )
-      )
-
-  (create-voucher [bk wallet amount expiration secret] nil)
-  (redeem-voucher [bk wallet voucher] nil)
-  )
+  (create-voucher [bk account-id amount expiration secret] nil)
+  
+  (redeem-voucher [bk account-id voucher] nil))
 
 (defn new-stub [db]
   "Check that the blockchain is available, then return a record"
@@ -168,25 +150,25 @@
   (label [bk] blockchain-label)
   
   ;; account
-  (import-account [bk wallet secret] nil)
+  (import-account [bk account-id secret] nil)
   (create-account [bk]
     (let [secret (fxc/create-secret param/encryption blockchain-label)]
       {:account-id (:_id secret)
        :account-secret secret}))
 
-  (get-address [bk wallet] nil)
+  (get-address [bk account-id] nil)
   (get-balance [bk account-id] 0) ;; TODO: Will be implemented when driving out transaction code
 
   ;; transactions
-  (list-transactions [bk wallet] ;; TODO
+  (list-transactions [bk account-id] ;; TODO
     )
-  (get-transaction   [bk wallet txid] nil)
-  (make-transaction  [bk wallet amount recipient secret] ;; TODO
+  (get-transaction   [bk account-id txid] nil)
+  (make-transaction  [bk from-account-id amount to-account-id secret] ;; TODO
     )
 
   ;; vouchers
-  (create-voucher [bk wallet amount expiration secret])
-  (redeem-voucher [bk wallet voucher]))
+  (create-voucher [bk account-id amount expiration secret])
+  (redeem-voucher [bk account-id voucher]))
 
 (defn create-in-memory-blockchain
   ([label] (create-in-memory-blockchain label (atom {}) (atom {})))

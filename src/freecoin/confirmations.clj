@@ -224,11 +224,17 @@
                           :apikey cookie-data}))
 
         ;; process transaction confirmations
+        ;; WIP: Removing knowledge of wallet internals from blockchain
+        ;; --- need account ids, not wallets.  This is currently
+        ;; broken.
         "transaction"
         (let [wallet (auth/get-wallet request)
+              from-account-id (get-in wallet [:blockchain :STUB])
+              to-account-id "NOT-IMPLEMENTED"
               tr (blockchain/make-transaction
                   (blockchain/new-stub db) wallet
-                  (:amount data) (:recipient data)
+                  (:amount data)
+                  to-account-id
                   nil)]
           ;; TODO: return a well formatted page
           tr)
