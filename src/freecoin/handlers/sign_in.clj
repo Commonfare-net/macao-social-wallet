@@ -70,10 +70,6 @@
   (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]
     (s/join "::" [(:cookie secret) (:_id secret)])))
 
-(defn sign-up [wallet-store blockchain sso-id name email]
-  (when-let [empty-wallet (wallet/new-empty-wallet! wallet-store sso-id name email)]
-    (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid empty-wallet))))
-
 (lc/defresource sso-callback [wallet-store blockchain sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
@@ -91,9 +87,9 @@
                    name (first (s/split email #"@"))]
                (if-let [wallet (wallet/fetch-by-sso-id wallet-store sso-id)]
                  {::uid (:uid wallet)}
-                 (when-let [wallet (sign-up wallet-store blockchain sso-id name email)]
+                 (when-let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain sso-id name email)]
                    {::uid (:uid wallet)
-                    ::cookie-data (wallet->access-key blockchain wallet)}))))
+                    ::cookie-data apikey}))))
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (cond-> (r/redirect "/landing-page")

@@ -42,12 +42,19 @@
 ;   :failed-logins nil ;; how many consecutive failed logins were attempted
    :public-key nil    ;; public asymmetric key for off-the-blockchain encryption
    :private-key nil   ;; private asymmetric key for off-the-blockchain encryption
-   :blockchains {}       ;; list of blockchains and public account ids
-   :blockchain-keys {}}) ;; list of keys for private blockchain operations
+   :account-id nil    ;; blockchain account id
+   })
 
-(defn new-empty-wallet! [wallet-store sso-id name email]
-  (let [wallet (empty-wallet (uuid/uuid) sso-id name email)]
-    (mongo/store! wallet-store :uid wallet)))
+(defn secret->apikey [secret]
+  (str (:cookie secret) "::" (:_id secret)))
+
+(defn new-empty-wallet!
+  ([wallet-store blockchain sso-id name email]
+   (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
+         wallet (-> (empty-wallet (uuid/uuid) sso-id name email)
+                    (assoc :account-id account-id))]
+     {:wallet (mongo/store! wallet-store :uid wallet)
+      :apikey (secret->apikey account-secret)})))
 
 (defn fetch [wallet-store uid]
   (mongo/fetch wallet-store uid))

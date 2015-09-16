@@ -12,9 +12,9 @@
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.participant-query :as pq]))
 
-(defn create-wallet [wallet-store wallet-data]
+(defn create-wallet [wallet-store blockchain wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
-    (w/new-empty-wallet! wallet-store sso-id name email)))
+    (:wallet (w/new-empty-wallet! wallet-store blockchain sso-id name email))))
 
 (defn index->wallet-data [index]
   (let [sso-id (str "sso-id-" index)
@@ -25,8 +25,9 @@
 (facts "about the participant query form"
        (fact "can be accessed by signed-in users"
              (let [wallet-store (fm/create-memory-store)
-                   wallet (w/new-empty-wallet! wallet-store
-                                               "stonecutter-user-id" "name" "test@email.com")
+                   blockchain (fb/create-in-memory-blockchain :bk)
+                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
+                                                        "stonecutter-user-id" "name" "test@email.com"))
                    query-form-handler (pq/query-form wallet-store)
                    response (-> (th/create-request
                                  :get "/participants-query"
@@ -51,9 +52,10 @@
        
        (fact "without any query parameters, lists all participants"
              (let [wallet-store (fm/create-memory-store)
+                   blockchain (fb/create-in-memory-blockchain :bk)
                    wallets (doall (->> (range 5)
                                        (map index->wallet-data)
-                                       (map (partial create-wallet wallet-store))))
+                                       (map (partial create-wallet wallet-store blockchain))))
                    participants-handler (pq/participants wallet-store)
                    response (-> (th/create-request
                                  :get "/participants"
@@ -66,10 +68,11 @@
         
         (fact "can query by name or email"
               (let [wallet-store (fm/create-memory-store)
+                    blockchain (fb/create-in-memory-blockchain :bk)
                     wallet-data [{:name "James Jones" :email "james@jones.com" :sso-id "sso-id-1"}
                                  {:name "James Jones" :email "jim@jones.com" :sso-id "sso-id-2"}
                                  {:name "Sarah Lastname" :email "sarah@email.com" :sso-id "sso-id-3"}]
-                    wallets (doall (map (partial create-wallet wallet-store) wallet-data))
+                    wallets (doall (map (partial create-wallet wallet-store blockchain) wallet-data))
                     participants-handler (pq/participants wallet-store)
                     query-m {:field ?field :value ?value}
                     response (-> (th/create-request

@@ -93,13 +93,9 @@
         wallet-store (fm/create-wallet-store (:db db))
         blockchain (blockchain/new-stub db)
         session-store (get-in app-state [:session-stores session-label])
-        wallet (wallet/new-empty-wallet! wallet-store sso-id name email)
-        wallet-with-blockchain (wallet/add-blockchain-to-wallet-with-id! wallet-store blockchain (:uid wallet))
-        secret (get-in wallet-with-blockchain [:blockchain-keys :STUB])
-        secret-without-cookie (dissoc secret :cookie)
-        cookie-data (str/join "::" [(:cookie secret) (:_id secret)])]
-    (reset! session-store {:signed-in-uid (:uid wallet-with-blockchain)
-                           :cookie-data cookie-data})
+        {:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain sso-id name email)]
+    (reset! session-store {:signed-in-uid (:uid wallet)
+                           :cookie-data apikey})
     app-state))
 
 ;; Midje checkers

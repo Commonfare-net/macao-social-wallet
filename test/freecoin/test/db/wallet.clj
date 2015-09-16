@@ -34,18 +34,19 @@
 
 (facts "Can create and fetch an empty wallet"
        (against-background (uuid/uuid) => "a-uuid")
-       (let [wallet-store (fm/create-memory-store)]
+       (let [wallet-store (fm/create-memory-store)
+             blockchain (fb/create-in-memory-blockchain :bk)]
          (fact "can create a wallet"
-               (wallet/new-empty-wallet! wallet-store
-                                         "sso-id" "name" "test@email.com")
-               => (just {:uid "a-uuid"
-                         :sso-id "sso-id"
-                         :name "name"
-                         :email "test@email.com"
-                         :public-key nil
-                         :private-key nil
-                         :blockchains {}
-                         :blockchain-keys {}}))
+               (let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain
+                                                                       "sso-id" "name" "test@email.com")]
+                 wallet => (just {:uid "a-uuid"
+                                  :sso-id "sso-id"
+                                  :name "name"
+                                  :email "test@email.com"
+                                  :public-key nil
+                                  :private-key nil
+                                  :account-id anything})))
+         
          (fact "can fetch the wallet by its uid"
                (wallet/fetch wallet-store "a-uuid")
                => (just {:uid "a-uuid"
@@ -54,8 +55,7 @@
                          :email "test@email.com"
                          :public-key nil
                          :private-key nil
-                         :blockchains {}
-                         :blockchain-keys {}}))
+                         :account-id anything}))
          
          (fact "can fetch wallet by sso-id"
                (wallet/fetch-by-sso-id wallet-store "sso-id")
@@ -65,22 +65,22 @@
                          :email "test@email.com"
                          :public-key nil
                          :private-key nil
-                         :blockchains {}
-                         :blockchain-keys {}}))))
+                         :account-id anything}))))
 
-(defn create-wallet [wallet-store wallet-data]
+(defn create-wallet [wallet-store blockchain wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
-    (wallet/new-empty-wallet! wallet-store sso-id name email)))
+    (:wallet (wallet/new-empty-wallet! wallet-store blockchain sso-id name email))))
 
-(defn populate-wallet-store [wallet-store]
+(defn populate-wallet-store [wallet-store blockchain]
   (let [wallets-data [{:name "James Jones" :email "james@jones.com" :sso-id "sso-id-1"}
                       {:name "James Jones" :email "jim@jones.com" :sso-id "sso-id-2"}
                       {:name "Sarah Lastname" :email "sarah@email.com" :sso-id "sso-id-3"}]]
-    (doall (map (partial create-wallet wallet-store) wallets-data))))
+    (doall (map (partial create-wallet wallet-store blockchain) wallets-data))))
 
 (facts "Can query wallet collection"
        (let [wallet-store (fm/create-memory-store)
-             wallets (populate-wallet-store wallet-store)]
+             blockchain (fb/create-in-memory-blockchain :bk)
+             wallets (populate-wallet-store wallet-store blockchain)]
          
          (fact "without parameters, returns all wallets"
                (wallet/query wallet-store) => (n-of anything 3))
@@ -96,13 +96,3 @@
           {:email "bob@nothere.com"}                    0
           {:name "James Jones" :email "jim@jones.com"}  1
           {:something "else"}                           0)))
-
-(fact "Can add a new blockchain to an existing wallet"
-      (let [wallet-store (fm/create-memory-store)
-            blockchain (fb/create-in-memory-blockchain :bk)
-            wallet (wallet/new-empty-wallet! wallet-store "sso-id" "name" "test@email.com")
-            updated-wallet (wallet/add-blockchain-to-wallet-with-id! wallet-store
-                                                                     blockchain
-                                                                     (:uid wallet))]
-        (:blockchains updated-wallet) => (contains {:bk anything})
-        (:blockchain-keys updated-wallet) => (contains {:bk anything})))

@@ -33,7 +33,6 @@
    [simple-time.core :as time]
 
    [freecoin.blockchain :as blockchain]
-   [freecoin.participants :as participant]
    [freecoin.secretshare :as ssss]
    [freecoin.storage :as storage]
    [freecoin.params :as params]
