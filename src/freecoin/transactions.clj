@@ -152,8 +152,7 @@
                         (ring-response {:headers {"Location" (:location confirmation)}})
 
                         ;; TODO: handle default case
-                        )))
-  )
+                        ))))
 
 
 

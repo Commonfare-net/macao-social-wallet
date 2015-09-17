@@ -3,14 +3,15 @@
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
             [stonecutter-oauth.client :as sc]
-            [freecoin.db.uuid :as uuid]
             [freecoin.storage :as storage]
-            [freecoin.integration.storage-helpers :as sh]
-            [freecoin.db.mongo :as fm]
             [freecoin.blockchain :as fb]
+            [freecoin.db.mongo :as fm]
+            [freecoin.db.uuid :as uuid]
             [freecoin.db.wallet :as w]
+            [freecoin.handlers.sign-in :as fs]
+            [freecoin.integration.storage-helpers :as sh]
             [freecoin.test.test-helper :as th]
-            [freecoin.handlers.sign-in :as fs])
+            [freecoin.test-helpers.store :as test-store])
   (:import [freecoin.db.mongo MemoryStore]))
 
 (def sso-url "http://SSO_URL")
@@ -24,14 +25,6 @@
 (def test-sso-config (sc/configure sso-url client-id client-secret callback-uri))
 
 (def db-connection (atom nil))
-
-(defprotocol TestStore
-  (entry-count [s]
-    "Total number of entries in the store"))
-
-(extend-protocol TestStore
-  MemoryStore
-  (entry-count [this] (count @(:data this))))
 
 (facts "About signing up via a Stonecutter SSO instance"
        (facts "About the landing page"
@@ -84,7 +77,7 @@
                              response => (th/check-redirects-to "/landing-page")
                              response => (th/check-signed-in-as "a-uuid")
                              response => th/check-has-wallet-key
-                             (entry-count wallet-store) => 1))
+                             (test-store/entry-count wallet-store) => 1))
                      
                      (fact "if user exists, signs user in and redirects to landing page without creating a new wallet"
                            (let [wallet-store (fm/create-memory-store)
@@ -97,7 +90,7 @@
                              response => (th/check-redirects-to "/landing-page")
                              response => (th/check-signed-in-as (:uid wallet))
                              response =not=> th/check-has-wallet-key
-                             (entry-count wallet-store) => 1)))
+                             (test-store/entry-count wallet-store) => 1)))
               
               (fact "When authorisation code is not provided, redirects to landing page"
                     (let [wallet-store (fm/create-memory-store)

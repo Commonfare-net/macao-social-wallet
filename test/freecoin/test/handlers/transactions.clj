@@ -5,7 +5,8 @@
             [freecoin.db.wallet :as w]
             [freecoin.db.uuid :as uuid]
             [freecoin.blockchain :as fb]
-            [freecoin.handlers.transactions :as ft]))
+            [freecoin.handlers.transactions :as ft]
+            [freecoin.test-helpers.store :as test-store]))
 
 (defn setup-with-sender-and-recipient []
   (let [wallet-store (fm/create-memory-store)
@@ -56,7 +57,8 @@
 
 (facts "about post requests from the transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
-             form-post-handler (ft/post-transaction-form wallet-store)]
+             confirmation-store ...confirmation-store...
+             form-post-handler (ft/post-transaction-form wallet-store confirmation-store)]
          (fact "returns 401 when participant not authenticated"
                (-> (th/create-request :post "/post-transaction-form" {})
                    form-post-handler
@@ -68,14 +70,17 @@
                    form-post-handler
                    :status) => 401)
          
-         (fact "returns 201 when participant authenticated, has cookie-data, and posts valid form"
-               (-> (th/create-request :post "/post-transaction-form"
-                                      {:amount "5.00"
-                                       :recipient "recipient-uid"}
-                                      {:signed-in-uid "sender-uid"
-                                       :cookie-data sender-apikey})
-                   form-post-handler
-                   :status) => 201)
+         (facts "when participant is authenticated, has cookie-data, and posts a valid form"
+                (let [confirmation-store (fm/create-memory-store)
+                      form-post-handler (ft/post-transaction-form wallet-store confirmation-store)
+                      response (-> (th/create-request
+                                    :post "/post-transaction-form"
+                                    {:amount "5.00" :recipient "recipient-uid"}
+                                    {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
+                                   form-post-handler)]
+                  (fact "creates a transaction confirmation"
+                        (test-store/entry-count confirmation-store) => 1
+                        (:status response) => 201)))
 
          (tabular
           (fact "redirects to the transaction form page when posted data is invalid"

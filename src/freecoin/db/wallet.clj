@@ -26,8 +26,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.db.wallet
-  (:require [freecoin.db.uuid :as uuid]
-            [freecoin.blockchain :as blockchain]
+  (:require [freecoin.blockchain :as blockchain]
             [freecoin.db.mongo :as mongo]))
 
 (defn- empty-wallet [uid sso-id name email]
@@ -48,13 +47,12 @@
 (defn secret->apikey [secret]
   (str (:cookie secret) "::" (:_id secret)))
 
-(defn new-empty-wallet!
-  ([wallet-store blockchain uuid-generator sso-id name email]
-   (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
-         wallet (-> (empty-wallet (uuid-generator) sso-id name email)
-                    (assoc :account-id account-id))]
-     {:wallet (mongo/store! wallet-store :uid wallet)
-      :apikey (secret->apikey account-secret)})))
+(defn new-empty-wallet! [wallet-store blockchain uuid-generator sso-id name email]
+  (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
+        wallet (-> (empty-wallet (uuid-generator) sso-id name email)
+                   (assoc :account-id account-id))]
+    {:wallet (mongo/store! wallet-store :uid wallet)
+     :apikey (secret->apikey account-secret)}))
 
 (defn fetch [wallet-store uid]
   (mongo/fetch wallet-store uid))
@@ -65,14 +63,3 @@
 (defn query
   ([wallet-store] (query wallet-store {}))
   ([wallet-store query-m] (mongo/query wallet-store query-m)))
-
-(defn- wip-insert-account [blockchain-label account-id account-secret wallet]
-  (-> wallet
-      (assoc-in [:blockchains blockchain-label] account-id)
-      (assoc-in [:blockchain-keys blockchain-label] account-secret)))
-
-(defn add-blockchain-to-wallet-with-id! [wallet-store blockchain uid]
-  (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
-        blockchain-label (blockchain/label blockchain)]
-    (mongo/update! wallet-store uid
-                   (partial wip-insert-account blockchain-label account-id account-secret))))

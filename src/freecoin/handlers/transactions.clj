@@ -33,6 +33,8 @@
             [ring.util.response :as r]
             [formidable.parse :as fp]
             [freecoin.db.wallet :as wallet]
+            [freecoin.db.confirmation :as confirmation]
+            [freecoin.db.uuid :as uuid]
             [freecoin.context-helpers :as ch]
             [freecoin.views :as fv]
             [freecoin.views.transaction-form :as transaction-form]))
@@ -54,7 +56,7 @@
     {:status :ok
      :data (fp/parse-params form-spec data)}))
 
-(lc/defresource post-transaction-form [wallet-store]
+(lc/defresource post-transaction-form [wallet-store confirmation-store]
   :allowed-methods [:post]
   :authorized? (fn [ctx]
                  (when-let [uid (ch/context->signed-in-uid ctx)]
@@ -67,4 +69,12 @@
                 (when (= :ok status)
                   (when-let [recipient-wallet (wallet/fetch wallet-store (:recipient data))]
                     true))))
+  :post! (fn [ctx]
+           (let [amount (get-in ctx [::form-data :amount])
+                 recipient-uid (get-in ctx [::form-data :recipient])
+                 sender-uid (ch/context->signed-in-uid ctx)]
+             (when-let [confirmation (confirmation/new-transaction-confirmation!
+                                      confirmation-store uuid/uuid
+                                      sender-uid recipient-uid amount)]
+               {::confirmation confirmation})))
   :handle-forbidden (lr/ring-response (r/redirect "/get-transaction-form")))
