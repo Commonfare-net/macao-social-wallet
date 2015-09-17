@@ -3,6 +3,7 @@
             [freecoin.test.test-helper :as th]
             [freecoin.db.mongo :as fm]
             [freecoin.db.wallet :as w]
+            [freecoin.db.confirmation :as c]
             [freecoin.db.uuid :as uuid]
             [freecoin.blockchain :as fb]
             [freecoin.handlers.transactions :as ft]
@@ -26,7 +27,7 @@
      :recipient-wallet (:wallet recipient-details)
      :recipient-apikey (:apikey recipient-details)}))
 
-(facts "about the transaction form"
+(facts "about the create transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
              transaction-form-handler (ft/get-transaction-form wallet-store)]
          (fact "returns 401 when participant is not authenticated"
@@ -100,3 +101,37 @@
           "5.0"          "nonexistent-uid"
           "5.0"          nil
           nil            "recipient-uid")))
+
+(facts "about the confirm transaction form"
+       (let [confirmation-store (fm/create-memory-store)
+             confirmation (c/new-transaction-confirmation! confirmation-store
+                                                           (constantly "confirmation-uid")
+                                                           "sender-uid" "recipient-uid" 10.0)
+             confirm-transaction-handler (ft/get-confirm-transaction-form confirmation-store)]
+
+         (fact "displays confirm transaction form"
+               (let [response
+                     (-> (th/create-request :get "/confirm-transaction/confirmation-uid"
+                                            {:confirmation-uid "confirmation-uid"}
+                                            {:signed-in-uid "sender-uid"})
+                         confirm-transaction-handler)]
+                 (:status response) => 200
+                 (:body response) => (contains #"Confirm transaction")))
+
+         (future-fact "returns 401 when participant not signed in, or does not have apikey")
+         
+         (fact "returns 404 when confirmation does not exist"
+               (-> (th/create-request :get "/confirm-transaction/nonexisting-confirmation-uid"
+                                      {:confirmation-uid "nonexisting-confirmation-uid"}
+                                      {:signed-in-uid "sender-uid"})
+                   confirm-transaction-handler
+                   :status) => 404)
+         
+         (fact "returns 404 when confirmation sender-uid does not match signed in user's uid"
+               (-> (th/create-request :get "/confirm-transaction/confirmation-uid"
+                                      {:confirmation-uid "confirmation-uid"}
+                                      {:signed-in-uid "not-the-senders-uid"})
+                   confirm-transaction-handler
+                   :status) => 404)
+         
+         (future-fact "returns 404 when confirmation with provided uid is not a transaction confirmation")))

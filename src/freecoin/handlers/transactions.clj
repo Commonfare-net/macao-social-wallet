@@ -37,7 +37,8 @@
             [freecoin.db.uuid :as uuid]
             [freecoin.context-helpers :as ch]
             [freecoin.views :as fv]
-            [freecoin.views.transaction-form :as transaction-form]))
+            [freecoin.views.transaction-form :as transaction-form]
+            [freecoin.views.confirm-transaction-form :as confirm-transaction-form]))
 
 (lc/defresource get-transaction-form [wallet-store]
   :authorized? (fn [ctx]
@@ -78,3 +79,16 @@
                                       sender-uid recipient-uid amount)]
                {::confirmation confirmation})))
   :handle-forbidden (lr/ring-response (r/redirect "/get-transaction-form")))
+
+(lc/defresource get-confirm-transaction-form [confirmation-store]
+  :allowed-methods [:get]
+  :exists? (fn [ctx]
+             (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
+                   signed-in-uid (ch/context->signed-in-uid ctx)]
+               (when-let [confirmation (confirmation/fetch confirmation-store confirmation-uid)]
+                 (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
+                   true))))
+  :handle-ok (fn [ctx]
+               (-> {}
+                   confirm-transaction-form/build
+                   fv/render-page)))

@@ -16,4 +16,4 @@
 (defn build [_content]
   {:title "Make a transaction"
    :heading "Send freecoins"
-   :form-spec transaction-form-spec})
+   :form-spec (fc/render-form transaction-form-spec)})
