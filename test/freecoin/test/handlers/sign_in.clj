@@ -71,7 +71,7 @@
               (facts "When token request yields a valid access_token + id_token"
                      (against-background
                       (sc/request-access-token! ...sso-config... ...auth-code...) => {:access_token ...access-token...
-                                                                                      :user-info {:user-id "stonecutter-user-id"
+                                                                                      :user-info {:sub "stonecutter-user-id"
                                                                                                   :email "test@email.com"
                                                                                                   :email_verified true}})
                      (fact "if new user, creates a wallet and redirects to landing page"

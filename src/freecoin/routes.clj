@@ -82,7 +82,7 @@
 ;; routes
 (defn app [db-connection sso-configuration]
   (let [wallet-store (fm/create-wallet-store (:db db-connection))
-        blockchain (fb/new-stub (:db db-connection))]
+        blockchain (fb/new-stub db-connection)]
     (cc/routes
      ;; embedded resources from resources/public
      (compojure.route/resources "/")
@@ -105,7 +105,7 @@
 
      ;; Wallet operations
 
-     (ANY "/"       [request] (wallet/balance-show request))
+     (ANY "/"       [request] {:status 200 :body "homepage"})
 
      (GET "/qrcode" [request] (wallet/qrcode request nil))
      (GET "/qrcode/:name" [name :as request] (wallet/qrcode request name))

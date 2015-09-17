@@ -46,10 +46,9 @@
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
              (if-let [uid (ch/context->signed-in-uid ctx)]
-               (let [wallet (wallet/fetch wallet-store uid)
-                     account-id (get-in wallet [:blockchain (blockchain/label blockchain)])]
+               (let [wallet (wallet/fetch wallet-store uid)]
                  {::wallet wallet
-                  ::balance (blockchain/get-balance blockchain account-id)})
+                  ::balance (blockchain/get-balance blockchain (:account-id wallet))})
                {}))
   :handle-ok (fn [ctx]
                (if-let [wallet (::wallet ctx)]
@@ -82,7 +81,7 @@
   :handle-forbidden (lr/ring-response (r/redirect "/landing-page"))
   :exists? (fn [ctx]
              (let [token-response (::token-response ctx)
-                   sso-id (get-in token-response [:user-info :user-id])
+                   sso-id (get-in token-response [:user-info :sub])
                    email (get-in token-response [:user-info :email])
                    name (first (s/split email #"@"))]
                (if-let [wallet (wallet/fetch-by-sso-id wallet-store sso-id)]
