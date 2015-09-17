@@ -46,7 +46,7 @@
               (fact "When signed in, displays users balance"
                     (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
-                          wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
+                          wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
                                                                "stonecutter-user-id" "name" "test@email.com"))
                           landing-page-handler (fs/landing-page wallet-store blockchain)
                           response (landing-page-handler (-> (rmr/request :get "/")
@@ -89,7 +89,7 @@
                      (fact "if user exists, signs user in and redirects to landing page without creating a new wallet"
                            (let [wallet-store (fm/create-memory-store)
                                  blockchain (fb/create-in-memory-blockchain :bk)
-                                 wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
+                                 wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
                                                                       "stonecutter-user-id" "name" "test@email.com"))
                                  callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")

@@ -7,14 +7,14 @@
             [freecoin.storage :as storage]
             [freecoin.integration.storage-helpers :as sh]
             [freecoin.db.mongo :as fm]
-            [freecoin.blockchain :as fb]
             [freecoin.db.wallet :as w]
+            [freecoin.blockchain :as fb]
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.participant-query :as pq]))
 
 (defn create-wallet [wallet-store blockchain wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
-    (:wallet (w/new-empty-wallet! wallet-store blockchain sso-id name email))))
+    (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid sso-id name email))))
 
 (defn index->wallet-data [index]
   (let [sso-id (str "sso-id-" index)
@@ -26,7 +26,7 @@
        (fact "can be accessed by signed-in users"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
+                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
                                                         "stonecutter-user-id" "name" "test@email.com"))
                    query-form-handler (pq/query-form wallet-store)
                    response (-> (th/create-request

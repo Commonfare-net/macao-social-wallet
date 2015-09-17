@@ -35,6 +35,7 @@
             [freecoin.storage :as storage]
             [freecoin.db.mongo :as fm]
             [freecoin.db.wallet :as wallet]
+            [freecoin.db.uuid :as uuid]
             [freecoin.integration.storage-helpers :as sh]
             [freecoin.blockchain :as blockchain]
             [freecoin.core :as core]))
@@ -93,7 +94,8 @@
         wallet-store (fm/create-wallet-store (:db db))
         blockchain (blockchain/new-stub db)
         session-store (get-in app-state [:session-stores session-label])
-        {:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain sso-id name email)]
+        {:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain uuid/uuid
+                                                          sso-id name email)]
     (reset! session-store {:signed-in-uid (:uid wallet)
                            :cookie-data apikey})
     app-state))

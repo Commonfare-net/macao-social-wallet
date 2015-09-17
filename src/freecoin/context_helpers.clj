@@ -5,3 +5,6 @@
 
 (defn context->cookie-data [ctx]
   (get-in ctx [:request :session :cookie-data]))
+
+(defn context->params [ctx]
+  (get-in ctx [:request :params]))

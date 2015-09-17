@@ -29,6 +29,9 @@
 
 (ns freecoin.handlers.transactions
   (:require [liberator.core :as lc]
+            [liberator.representation :as lr]
+            [ring.util.response :as r]
+            [formidable.parse :as fp]
             [freecoin.db.wallet :as wallet]
             [freecoin.context-helpers :as ch]
             [freecoin.views :as fv]
@@ -44,9 +47,24 @@
                    transaction-form/build
                    fv/render-page)))
 
+(defn validate-form [form-spec data]
+  (fp/with-fallback
+    (fn [problems] {:status :error
+                    :problems problems})
+    {:status :ok
+     :data (fp/parse-params form-spec data)}))
+
 (lc/defresource post-transaction-form [wallet-store]
   :allowed-methods [:post]
   :authorized? (fn [ctx]
                  (when-let [uid (ch/context->signed-in-uid ctx)]
                    (when (and (wallet/fetch wallet-store uid)
-                              (ch/context->cookie-data ctx)) true))))
+                              (ch/context->cookie-data ctx)) true)))
+  :allowed? (fn [ctx]
+              (let [{:keys [status data problems]}
+                    (validate-form transaction-form/transaction-form-spec
+                                   (ch/context->params ctx))]
+                (when (= :ok status)
+                  (when-let [recipient-wallet (wallet/fetch wallet-store (:recipient data))]
+                    true))))
+  :handle-forbidden (lr/ring-response (r/redirect "/get-transaction-form")))

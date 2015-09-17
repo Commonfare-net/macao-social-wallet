@@ -33,11 +33,11 @@
             [freecoin.db.wallet :as wallet]))
 
 (facts "Can create and fetch an empty wallet"
-       (against-background (uuid/uuid) => "a-uuid")
-       (let [wallet-store (fm/create-memory-store)
+       (let [uuid-generator (constantly "a-uuid")
+             wallet-store (fm/create-memory-store)
              blockchain (fb/create-in-memory-blockchain :bk)]
          (fact "can create a wallet"
-               (let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain
+               (let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain uuid-generator
                                                                        "sso-id" "name" "test@email.com")]
                  wallet => (just {:uid "a-uuid"
                                   :sso-id "sso-id"
@@ -69,7 +69,7 @@
 
 (defn create-wallet [wallet-store blockchain wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
-    (:wallet (wallet/new-empty-wallet! wallet-store blockchain sso-id name email))))
+    (:wallet (wallet/new-empty-wallet! wallet-store blockchain uuid/uuid sso-id name email))))
 
 (defn populate-wallet-store [wallet-store blockchain]
   (let [wallets-data [{:name "James Jones" :email "james@jones.com" :sso-id "sso-id-1"}

@@ -32,6 +32,7 @@
             [clojure.string :as s]
             [stonecutter-oauth.client :as soc]
             [stonecutter-oauth.jwt :as sjwt]
+            [freecoin.db.uuid :as uuid]
             [freecoin.db.wallet :as wallet]
             [freecoin.storage :as storage]
             [freecoin.blockchain :as blockchain]
@@ -86,7 +87,8 @@
                    name (first (s/split email #"@"))]
                (if-let [wallet (wallet/fetch-by-sso-id wallet-store sso-id)]
                  {::uid (:uid wallet)}
-                 (when-let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain sso-id name email)]
+                 (when-let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain uuid/uuid
+                                                                              sso-id name email)]
                    {::uid (:uid wallet)
                     ::cookie-data apikey}))))
   :handle-ok (fn [ctx]

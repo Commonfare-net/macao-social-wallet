@@ -49,9 +49,9 @@
   (str (:cookie secret) "::" (:_id secret)))
 
 (defn new-empty-wallet!
-  ([wallet-store blockchain sso-id name email]
+  ([wallet-store blockchain uuid-generator sso-id name email]
    (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
-         wallet (-> (empty-wallet (uuid/uuid) sso-id name email)
+         wallet (-> (empty-wallet (uuid-generator) sso-id name email)
                     (assoc :account-id account-id))]
      {:wallet (mongo/store! wallet-store :uid wallet)
       :apikey (secret->apikey account-secret)})))
