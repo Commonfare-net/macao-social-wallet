@@ -67,19 +67,19 @@
                                                                                       :user-info {:sub "stonecutter-user-id"
                                                                                                   :email "test@email.com"
                                                                                                   :email_verified true}})
-                     (fact "if new user, creates a wallet and redirects to landing page"
+                     (fact "if new user, creates a wallet and redirects to index"
                            (against-background (uuid/uuid) => "a-uuid")
                            (let [wallet-store (fm/create-memory-store)
                                  blockchain (fb/create-in-memory-blockchain :bk)
                                  callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
-                             response => (th/check-redirects-to "/landing-page")
+                             response => (th/check-redirects-to "/")
                              response => (th/check-signed-in-as "a-uuid")
                              response => th/check-has-wallet-key
                              (test-store/entry-count wallet-store) => 1))
                      
-                     (fact "if user exists, signs user in and redirects to landing page without creating a new wallet"
+                     (fact "if user exists, signs user in and redirects to index without creating a new wallet"
                            (let [wallet-store (fm/create-memory-store)
                                  blockchain (fb/create-in-memory-blockchain :bk)
                                  wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
@@ -87,7 +87,7 @@
                                  callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                                  response (callback-handler (-> (rmr/request :get "/sso-callback")
                                                                 (assoc :params {:code ...auth-code...})))]
-                             response => (th/check-redirects-to "/landing-page")
+                             response => (th/check-redirects-to "/")
                              response => (th/check-signed-in-as (:uid wallet))
                              response =not=> th/check-has-wallet-key
                              (test-store/entry-count wallet-store) => 1)))

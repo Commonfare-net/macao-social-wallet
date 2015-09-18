@@ -30,6 +30,7 @@
             [monger.core :as mongo]))
 
 (def ^:private wallet-collection "wallets")
+(def ^:private confirmation-collection "confirmations")
 
 (defprotocol FreecoinStore
   (store! [e k item]
@@ -90,3 +91,6 @@
 
 (defn create-wallet-store [db]
   (create-mongo-store db wallet-collection))
+
+(defn create-confirmation-store [db]
+  (create-mongo-store db confirmation-collection))

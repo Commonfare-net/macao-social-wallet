@@ -36,7 +36,11 @@
    [compojure.core :as cc :refer [ANY GET POST context]]
    [compojure.route :refer [resources]]
 
+   [clojure.tools.logging :as log]
+   [scenic.routes :as scenic]
+   [bidi.bidi :as bidi]
    ;; [environ.core :refer [env]]
+   [freecoin.config :as c]
 
    [freecoin.params :as param]
    [freecoin.db.mongo :as fm]
@@ -61,6 +65,18 @@
    [freecoin.twitter :as twitter]
    ))
 
+(def routes (scenic/load-routes-from-file "routes.txt"))
+
+(defn path [action & params]
+  (try
+    (apply bidi/path-for routes action params)
+    (catch Exception e
+      (log/warn (format "Key: '%s' probably does not match a route.\n%s" action e))
+      (throw (Exception. (format "Error constructing url for action '%s', with params '%s'" action params))))))
+
+(defn absolute-path [config-m action & params]
+  (str (c/base-url config-m) (apply path action params)))
+
 (defn redirect-home [_]
   (liberator.representation/ring-response
    {:body "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/\"></head></html>"
@@ -82,7 +98,7 @@
 ;; routes
 (defn app [db-connection sso-configuration]
   (let [wallet-store (fm/create-wallet-store (:db db-connection))
-        blockchain (fb/new-stub db-connection)]
+        blockchain (fb/new-stub (:db db-connection))]
     (cc/routes
      ;; embedded resources from resources/public
      (compojure.route/resources "/")

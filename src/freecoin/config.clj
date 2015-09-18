@@ -31,3 +31,6 @@
 
 (defn auth-url [config-m]
   (get-env config-m :auth-url))
+
+(defn cookie-secret [config-m]
+  (get-env config-m :cookie-secret "encryptthecookie"))

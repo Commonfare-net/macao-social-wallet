@@ -99,7 +99,7 @@
                                              (::content-type ctx))]
                 (case status
                   :ok
-                  (if (storage/find-one (::db ctx) "wallets" {:name (:recipient data)})
+                  (if (storage/find-one (:db (::db ctx)) "wallets" {:name (:recipient data)})
                     [true {::user-data data}]
                     [false {::user-data data
                             ::problems [{:keys ["recipient"] :msg "there is no recipient with that name"}]
@@ -178,7 +178,7 @@
   :handle-unauthorized   (:problem (auth/check request))
 
   :exists? (fn [ctx]
-             (let [cc (storage/find-by-id (::db ctx) "confirms" confirmation)]
+             (let [cc (storage/find-by-id (:db (::db ctx)) "confirms" confirmation)]
                (if (empty? cc)
                  ;; no confirmation found
                  {::found false ::confirmation confirmation}
@@ -197,7 +197,7 @@
                             ;; else
                           (utils/pretty 
                            (blockchain/make-transaction
-                            (blockchain/new-stub db) wallet
+                            (blockchain/new-stub (:db db)) wallet
                             (:amount params) (:recipient params)
                             nil) ;; secret is not used in STUB
                            )))))
@@ -231,7 +231,7 @@
 
   :handle-ok (fn [ctx]
                (let [transactions (blockchain/list-transactions
-                                   (blockchain/new-stub (::db ctx)) (auth/get-wallet request))]
+                                   (blockchain/new-stub (:db (::db ctx))) (auth/get-wallet request))]
                  (views/render-template
                   list-transactions-template {:title "Transactions"
                                               :transactions transactions})))

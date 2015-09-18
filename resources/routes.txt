@@ -1,0 +1,4 @@
+GET  /                     index
+GET  /landing-page         landing-page
+GET  /sign-in-with-sso     sign-in
+GET  /sso-callback         sso-callback

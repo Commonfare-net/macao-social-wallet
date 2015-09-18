@@ -74,7 +74,7 @@
                             (let [_ (doseq [n (range 10)]
                                       (->> {:name (str "name-" n)
                                             :email (str "email-" n "@test.com")}
-                                           (storage/insert (:db-connection ih/app-state) "wallets")))
+                                           (storage/insert (:db (:db-connection ih/app-state)) "wallets")))
                                   {response :response} (-> ih/app-state
                                                            (ih/create-and-sign-in :default wallet1)
                                                            (get-in [:sessions :default])
@@ -87,8 +87,8 @@
                (facts "with query string ?field=<:field>&value=<:value>"
                       (tabular
                        (fact "Retrieves a wallet by name or by email address"
-                             (let [_ (storage/insert (:db-connection ih/app-state) "wallets" wallet1)
-                                   _ (storage/insert (:db-connection ih/app-state) "wallets" wallet2)
+                             (let [_ (storage/insert (:db (:db-connection ih/app-state)) "wallets" wallet1)
+                                   _ (storage/insert (:db (:db-connection ih/app-state)) "wallets" wallet2)
                                    {response :response} (-> ih/app-state
                                                             (ih/create-and-sign-in :default wallet1)
                                                             (get-in [:sessions :default])

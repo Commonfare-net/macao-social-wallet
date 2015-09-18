@@ -22,7 +22,7 @@
                               :map-data {:a 1
                                          :b "xyz"}
                               :vector-data [1 2 "a" "b"]}
-                    stored-document (storage/insert @db-connection test-collection test-doc)
-                    retrieved-document (storage/find-by-id @db-connection test-collection (:_id test-doc))]
+                    stored-document (storage/insert (:db @db-connection) test-collection test-doc)
+                    retrieved-document (storage/find-by-id (:db @db-connection) test-collection (:_id test-doc))]
                 stored-document => test-doc
                 retrieved-document => test-doc))))

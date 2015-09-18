@@ -71,7 +71,7 @@
    [:h1 heading]
    (fc/render-form form-spec)])
 
-(defn render-page [{:keys [title heading body] :as content}]
+(defn render-page [{:keys [title heading body body-class] :as content}]
   (page/html5
     [:head [:meta {:charset "utf-8"}]
      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
@@ -81,7 +81,7 @@
      (page/include-css "/static/css/bootstrap-responsive.min.css")
      (page/include-css "/static/css/freecoin.css")
      (page/include-css "/static/css/json-html.css")]
-    [:body
+    [:body {:class body-class}
      [:div {:class "container-fluid"}
       [:h1 (or heading title)]
       body]]))

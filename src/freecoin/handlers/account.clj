@@ -25,27 +25,26 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.views.balance-page)
+(ns freecoin.handlers.account
+  (:require [liberator.core :as lc]
+            [liberator.representation :as lr]
+            [ring.util.response :as r]
+            [freecoin.db.wallet :as wallet]
+            [freecoin.blockchain :as blockchain]
+            [freecoin.context-helpers :as ch]
+            [freecoin.views :as fv]
+            [freecoin.views.balance-page :as balance-page]))
 
-(defn render-wallet [wallet]
-  [:li {:style "margin: 1em"}
-   [:div {:class "card pull-left"}
-    [:span (str "name: " (:name wallet))]
-    [:br]
-    [:span (str "email: " (:email wallet))]
-    [:br]
-    [:span {:class "qrcode pull-left"}
-     [:img {:src (format "/qrcode/%s" (:name wallet))}]]
-    [:span {:class "gravatar pull-right"}
-     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]]])
-
-(defn balance-page [context]
-  (let [wallet (:wallet context)
-        balance (:balance context)]
-    {:body-class "func--index-page"
-     :body [:div
-            [:ul {:style "list-style-type: none;"}
-             (render-wallet wallet)]
-            [:div {:class "balance pull-left"}
-             (str "Balance: " balance)]]
-     :title "Welcome to freecoin"}))
+(lc/defresource balance-page [wallet-store blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :exists? (fn [ctx]
+             (if-let [uid (ch/context->signed-in-uid ctx)]
+               (let [wallet (wallet/fetch wallet-store uid)]
+                 {::wallet wallet})))
+  :handle-ok (fn [ctx]
+               (if-let [wallet (::wallet ctx)]
+                 (-> {:wallet wallet :balance (blockchain/get-balance blockchain (:account-id wallet))}
+                     balance-page/balance-page
+                     fv/render-page)
+                 (lr/ring-response (r/redirect "/landing-page")))))

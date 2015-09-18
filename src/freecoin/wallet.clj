@@ -168,7 +168,7 @@
   (fn [ctx]
     (let [wallets (->> request
                        request->wallet-query
-                       (storage/find-by-key (::db ctx) "wallets"))]
+                       (storage/find-by-key (:db (::db ctx)) "wallets"))]
       (views/render-template
        participants-template {:title "wallets"
                               :wallets wallets}))))
@@ -193,7 +193,7 @@
 
       ;; else a name is specified
       (let [wallet (first (storage/find-by-key
-                           (get-in request [:config :db-connection])
+                           (:db (get-in request [:config :db-connection]))
                            "wallets" {:name (ring.util.codec/percent-decode id)}))]
 
         (if (empty? wallet) ""
@@ -264,7 +264,7 @@
                                    (::content-type ctx))]
       (case status
         :ok
-        (if (storage/find-one (::db ctx) "wallets" {:name (:name data)})
+        (if (storage/find-one (:db (::db ctx)) "wallets" {:name (:name data)})
 
           ;; found a duplicate
           [false {::user-data data
@@ -342,7 +342,7 @@
        balance-template {:title "Balance"
                          :wallet wallet
                          :balance (blockchain/get-balance
-                                   (blockchain/new-stub (::db ctx))
+                                   (blockchain/new-stub (:db (::db ctx)))
                                    account-id)}
        )))
   )

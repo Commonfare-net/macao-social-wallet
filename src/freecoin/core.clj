@@ -39,15 +39,51 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+
+            [scenic.routes :as scenic]
+            
             [cemerick.friend :as friend]
             [compojure.core :refer [defroutes ANY]]
             [stonecutter-oauth.client :as soc]
             [freecoin.db.mongo :as fm]
+            [freecoin.db.storage :as storage]
             [freecoin.routes :as routes]
             [freecoin.params :as param]
             [freecoin.config :as config]
-            [freecoin.storage :as storage]
-            [freecoin.secretshare :as ssss]))
+            [freecoin.storage :as s]
+            [freecoin.secretshare :as ssss]
+            [freecoin.handlers.sign-in :as sign-in]
+            [freecoin.handlers.account :as account]))
+
+(defn not-found [request]
+  {:status 404
+   :body "cheese"})
+
+(defn create-stonecutter-config [config-m]
+  (soc/configure (config/auth-url config-m)
+                 (config/client-id config-m)
+                 (config/client-secret config-m)
+                 (routes/absolute-path config-m :sso-callback)))
+
+(defn handlers [config-m stores-m blockchain]
+  (let [wallet-store (storage/get-wallet-store stores-m)
+        confirmation-store (storage/get-confirmation-store stores-m)
+        sso-configuration (create-stonecutter-config config-m)]
+    (when (= :invalid-configuration sso-configuration)
+      (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
+    {:index               (account/balance-page wallet-store blockchain)
+     :landing-page        (sign-in/landing-page wallet-store blockchain)
+     :sign-in             (sign-in/sign-in sso-configuration)
+     :sso-callback        (sign-in/sso-callback wallet-store blockchain sso-configuration)}))
+
+(defn create-app [config-m stores-m blockchain]
+  (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
+      wrap-cookies
+      (wrap-session {:cookie-attrs {:secure    false
+                                    :http-only true}
+                     :store (cookie-store (config/cookie-secret config-m))})
+      wrap-keyword-params
+      wrap-params))
 
 (defn wrap-db [handler db-connection]
   (fn [request]
@@ -70,12 +106,12 @@
   (if (:db-connection app-state)
     app-state
     (let [db-config (-> app-state :config-params :db-config)
-          db-connection (storage/connect db-config)]
+          db-connection (s/connect db-config)]
       (assoc app-state :db-connection db-connection))))
 
 (defn disconnect-db [app-state]
   (when (:db-connection app-state)
-    (storage/disconnect (:db-connection app-state)))
+    (s/disconnect (:db-connection app-state)))
   (dissoc app-state :db-connection))
 
 (defn start-server [app-state]

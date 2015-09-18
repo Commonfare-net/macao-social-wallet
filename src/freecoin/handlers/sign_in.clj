@@ -93,7 +93,7 @@
                     ::cookie-data apikey}))))
   :handle-ok (fn [ctx]
                (lr/ring-response
-                (cond-> (r/redirect "/landing-page")
+                (cond-> (r/redirect "/")
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
                   true (assoc-in [:session :signed-in-uid] (::uid ctx)))))
   :handle-not-found (lr/ring-response (r/redirect "/landing-page")))

@@ -3,42 +3,31 @@
   :url "http://freecoin.ch"
   :license {:name "GNU GPL Affero v3 and "
             :url "http://www.d-centproject.eu"}
-
   :profiles {:dev [:dev-common :dev-local]
              :dev-common {:dependencies [[midje "1.6.3"]
                                          [peridot "0.3.1"]
-                                        ;[org.clojure/tools.trace "0.7.8"]
-                                         ]
-                          :env [
-                                [:base-url "http://localhost:8000"]
+                                         [kerodon "0.6.1"]]
+                          :env [[:base-url "http://localhost:8000"]
                                 [:client-id "QI7UVfyl6kepommh"]
                                 [:client-secret "iEJGGyJwrB8bfIvC"]
-                                [:auth-url "http://localhost:3000"]
-                                ]
+                                [:auth-url "http://localhost:3000"]]
                           :plugins [[lein-midje "3.1.3"]]}
-
              :production [:user :dcent]
-             :dcent {:env [
-                           [:base-url "http://localhost:8000"]
+             :dcent {:env [[:base-url "http://localhost:8000"]
                            [:client-id "freecoin"]
                            [:client-secret "freecoin-secret"]
-                           [:auth-url "http://sso.dcentproject.eu:3000"]
-                           ]
-                     }
+                           [:auth-url "fake stonecutter auth url"]]}
 
              :vm {:ring {:host "192.168.50.80"}}
              :uberjar {:aot :all
                        :main freecoin.main}}
-
   :plugins [[lein-ring "0.9.3"]
             [lein-environ "1.0.0"]]
-
   :ring {:reload-paths ["src"]
          :init freecoin.core/lein-ring-init
          :handler freecoin.core/lein-ring-handler
          :destroy freecoin.core/lein-ring-stop
          :port 8000}
-
   :source-paths ["src"]
 
   ;; :java-source-paths ["lib/java"]
@@ -48,12 +37,17 @@
   ;; make sure we use a proper source of random (install haveged)
   :jvm-opts ["-Djava.security.egd=file:/dev/random"]
 
-  :dependencies [
-                 [org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
 
+                 ;; logging
+                 [org.clojure/tools.logging "0.3.1"]
+                 
                  ;; rest api
                  [liberator "0.12.2"]
 
+                 ;; Routing
+                 [scenic "0.2.5"]
+                 
                  ;; liberator
                  [compojure "1.3.3"]
                  [ring/ring-core "1.3.2"]
@@ -118,14 +112,9 @@
                  [clavatar "0.2.1"]
 
                  ;; code analysis: call-graph
-                 [cc.artifice/lein-gossip "0.2.1"]
-                 ]
-  :env [
-        [:base-url "http://localhost:8000"]
-        ]
+                 [cc.artifice/lein-gossip "0.2.1"]]
+  :env [[:base-url "http://localhost:8000"]]
 
   ;; for running a production server using 'lein run'
   :aliases {"dev" ["with-profile" "dev" "ring" "server"]
-            "run" ["with-profile" "production" "ring" "server"]}
-
-  )
+            "run" ["with-profile" "production" "ring" "server"]})

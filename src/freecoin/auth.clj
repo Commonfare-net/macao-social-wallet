@@ -60,7 +60,7 @@
 
    (let [id (:_id apikey)
          db (get-in request [:config :db-connection])
-         wallet (storage/find-by-id db "wallets" id)]
+         wallet (storage/find-by-id (:db db) "wallets" id)]
 
      (if (empty? wallet) false
          ;; else
@@ -80,7 +80,7 @@
 
    (let [id (:_id apikey)
          db (get-in request [:config :db-connection])
-         secret (storage/find-by-id db "secrets" id)]
+         secret (storage/find-by-id (:db db) "secrets" id)]
      ;; safeguard
      (if (empty? secret) false
          ;; else return the

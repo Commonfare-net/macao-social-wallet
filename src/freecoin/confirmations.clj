@@ -60,7 +60,7 @@
   (let [code (ssss/hash-encode-num
               params/encryption (:integer (rand/create 16)))
         stored (storage/insert
-                db "confirmations" {:_id code
+                (:db db) "confirmations" {:_id code
                                     :action action
                                     :data data})]
     ;; TODO depending from the type of confirmation configured
@@ -83,7 +83,7 @@
 
   :allowed? (fn [ctx]
               (let [found (storage/find-by-id
-                           (::db ctx) "confirmations" code)]
+                           (:db (::db ctx)) "confirmations" code)]
 
                 (if (contains? found :error)
                   [false {::error (:error found)}]
@@ -150,7 +150,7 @@
       (case status
         :ok ;; parse query result
         (let [found (storage/find-by-id
-                     (::db ctx) "confirmations"
+                     (:db (::db ctx)) "confirmations"
                      (:id data))]
           (if (contains? found :error)
             [false {::problems (:error found)}]
@@ -188,7 +188,7 @@
 
         ;; process signin confirmations
         "signin"
-        (let [{:keys [account-id account-secret]} (blockchain/create-account (blockchain/new-stub db))
+        (let [{:keys [account-id account-secret]} (blockchain/create-account (blockchain/new-stub (:db db)))
               secret-without-cookie (dissoc account-secret :cookie)
               cookie-data (str/join "::" [(:cookie account-secret) account-id])]
           (utils/log! ::ACK 'signin cookie-data)
@@ -200,7 +200,7 @@
             (do
               ;; insert in the wallet database, use
               ;; the shamir's generated UID as _id
-              (storage/insert db "wallets"
+              (storage/insert (:db db) "wallets"
                               (assoc new-account :_id (:_id secret)))
               ;; return the apikey cookie
               (ring-response {:session {:cookie-data cookie-data}
@@ -231,7 +231,7 @@
               from-account-id (get-in wallet [:blockchain :STUB])
               to-account-id "NOT-IMPLEMENTED"
               tr (blockchain/make-transaction
-                  (blockchain/new-stub db) wallet
+                  (blockchain/new-stub (:db db)) wallet
                   (:amount data)
                   to-account-id
                   nil)]

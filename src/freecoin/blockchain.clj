@@ -84,7 +84,7 @@
 (defrecord nxt [server port])
 
 ;; inherits from Blockchain and implements its methods
-(defrecord stub [db]
+(defrecord Stub [db]
   Blockchain
   (label [bk] (keyword (recname bk)))
   
@@ -136,8 +136,7 @@
 
 (defn new-stub [db]
   "Check that the blockchain is available, then return a record"
-  (stub. db)
-  )
+  (Stub. db))
 
 ;; (defrecord account
 ;;     [_id public-key private-key

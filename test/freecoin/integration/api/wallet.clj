@@ -74,7 +74,7 @@
                {:name "user" :email "invalid"} {:reason [{:keys ["email"] :msg "must be a valid email"}]})
 
               (fact "returns 403 if a wallet already exists for the given username"
-                    (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
+                    (let [wallet (storage/insert (:db (:db-connection ih/app-state)) "wallets" {:name "user"})
                           {response :response} (-> (get-in ih/app-state [:sessions :default])
                                                    (p/content-type "application/json")
                                                    (p/request "/signin"
@@ -109,7 +109,7 @@
                "name=user&email=invalid"      #"Email.+: must be a valid email")
 
               (fact "when username not unique, redirects to /signin with error message"
-                    (let [wallet (storage/insert (:db-connection ih/app-state) "wallets" {:name "user"})
+                    (let [wallet (storage/insert (:db (:db-connection ih/app-state)) "wallets" {:name "user"})
                           {response :response} (-> (get-in ih/app-state [:sessions :default])
                                                    (p/content-type "application/x-www-form-urlencoded")
                                                    (p/request "/signin"

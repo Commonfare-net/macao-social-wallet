@@ -92,7 +92,7 @@
   (let [{:keys [sso-id name email]} wallet-details
         db (:db-connection app-state)
         wallet-store (fm/create-wallet-store (:db db))
-        blockchain (blockchain/new-stub db)
+        blockchain (blockchain/new-stub (:db db))
         session-store (get-in app-state [:session-stores session-label])
         {:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain uuid/uuid
                                                           sso-id name email)]
