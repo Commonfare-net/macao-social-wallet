@@ -34,3 +34,12 @@
 
 (defn cookie-secret [config-m]
   (get-env config-m :cookie-secret "encryptthecookie"))
+
+(defn- get-docker-mongo-uri [config-m]
+  (when-let [mongo-ip (get-env config-m :mongo-port-27017-tcp-addr)]
+    (format "mongodb://%s:27017/freecoin" mongo-ip)))
+
+(defn mongo-uri [config-m]
+  (or (get-docker-mongo-uri config-m)
+      (get-env config-m :mongo-uri)
+      "mongodb://localhost:27017/freecoin"))

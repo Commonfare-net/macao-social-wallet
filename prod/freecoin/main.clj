@@ -32,5 +32,5 @@
 
 ;; Main entry point for deployment
 (defn -main [& args]
-  (prn "Starting freecoin server")
+  (prn "Starting freecoin server --- from main.clj")
   (fc/start))

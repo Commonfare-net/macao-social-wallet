@@ -1,6 +1,7 @@
 (ns freecoin.views.participants-query-form
-  (:require [freecoin.views :as fv]
-            [formidable.core :as fc]))
+  (:require [formidable.core :as fc]
+            [freecoin.routes :as routes]
+            [freecoin.views :as fv]))
 
 (def participants-form-spec
   {:fields [{:name :field
@@ -8,7 +9,7 @@
              :options ["name" "email"]}
             {:name :value :type :text}]
    :validations [[:required [:field :value]]]
-   :action "/participants/find"
+   :action (routes/path :participants)
    :method "get"})
 
 (defn build [_content]

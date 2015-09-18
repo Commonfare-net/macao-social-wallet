@@ -154,8 +154,6 @@
                         ;; TODO: handle default case
                         ))))
 
-
-
 (defresource get-transaction-confirm [request confirmation]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
@@ -164,8 +162,7 @@
                 views/simple-form-template
                 {:title "Confirm transaction"
                  :heading "Please confirm to execute the transacton"
-                 :form-spec {:submit-label "Confirm"}}))
-  )
+                 :form-spec {:submit-label "Confirm"}})))
 
 (defresource post-transaction-confirm [request confirmation]
   :service-available? {::db (get-in request [:config :db-connection])

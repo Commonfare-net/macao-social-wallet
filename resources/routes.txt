@@ -1,4 +1,16 @@
-GET  /                     index
-GET  /landing-page         landing-page
-GET  /sign-in-with-sso     sign-in
-GET  /sso-callback         sso-callback
+GET  /                                  index
+GET  /qrcode                            qrcode
+GET  /qrcode/:uid                       qrcode
+
+GET  /landing-page                      landing-page
+GET  /sign-in-with-sso                  sign-in
+GET  /sso-callback                      sso-callback
+
+GET  /participant-query                 get-participant-search-form
+GET  /participants                      participants
+
+GET  /send                              get-transaction-form
+POST /send                              post-transaction-form
+GET  /send/confirm/:confirmation-uid    get-confirm-transaction-form
+
+GET  /transactions                      transactions

@@ -39,6 +39,8 @@
             [freecoin.views.participants-list :as participants-list]))
 
 (lc/defresource query-form [wallet-store]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
   :authorized? (fn [ctx]
                  (when-let [uid (ch/context->signed-in-uid ctx)]
                    (when (wallet/fetch wallet-store uid) true)))
@@ -54,6 +56,8 @@
     {}))
 
 (lc/defresource participants [wallet-store]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
   :authorized? (fn [ctx]
                  (when-let [uid (ch/context->signed-in-uid ctx)]
                    (when (wallet/fetch wallet-store uid) true)))

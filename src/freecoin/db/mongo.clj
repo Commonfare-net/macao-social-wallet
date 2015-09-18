@@ -32,6 +32,13 @@
 (def ^:private wallet-collection "wallets")
 (def ^:private confirmation-collection "confirmations")
 
+(defn get-mongo-db-and-conn [mongo-uri]
+  (let [db-and-conn (mongo/connect-via-uri mongo-uri)]
+    db-and-conn))
+
+(defn get-mongo-db [mongo-uri]
+  (:db (get-mongo-db-and-conn mongo-uri)))
+
 (defprotocol FreecoinStore
   (store! [e k item]
     "Store item against the key k")

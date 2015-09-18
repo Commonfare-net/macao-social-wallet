@@ -25,7 +25,8 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.views.balance-page)
+(ns freecoin.views.balance-page
+  (:require [clavatar.core :as clavatar]))
 
 (defn render-wallet [wallet]
   [:li {:style "margin: 1em"}
@@ -37,7 +38,7 @@
     [:span {:class "qrcode pull-left"}
      [:img {:src (format "/qrcode/%s" (:name wallet))}]]
     [:span {:class "gravatar pull-right"}
-     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]]])
+     [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]]])
 
 (defn balance-page [context]
   (let [wallet (:wallet context)
