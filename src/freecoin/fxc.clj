@@ -23,18 +23,10 @@
 
 
 (ns freecoin.fxc
-  (:require
-   [freecoin.secretshare :as ssss]
-   [freecoin.random :as rand]
-   [freecoin.params :as param]
-   [freecoin.utils :as util]
-
-
-   [clojure.string :as str]
-   [clojure.pprint :as pp]
-
-   )
-  )
+  (:require [freecoin.secretshare :as ssss]
+            [freecoin.random :as rand]
+            [freecoin.utils :as util]
+            [clojure.string :as str]))
 
 (declare render-slice)
 (declare extract-quorum)

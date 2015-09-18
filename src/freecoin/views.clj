@@ -27,14 +27,12 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views
-  (:require
-   [hiccup.page :as page]
-   [formidable.core :as fc]
-   [formidable.parse :as fp]
-   [cheshire.core :as cheshire]
-   [autoclave.core :as autoclave]
-
-   [json-html.core :as present]))
+  (:require [hiccup.page :as page]
+            [formidable.core :as fc]
+            [formidable.parse :as fp]
+            [cheshire.core :as cheshire]
+            [autoclave.core :as autoclave]
+            [json-html.core :as present]))
 
 (defn confirm-button [{:keys [action data] :as confirmation}]
   (page/html5

@@ -28,8 +28,7 @@
 (ns freecoin.auth
   (:require [clojure.string :as str]
             [freecoin.storage :as storage]
-            [freecoin.db.wallet :as wallet]
-            [freecoin.utils :as util]))
+            [freecoin.db.wallet :as wallet]))
 
 ;; TODO:  use throw/catch exceptions
 ;; which will then go to :handle-exception

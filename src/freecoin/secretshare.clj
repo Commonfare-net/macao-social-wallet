@@ -25,21 +25,9 @@
 
 (ns freecoin.secretshare
   (:gen-class)
-  (:import
-   [com.tiemens.secretshare.engine SecretShare]
-   [java.math]
-   )
-  (:require
-   [freecoin.random :as rand]
-   [freecoin.utils :as util]
-   [freecoin.params :as param]
-
-   [hashids.core :as hash]
-
-   [clojure.string :only (join split) :as str]
-   [clojure.pprint :as pp]
-   )
-  )
+  (:import [com.tiemens.secretshare.engine SecretShare])
+  (:require [freecoin.utils :as util]
+            [hashids.core :as hash]))
 
 (defn prime384 []
   (SecretShare/getPrimeUsedFor384bitSecretPayload))

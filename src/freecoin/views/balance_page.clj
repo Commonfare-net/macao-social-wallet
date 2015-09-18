@@ -26,7 +26,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views.balance-page
-  (:require [clavatar.core :as clavatar]))
+  (:require [clavatar.core :as clavatar]
+            [freecoin.routes :as routes]))
 
 (defn render-wallet [wallet]
   [:li {:style "margin: 1em"}
@@ -36,7 +37,7 @@
     [:span (str "email: " (:email wallet))]
     [:br]
     [:span {:class "qrcode pull-left"}
-     [:img {:src (format "/qrcode/%s" (:name wallet))}]]
+     [:img {:src (routes/path :qrcode :uid (:uid wallet))}]]
     [:span {:class "gravatar pull-right"}
      [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]]])
 

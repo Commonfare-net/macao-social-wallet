@@ -24,13 +24,9 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.utils
-  (:require
-   [liberator.dev :as dev]
-   [json-html.core :as present]
-   [hiccup.page :as page]
-
-   )
-  )
+  (:require [liberator.dev :as dev]
+            [json-html.core :as present]
+            [hiccup.page :as page]))
 
 (declare log!)
 

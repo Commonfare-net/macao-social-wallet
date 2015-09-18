@@ -23,26 +23,18 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.confirmations
-  (:require
-   [clojure.string :as str]
-
-   [liberator.dev]
-   [liberator.core :refer [resource defresource]]
-   [liberator.representation :refer [as-response ring-response]]
-
-   [simple-time.core :as time]
-
-   [freecoin.blockchain :as blockchain]
-   [freecoin.secretshare :as ssss]
-   [freecoin.storage :as storage]
-   [freecoin.params :as params]
-   [freecoin.random :as rand]
-   [freecoin.views :as views]
-   [freecoin.utils :as utils]
-   [freecoin.auth :as auth]
-
-   )
-  )
+  (:require [clojure.string :as str]
+            [liberator.core :as lc]
+            [liberator.representation :as lr]
+            [simple-time.core :as time]
+            [freecoin.blockchain :as blockchain]
+            [freecoin.secretshare :as ssss]
+            [freecoin.storage :as storage]
+            [freecoin.params :as params]
+            [freecoin.random :as rand]
+            [freecoin.views :as views]
+            [freecoin.utils :as utils]
+            [freecoin.auth :as auth]))
 
 ;; Confirmation's data structure
 ;; {:_id     code
@@ -73,7 +65,7 @@
       )
     ))
 
-(defresource get-confirm-form [request code]
+(lc/defresource get-confirm-form [request code]
   :service-available?
   {::db (get-in request [:config :db-connection])
    ::content-type (get-in request [:headers "content-type"])}
@@ -98,8 +90,8 @@
                 ))
 
   :handle-forbidden (fn [ctx]
-                      (ring-response {:status 404
-                                      :body (::error ctx)}))
+                      (lr/ring-response {:status 404
+                                         :body (::error ctx)}))
 
   :handle-ok (fn [ctx] (views/confirm-button (::user-data ctx)))
   )
@@ -126,7 +118,7 @@
    :blockchains {}       ;; list of blockchains and public account ids
    :blockchain-keys {}}) ;; list of keys for private blockchain operations
 
-(defresource execute [request]
+(lc/defresource execute [request]
   :service-available?
   {::db (get-in request [:config :db-connection])
    ::content-type (get-in request [:headers "content-type"])}
@@ -175,8 +167,8 @@
         )))
 
   :handle-forbidden (fn [ctx]
-                      (ring-response {:status 404
-                                      :body (::problems ctx)}))
+                      (lr/ring-response {:status 404
+                                         :body (::problems ctx)}))
 
   :handle-created
   (fn [ctx]
@@ -203,8 +195,8 @@
               (storage/insert (:db db) "wallets"
                               (assoc new-account :_id (:_id secret)))
               ;; return the apikey cookie
-              (ring-response {:session {:cookie-data cookie-data}
-                              :apikey cookie-data})
+              (lr/ring-response {:session {:cookie-data cookie-data}
+                                 :apikey cookie-data})
               ;; TODO: give PINs for backup
 
               ;; local backup approach: use pub/priv key
@@ -219,8 +211,8 @@
               ;; that is recognized by the
               ;; blockchain. If yes, restore the account.
               ))
-          (ring-response {:session {:cookie-data cookie-data}
-                          :apikey cookie-data}))
+          (lr/ring-response {:session {:cookie-data cookie-data}
+                             :apikey cookie-data}))
 
         ;; process transaction confirmations
         ;; WIP: Removing knowledge of wallet internals from blockchain
@@ -238,9 +230,8 @@
           ;; TODO: return a well formatted page
           tr)
 
-        (ring-response
-         {:status 404
-          :body (pr-str "unknown action" action)}))
+        (lr/ring-response {:status 404
+                           :body (pr-str "unknown action" action)}))
       ;; TODO:delete on success
       ))
   )

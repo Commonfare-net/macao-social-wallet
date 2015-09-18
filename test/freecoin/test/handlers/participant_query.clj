@@ -5,7 +5,6 @@
             [stonecutter-oauth.client :as sc]
             [freecoin.db.uuid :as uuid]
             [freecoin.storage :as storage]
-            [freecoin.integration.storage-helpers :as sh]
             [freecoin.db.mongo :as fm]
             [freecoin.db.wallet :as w]
             [freecoin.blockchain :as fb]

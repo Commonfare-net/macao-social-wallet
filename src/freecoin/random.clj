@@ -25,8 +25,7 @@
 
 (ns freecoin.random
   (:gen-class)
-  (:import  [java.security.SecureRandom])
-  (:require [clojure.string :only (join split) :as s]))
+  (:import  [java.security.SecureRandom]))
 
 ;; generate a single random digit in the range of 0-9
 (defn digit [max]

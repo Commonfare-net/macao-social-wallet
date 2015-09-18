@@ -28,43 +28,17 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.wallet
-  ;; (:import [freecoin.blockchain stub])
-  (:require
-   [clojure.string :as str]
-
-   [formidable.core :as fc]
-   [formidable.parse :as fp]
-
-   [liberator.dev]
-   [liberator.core :refer [resource defresource]]
-   [liberator.representation :refer [as-response ring-response]]
-
-   [ring.util.io :refer [piped-input-stream]]
-
-   [clj.qrgen :as qr]
-
-   [clavatar.core]
-
-;;   [taoensso.nippy :as nippy]
-
-
-   [freecoin.secretshare :as ssss]
-
-   [freecoin.params :as param]
-   [freecoin.random :as rand]
-   [freecoin.utils :as utils]
-   [freecoin.auth :as auth]
-
-   [freecoin.storage :as storage]
-
-   [freecoin.fxc :as fxc]
-   [freecoin.blockchain :as blockchain]
-
-   [freecoin.confirmations :as confirm]
-   [freecoin.views :as views]
-
-   )
-  )
+  (:require [liberator.core :as lc]
+            [ring.util.codec :as rc]
+            [clj.qrgen :as qr]
+            [clavatar.core :as clavatar]
+            [freecoin.params :as param]
+            [freecoin.utils :as utils]
+            [freecoin.auth :as auth]
+            [freecoin.storage :as storage]
+            [freecoin.blockchain :as blockchain]
+            [freecoin.confirmations :as confirm]
+            [freecoin.views :as views]))
 
 ;; A wallet can contain multiple, non duplicate blockchain accounts
 ;; and is unique to a participant.
@@ -87,7 +61,7 @@
    :action "/participants/find"
    :method "get"})
 
-(defresource participants-form [request]
+(lc/defresource participants-form [request]
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
   :authorized?           (:result (auth/check request))
@@ -116,7 +90,7 @@
     [:span {:class "qrcode pull-left"}
      [:img {:src (format "/qrcode/%s" (:name wallet))} ]]
     [:span {:class "gravatar pull-right"}
-     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]
+     [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]
     ]])
 
 (defn welcome-template [{:keys [wallet] :as content}]
@@ -157,7 +131,7 @@
     {(keyword field) value}
     {}))
 
-(defresource participants-find [request]
+(lc/defresource participants-find [request]
   :service-available?    {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
@@ -173,7 +147,7 @@
        participants-template {:title "wallets"
                               :wallets wallets}))))
 
-(defresource qrcode [request id]
+(lc/defresource qrcode [request id]
   :allowed-methods [:get]
   :available-media-types ["image/png"]
   :authorized?           (:result (auth/check request))
@@ -194,7 +168,7 @@
       ;; else a name is specified
       (let [wallet (first (storage/find-by-key
                            (:db (get-in request [:config :db-connection]))
-                           "wallets" {:name (ring.util.codec/percent-decode id)}))]
+                           "wallets" {:name (rc/percent-decode id)}))]
 
         (if (empty? wallet) ""
             (qr/as-input-stream
@@ -216,7 +190,7 @@
             {:name :email :type :email}]
    :validations [[:required [:name :email]]]})
 
-(defresource get-create [request]
+(lc/defresource get-create [request]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok
@@ -238,7 +212,7 @@
 
 
 
-(defresource post-create [request]
+(lc/defresource post-create [request]
   ;; Files a request to create a wallet, accepting a json structure
   ;; containing name and email. Checks if the name doesn't already
   ;; exists, if succesful returns a json structure containing the
@@ -326,7 +300,7 @@
   )
 
 
-(defresource balance-show [request]
+(lc/defresource balance-show [request]
   :service-available?    {::db (get-in request [:config :db-connection])}
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
@@ -343,14 +317,4 @@
                          :wallet wallet
                          :balance (blockchain/get-balance
                                    (blockchain/new-stub (:db (::db ctx)))
-                                   account-id)}
-       )))
-  )
-
-
-
-;; Reminder, but NEVER show nxtpass!
-;; {:nxtpass (fxc/unlock-secret
-;;            param/encryption
-;;            (auth/get-secret request apikey) (:slice apikey))}
-;;-----------------------------------------------------------
+                                   account-id)}))))

@@ -1,5 +1,7 @@
 (ns freecoin.handlers.debug
-  (:require [liberator.core :as lc]))
+  (:require [liberator.core :as lc]
+            [freecoin.utils :as util]
+            [freecoin.params :as param]))
 
 (lc/defresource echo [request]
   :allowed-methods [:get]

@@ -23,16 +23,11 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.blockchain
-  (:require
-   [clojure.string :as str]
-
-   [freecoin.fxc :as fxc]
-   [freecoin.random :as rand]
-   [freecoin.params :as param]
-   [freecoin.storage :as storage]
-   [freecoin.utils :as utils]
-   
-   [simple-time.core :as time]))
+  (:require [clojure.string :as str]
+            [freecoin.fxc :as fxc]
+            [freecoin.params :as param]
+            [freecoin.storage :as storage]
+            [simple-time.core :as time]))
 
 (defprotocol Blockchain
   ;; blockchain identifier
@@ -137,10 +132,6 @@
 (defn new-stub [db]
   "Check that the blockchain is available, then return a record"
   (Stub. db))
-
-;; (defrecord account
-;;     [_id public-key private-key
-;;      blockchains blockchain-keys])
 
 ;;; in-memory blockchain for testing
 (defrecord InMemoryBlockchain [blockchain-label transactions-atom accounts-atom]

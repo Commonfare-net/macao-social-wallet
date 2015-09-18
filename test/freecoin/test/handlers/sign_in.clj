@@ -9,7 +9,6 @@
             [freecoin.db.uuid :as uuid]
             [freecoin.db.wallet :as w]
             [freecoin.handlers.sign-in :as fs]
-            [freecoin.integration.storage-helpers :as sh]
             [freecoin.test.test-helper :as th]
             [freecoin.test-helpers.store :as test-store])
   (:import [freecoin.db.mongo MemoryStore]))
@@ -56,24 +55,22 @@
                response => (th/check-redirects-to expected-authorisation-url)))
 
        (facts "About the openid callback endpoint"
-              (against-background
-               [(before :facts (do (reset! db-connection (storage/connect sh/test-db-config))
-                                   (sh/clear-db @db-connection)))
-                (after :facts (do (storage/disconnect @db-connection)))])
-              
               (facts "When token request yields a valid access_token + id_token"
                      (against-background
-                      (sc/request-access-token! ...sso-config... ...auth-code...) => {:access_token ...access-token...
-                                                                                      :user-info {:sub "stonecutter-user-id"
-                                                                                                  :email "test@email.com"
-                                                                                                  :email_verified true}})
+                      (sc/request-access-token! ...sso-config... ...auth-code...)
+                      => {:access_token ...access-token...
+                          :user-info {:sub "stonecutter-user-id"
+                                      :email "test@email.com"
+                                      :email_verified true}})
                      (fact "if new user, creates a wallet and redirects to index"
                            (against-background (uuid/uuid) => "a-uuid")
                            (let [wallet-store (fm/create-memory-store)
                                  blockchain (fb/create-in-memory-blockchain :bk)
-                                 callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
-                                 response (callback-handler (-> (rmr/request :get "/sso-callback")
-                                                                (assoc :params {:code ...auth-code...})))]
+                                 callback-handler (fs/sso-callback wallet-store blockchain
+                                                                   ...sso-config...)
+                                 response (-> (rmr/request :get "/sso-callback")
+                                              (assoc :params {:code ...auth-code...})
+                                              callback-handler)]
                              response => (th/check-redirects-to "/")
                              response => (th/check-signed-in-as "a-uuid")
                              response => th/check-has-wallet-key
@@ -85,8 +82,9 @@
                                  wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
                                                                       "stonecutter-user-id" "name" "test@email.com"))
                                  callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
-                                 response (callback-handler (-> (rmr/request :get "/sso-callback")
-                                                                (assoc :params {:code ...auth-code...})))]
+                                 response (-> (rmr/request :get "/sso-callback")
+                                              (assoc :params {:code ...auth-code...})
+                                              callback-handler)]
                              response => (th/check-redirects-to "/")
                              response => (th/check-signed-in-as (:uid wallet))
                              response =not=> th/check-has-wallet-key
@@ -96,7 +94,8 @@
                     (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
                           callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
-                          response (callback-handler (rmr/request :get "/sso-callback"))]
+                          response (-> (rmr/request :get "/sso-callback")
+                                       callback-handler)]
                       response => (th/check-redirects-to "/landing-page")))
               
               (fact "When token response fails, redirects to landing page"
@@ -105,6 +104,7 @@
                     (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
                           callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
-                          response (callback-handler (-> (rmr/request :get "/sso-callback")
-                                                         (assoc :params {:code ...invalid-auth-code...})))]
+                          response (-> (rmr/request :get "/sso-callback")
+                                       (assoc :params {:code ...invalid-auth-code...})
+                                       callback-handler)]
                       response => (th/check-redirects-to "/landing-page")))))

@@ -1,6 +1,6 @@
 GET  /                                  index
-GET  /qrcode                            qrcode
 GET  /qrcode/:uid                       qrcode
+GET  /qrcode                            qrcode
 
 GET  /landing-page                      landing-page
 GET  /sign-in-with-sso                  sign-in

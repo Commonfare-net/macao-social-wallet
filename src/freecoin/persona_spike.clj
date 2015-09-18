@@ -24,11 +24,11 @@
 
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 (ns freecoin.persona-spike
-  (:require
-   [compojure.core :refer [defroutes ANY GET POST]]
-   [hiccup.page :as page]
-   [persona-kit.view :as pv]))
+  (:require [compojure.core :refer [defroutes GET]]
+            [hiccup.page :as page]
+            [persona-kit.view :as pv]))
 
 ;; TODO: add js to view to wire-up login button
 

@@ -1,6 +1,6 @@
 (ns freecoin.views.transaction-form
-  (:require [freecoin.views :as fv]
-            [formidable.core :as fc]))
+  (:require [formidable.core :as fc]
+            [freecoin.routes :as routes]))
 
 (def transaction-form-spec
   {:fields [{:name :amount :type :decimal}
@@ -10,7 +10,7 @@
                  [:decimal [:amount] :type-mismatch]
                  [:string [:recipient] :type-mismatch]]
    :validate-types false
-   :action "/send"
+   :action (routes/path :post-transaction-form)
    :method "post"})
 
 (defn build [_content]

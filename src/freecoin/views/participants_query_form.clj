@@ -1,7 +1,6 @@
 (ns freecoin.views.participants-query-form
   (:require [formidable.core :as fc]
-            [freecoin.routes :as routes]
-            [freecoin.views :as fv]))
+            [freecoin.routes :as routes]))
 
 (def participants-form-spec
   {:fields [{:name :field

@@ -1,9 +1,6 @@
 (ns freecoin.storage
   (:require [monger.core :as mg]
-            [monger.collection :as mc]
-            [monger.conversion :refer [from-db-object]]
-            [monger.operators :refer :all]
-            [freecoin.utils :as utils]))
+            [monger.collection :as mc]))
 
 (defn connect [{:keys [url] :as db-config}]
   (mg/connect-via-uri url))

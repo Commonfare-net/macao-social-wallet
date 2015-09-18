@@ -28,29 +28,16 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.transactions
-  (:require
-   [clojure.string :as str]
-
-   [formidable.core :as fc]
-   [formidable.parse :as fp]
-
-   [liberator.dev]
-   [liberator.core :refer [defresource]]
-   [liberator.representation :refer [ring-response]]
-
-   [simple-time.core :as time]
-
-   [freecoin.blockchain :as blockchain]
-   [freecoin.confirmations :as confirms]
-   [freecoin.storage :as storage]
-   [freecoin.params :as params]
-   [freecoin.views :as views]
-   [freecoin.utils :as utils]
-   [freecoin.context-helpers :as ch]
-   [freecoin.auth :as auth]
-
-   )
-  )
+  (:require [liberator.core :as lc]
+            [liberator.representation :as lr]
+            [simple-time.core :as time]
+            [freecoin.blockchain :as blockchain]
+            [freecoin.confirmations :as confirms]
+            [freecoin.storage :as storage]
+            [freecoin.views :as views]
+            [freecoin.utils :as utils]
+            [freecoin.context-helpers :as ch]
+            [freecoin.auth :as auth]))
 
 (defn transaction-form-spec [recipient]
   {:fields [{:name :amount :datatype :float}
@@ -63,7 +50,7 @@
    :method "post"})
 
 
-(defresource get-transaction-form [request recipient]
+(lc/defresource get-transaction-form [request recipient]
   :allowed-methods       [:get]
   :available-media-types ["text/html"]
 
@@ -82,7 +69,7 @@
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})
 
-(defresource post-transaction-form [wallet-store]
+(lc/defresource post-transaction-form [wallet-store]
   :service-available? (fn [ctx] {::db (get-in ctx [:request :config :db-connection])
                                  ::content-type (get-in ctx [:request :headers "content-type"])})
 
@@ -149,12 +136,12 @@
                     (let [confirmation (::confirmation ctx)]
                       (case (::content-type ctx)
                         "application/json"
-                        (ring-response {:headers {"Location" (:location confirmation)}})
+                        (lr/ring-response {:headers {"Location" (:location confirmation)}})
 
                         ;; TODO: handle default case
                         ))))
 
-(defresource get-transaction-confirm [request confirmation]
+(lc/defresource get-transaction-confirm [request confirmation]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
@@ -164,7 +151,7 @@
                  :heading "Please confirm to execute the transacton"
                  :form-spec {:submit-label "Confirm"}})))
 
-(defresource post-transaction-confirm [request confirmation]
+(lc/defresource post-transaction-confirm [request confirmation]
   :service-available? {::db (get-in request [:config :db-connection])
                        ::content-type (get-in request [:headers "content-type"])}
 
@@ -216,7 +203,7 @@
          (render-transaction tx))]
      )])
 
-(defresource get-all-transactions [request]
+(lc/defresource get-all-transactions [request]
   :service-available? {::db (get-in request [:config :db-connection])
                        ::content-type (get-in request [:headers "content-type"])}
 

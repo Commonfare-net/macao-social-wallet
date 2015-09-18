@@ -1,8 +1,7 @@
 (ns freecoin.test.test-helper
   (:require [midje.sweet :as midje]
             [ring.mock.request :as request]
-            [net.cgrand.enlive-html :as html]
-            [freecoin.helper :as fh]))
+            [net.cgrand.enlive-html :as html]))
 
 (defn create-request
   ([method path query-m]

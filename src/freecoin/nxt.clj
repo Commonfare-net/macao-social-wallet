@@ -24,22 +24,13 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.nxt
-  (:require
-   [freecoin.secretshare :as ssss]
-   [freecoin.params :as param]
-   [freecoin.utils :as util]
-   [freecoin.auth :as auth]
-
-   [liberator.core :refer [resource defresource]]
-
-
-   [cheshire.core :refer :all :as cheshire]
-   [org.httpkit.client :as http]
-   [json-html.core :as present]
-   [hiccup.page :as page]
-
-   )
-  )
+  (:require [liberator.core :as lc]
+            [cheshire.core :as cheshire]
+            [org.httpkit.client :as http]
+            [json-html.core :as present]
+            [hiccup.page :as page]
+            [freecoin.params :as param]
+            [freecoin.auth :as auth]))
 
 ;; operations always needing accountId
 (def account-ops ["getAccountId"
@@ -90,7 +81,7 @@
   )
 
 ;; ring resource for direct wiring
-(defresource api [request command]
+(lc/defresource api [request command]
 ;;{:pre (string? command)}
 
   :allowed-methods [:get]

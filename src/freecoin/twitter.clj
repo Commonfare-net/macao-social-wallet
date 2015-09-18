@@ -28,7 +28,6 @@
 (ns freecoin.twitter
   (:require [oauth.client :as oauth]
             [ring.util.response :as response]
-            [ring.util.request :as request]
             [compojure.core :refer [defroutes GET]]
             [environ.core :refer [env]]
             [freecoin.utils :as utils]
