@@ -1,7 +1,7 @@
 (ns freecoin.config
   (:require [environ.core :as env]))
 
-(def env-vars #{:port :host :base-url
+(def env-vars #{:port :host :base-url :secure
                 :client-id :client-secret :auth-url})
 
 (defn create-config []
@@ -43,3 +43,6 @@
   (or (get-docker-mongo-uri config-m)
       (get-env config-m :mongo-uri)
       "mongodb://localhost:27017/freecoin"))
+
+(defn secure? [config-m]
+  (not (= "false" (get-env config-m :secure "true"))))

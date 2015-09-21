@@ -28,6 +28,8 @@
 
 (ns freecoin.core
   (:require [org.httpkit.server :as server]
+            [clojure.tools.logging :as log]
+            [ring.middleware.defaults :as ring-mw]
             [ring.middleware.cookies :refer [wrap-cookies]]
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]
@@ -78,14 +80,20 @@
      :transactions                  todo
      :nxt                           todo}))
 
+(defn handle-anti-forgery-error [request]
+  (log/warn "ANTY_FORGERY_ERROR - headers: " (:headers request))
+  {:status 403 :body "CSRF token mismatch"})
+
+(defn wrap-defaults-config [session-store secure?]
+  (-> (if secure? (ring-mw/secure-site-defaults :proxy true) ring-mw/site-defaults)
+      (assoc-in [:session :cookie-name] "freecoin-session")
+      (assoc-in [:session :store] session-store)
+      (assoc-in [:security :anti-forgery] {:error-handler handle-anti-forgery-error})))
+
 (defn create-app [config-m stores-m blockchain]
   (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
-      wrap-cookies
-      (wrap-session {:cookie-attrs {:secure    false
-                                    :http-only true}
-                     :store (cookie-store (config/cookie-secret config-m))})
-      wrap-keyword-params
-      wrap-params))
+      (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
+                                                   (config/secure? config-m)))))
 
 ;; launching and halting the app
 (defonce app-state {})

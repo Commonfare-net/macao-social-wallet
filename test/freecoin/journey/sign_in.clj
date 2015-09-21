@@ -12,12 +12,13 @@
             [freecoin.config :as c]
             [freecoin.core :as fc]))
 
+(ih/setup-db)
+
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub (ih/get-test-db)))
 
-(def test-app (ih/build-app {;:stores-m stores-m
-                             ;:blockchain blockchain
-                             }))
+(def test-app (ih/build-app {:stores-m stores-m
+                             :blockchain blockchain}))
 
 (def ^:dynamic sso-id "sso-id-1")
 (def ^:dynamic email "id-1@email.com")

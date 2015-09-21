@@ -32,7 +32,8 @@
 (defn default-app-config-m []
   {:stores-m (s/create-in-memory-stores)
    :blockchain (blockchain/create-in-memory-blockchain :bk)
-   :config-m {:client-secret "freecoin-secret"
+   :config-m {:secure "false"
+              :client-secret "freecoin-secret"
               :client-id "freecoin"
               :auth-url "stonecutter-url"}})
 

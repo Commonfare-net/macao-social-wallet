@@ -9,6 +9,7 @@
                  [scenic "0.2.5"]
                  [ring/ring-core "1.3.2"]
                  [ring/ring-anti-forgery "1.0.0"]
+                 [ring/ring-defaults "0.1.5"]
                  [com.cemerick/friend "0.2.1" :exclusions [robert/hooke xml-apis]]
                  [persona-kit "0.1.1-SNAPSHOT" :exclusions [com.cemerick/friend]]
                  [clj-oauth "1.5.1"]
