@@ -31,13 +31,21 @@
             [ring.util.response :as r]
             [clojure.string :as s]
             [stonecutter-oauth.client :as soc]
+            [freecoin.config :as config]
+            [freecoin.routes :as routes]
             [freecoin.db.uuid :as uuid]
             [freecoin.db.wallet :as wallet]
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
-            [freecoin.views.balance-page :as balance-page]))
+            [freecoin.views.index-page :as index-page]))
+
+(lc/defresource index-page
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (-> (index-page/build)
+                 fv/render-page))
 
 (lc/defresource landing-page [wallet-store blockchain]
   :allowed-methods [:get]
@@ -45,14 +53,13 @@
   :exists? (fn [ctx]
              (if-let [uid (ch/context->signed-in-uid ctx)]
                (let [wallet (wallet/fetch wallet-store uid)]
-                 {::wallet wallet
-                  ::balance (blockchain/get-balance blockchain (:account-id wallet))})
+                 {::wallet wallet})
                {}))
   :handle-ok (fn [ctx]
                (if-let [wallet (::wallet ctx)]
-                 (-> {:wallet wallet :balance (::balance ctx)}
-                     balance-page/balance-page
-                     fv/render-page)
+                 (-> (routes/absolute-path (config/create-config) :account)
+                     r/redirect
+                     lr/ring-response)
                  (-> {:sign-in-url "/sign-in-with-sso"}
                      landing-page/landing-page
                      fv/render-page))))
@@ -60,8 +67,8 @@
 (lc/defresource sign-in [sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (fn [ctx]
-               (lr/ring-response (soc/authorisation-redirect-response sso-config))))
+  :handle-ok (-> (soc/authorisation-redirect-response sso-config)
+                 lr/ring-response))
 
 (defn wallet->access-key [blockchain wallet]
   (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]
@@ -76,7 +83,9 @@
                   (when-let [token-response (soc/request-access-token! sso-config code)]
                     {::token-response token-response})
                   (catch Exception e nil))))
-  :handle-forbidden (lr/ring-response (r/redirect "/landing-page"))
+  :handle-forbidden (-> (routes/absolute-path (config/create-config) :landing-page)
+                        r/redirect
+                        lr/ring-response)
   :exists? (fn [ctx]
              (let [token-response (::token-response ctx)
                    sso-id (get-in token-response [:user-info :sub])
@@ -90,7 +99,22 @@
                     ::cookie-data apikey}))))
   :handle-ok (fn [ctx]
                (lr/ring-response
-                (cond-> (r/redirect "/")
+                (cond-> (r/redirect (routes/absolute-path (config/create-config) :account))
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
                   true (assoc-in [:session :signed-in-uid] (::uid ctx)))))
-  :handle-not-found (lr/ring-response (r/redirect "/landing-page")))
+  :handle-not-found (-> (routes/absolute-path (config/create-config) :landing-page)
+                        r/redirect
+                        lr/ring-response))
+
+(defn preserve-session [response request]
+  (assoc response :session (:session request)))
+
+(lc/defresource sign-out
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx]
+               (-> (routes/absolute-path (config/create-config) :index)
+                   r/redirect
+                   (preserve-session (:request ctx))
+                   (update-in [:session] dissoc :signed-in-uid)
+                   lr/ring-response)))

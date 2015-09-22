@@ -9,7 +9,7 @@
             [freecoin.db.wallet :as w]
             [freecoin.blockchain :as fb]
             [freecoin.test.test-helper :as th]
-            [freecoin.handlers.participant-query :as pq]))
+            [freecoin.handlers.participants :as fp]))
 
 (defn create-wallet [wallet-store blockchain wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
@@ -21,13 +21,27 @@
         email (str "wallet-" index "@email.com")]
     {:sso-id sso-id :name name :email email}))
 
+(facts "about the account page"
+       (fact "displays the signed-in participant's balance"
+             (let [wallet-store (fm/create-memory-store)
+                   blockchain (fb/create-in-memory-blockchain :bk)
+                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                                                        "stonecutter-user-id" "name" "test@email.com"))
+                   account-page-handler (fp/account wallet-store blockchain)
+                   response (account-page-handler (-> (rmr/request :get "/account")
+                                                      (assoc :session {:signed-in-uid (:uid wallet)})))]
+               (:status response) => 200
+               (:body response) => (contains #"Balance:\s*0")))
+       
+       (fact "can not be accessed when user is not signed in"))
+
 (facts "about the participant query form"
        (fact "can be accessed by signed-in users"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
                                                         "stonecutter-user-id" "name" "test@email.com"))
-                   query-form-handler (pq/query-form wallet-store)
+                   query-form-handler (fp/query-form wallet-store)
                    response (-> (th/create-request
                                  :get "/participants-query"
                                  {} (th/authenticated-session (:uid wallet)))
@@ -36,7 +50,7 @@
 
        (fact "can not be accessed when user is not signed in"
              (let [wallet-store (fm/create-memory-store)
-                   query-form-handler (pq/query-form wallet-store)
+                   query-form-handler (fp/query-form wallet-store)
                    response (-> (th/create-request :get "/participants-query" {})
                                 query-form-handler)]
                (:status response) => 401)))
@@ -44,7 +58,7 @@
 (facts "about the participants query handler"
        (fact "can not be accessed when user is not signed in"
              (let [wallet-store (fm/create-memory-store)
-                   participants-handler (pq/participants wallet-store)
+                   participants-handler (fp/participants wallet-store)
                    response (-> (th/create-request :get "/participants" {})
                                 participants-handler)]
                (:status response) => 401))
@@ -55,7 +69,7 @@
                    wallets (doall (->> (range 5)
                                        (map index->wallet-data)
                                        (map (partial create-wallet wallet-store blockchain))))
-                   participants-handler (pq/participants wallet-store)
+                   participants-handler (fp/participants wallet-store)
                    response (-> (th/create-request
                                  :get "/participants"
                                  {} (th/authenticated-session (:uid (first wallets))))
@@ -72,7 +86,7 @@
                                  {:name "James Jones" :email "jim@jones.com" :sso-id "sso-id-2"}
                                  {:name "Sarah Lastname" :email "sarah@email.com" :sso-id "sso-id-3"}]
                     wallets (doall (map (partial create-wallet wallet-store blockchain) wallet-data))
-                    participants-handler (pq/participants wallet-store)
+                    participants-handler (fp/participants wallet-store)
                     query-m {:field ?field :value ?value}
                     response (-> (th/create-request
                                   :get "/participants"

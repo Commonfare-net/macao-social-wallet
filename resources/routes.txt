@@ -5,6 +5,9 @@ GET  /qrcode                            qrcode
 GET  /landing-page                      landing-page
 GET  /sign-in-with-sso                  sign-in
 GET  /sso-callback                      sso-callback
+GET  /sign-out                          sign-out
+
+GET  /account                           account
 
 GET  /participant-query                 get-participant-search-form
 GET  /participants                      participants

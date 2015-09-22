@@ -25,14 +25,32 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.handlers.participant-query
+(ns freecoin.handlers.participants
   (:require [liberator.core :as lc]
+            [liberator.representation :as lr]
+            [ring.util.response :as r]
             [freecoin.utils :as utils]
             [freecoin.db.wallet :as wallet]
+            [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
             [freecoin.views :as fv]
             [freecoin.views.participants-query-form :as participants-query-form]
-            [freecoin.views.participants-list :as participants-list]))
+            [freecoin.views.participants-list :as participants-list]
+            [freecoin.views.account-page :as account-page]))
+
+(lc/defresource account [wallet-store blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :exists? (fn [ctx]
+             (if-let [uid (ch/context->signed-in-uid ctx)]
+               (let [wallet (wallet/fetch wallet-store uid)]
+                 {::wallet wallet})))
+  :handle-ok (fn [ctx]
+               (if-let [wallet (::wallet ctx)]
+                 (-> {:wallet wallet :balance (blockchain/get-balance blockchain (:account-id wallet))}
+                     account-page/build
+                     fv/render-page)
+                 (lr/ring-response (r/redirect "/landing-page")))))
 
 (lc/defresource query-form [wallet-store]
   :allowed-methods [:get]

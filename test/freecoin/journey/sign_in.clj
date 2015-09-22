@@ -31,12 +31,15 @@
  (soc/request-access-token! anything anything) => {:user-info {:sub sso-id
                                                                :email email}})
 
+(defn sign-in [state]
+  (k/visit state (routes/absolute-path (c/create-config) :sso-callback)))
+
 (facts "User can access landing page"
        (-> (k/session test-app)
            (k/visit (routes/absolute-path (c/create-config) :landing-page))
            (kc/check-page-is :landing-page [ks/landing-page-body])))
 
-(facts "A participant can authenticate and create an account, then is redirected to the index to view their balance"
+(facts "A participant can authenticate and create an account, then is redirected to the account page to view their balance"
        (against-background
         (soc/authorisation-redirect-response anything)
         => (r/redirect (str (routes/absolute-path (c/create-config) :sso-callback)
@@ -44,7 +47,15 @@
        (-> (k/session test-app)
            (k/visit (routes/absolute-path (c/create-config) :sign-in))
            (kc/check-and-follow-redirect "to stonecutter callback")
-           (kc/check-and-follow-redirect "to landing-page")
-           (kc/check-page-is :index [ks/index-page-body])))
+           (kc/check-and-follow-redirect "to account page")
+           (kc/check-page-is :account [ks/account-page-body])))
 
-(future-facts "Participant can sign out")
+(facts "Participant can sign out"
+       (-> (k/session test-app)
+           sign-in
+           (k/visit (routes/absolute-path (c/create-config) :sign-out))
+           (kc/check-and-follow-redirect "to index page")
+           (kc/check-page-is :index [ks/index-page-body])
+           ; TODO: DM 20150922 - Assertion that participant has in
+           ; fact signed out.
+           ))
