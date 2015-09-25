@@ -5,6 +5,7 @@ pom.xml
 pom.xml.asc
 *.jar
 *.class
+*.orig
 .lein-*
 /.nrepl-port
 .hgignore
@@ -14,3 +15,5 @@ tests.log
 profiles.clj
 deploy.tar.gz
 /ops/.vagrant
+/doc/dot/*png
+/doc/dot/*dot
