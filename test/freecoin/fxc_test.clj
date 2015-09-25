@@ -34,39 +34,39 @@
 
    [freecoin.utils :as util]
 
+   [buddy.hashers :as hashers]
    [clojure.pprint :as pp]
 
    )
   )
 
 
+
 (fact "Secret FXC codec"
 
   ;; manual creation of an nxt address to intercept it in clear
   (def fake {:ah (:integer (rand/create (:length param/encryption)))
-
              :al (:integer (rand/create (:length param/encryption)))
              })
   (def nxtpass (fxc/render-slice param/encryption "STUB" (:ah fake) (:al fake) 0))
+
   (def secret (fxc/create-secret param/encryption "STUB" (:ah fake) (:al fake)))
-  
+
+  (pp/pprint (format "%x FXC %x" (:ah fake) (:al fake)))
   (pp/pprint nxtpass)
-  
-  (pp/pprint secret)
   
   (fact "cookie is first slice" (first (:slices secret)) => (:cookie secret))
 
   (fact "reversable extraction / hash / conversion for AH"
     (fxc/extract-ahal param/encryption (:cookie secret) "ah")
     =>
-    (ssss/hash-encode-num param/encryption
-                          (fxc/extract-int param/encryption (first (:slices secret)) "ah"))
+    (fxc/extract-int param/encryption (first (:slices secret)) "ah")
     )
+
   (fact "reversable extraction / hash / conversion for AL"
     (fxc/extract-ahal param/encryption (:cookie secret) "al")
     =>
-    (ssss/hash-encode-num param/encryption
-                          (fxc/extract-int param/encryption (first (:slices secret)) "al"))
+    (fxc/extract-int param/encryption (first (:slices secret)) "al")
     )
 
   (fact "unlocking secret"

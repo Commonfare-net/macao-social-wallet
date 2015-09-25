@@ -26,7 +26,8 @@
   (:require [freecoin.secretshare :as ssss]
             [freecoin.random :as rand]
             [freecoin.utils :as util]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            ))
 
 (declare render-slice)
 (declare extract-quorum)
@@ -36,8 +37,8 @@
 
 (defn new-passphrase [conf type]
   (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type
-          (ssss/hash-encode-num conf (:integer (rand/create (:length conf))))
-          (ssss/hash-encode-num conf (:integer (rand/create (:length conf))))
+          (:integer (rand/create (:length conf)))
+          (:integer (rand/create (:length conf)))
           0)
   )
 
@@ -95,7 +96,8 @@
   (let [quorum (extract-quorum conf secret slice)
         ah (ssss/shamir-combine (:ah quorum))
         al (ssss/shamir-combine (:al quorum))]
-    (render-slice conf ah al 0)))
+    (render-slice conf ah al 0))
+  )
 
 
 
@@ -143,10 +145,7 @@
   ))
 
 (defn render-slice [conf type ah al idx]
-   (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type
-           (ssss/hash-encode-num conf ah)
-           (ssss/hash-encode-num conf al)
-           idx)
+   (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type ah al idx)
    )
 
 (defn extract-ahal [conf addr ah-or-al]
@@ -170,6 +169,5 @@
   )
 
 (defn extract-int [conf addr ah-or-al]
-  (ssss/hash-decode-str conf
-   (extract-ahal conf addr ah-or-al))
+   (extract-ahal conf addr ah-or-al)
   )

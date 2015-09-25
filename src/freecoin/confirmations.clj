@@ -181,6 +181,7 @@
         ;; process signin confirmations
         "signin"
         (let [{:keys [account-id account-secret]} (blockchain/create-account (blockchain/new-stub (:db db)))
+              ;; TODO: make new-stub configurable so that different blockchains can be set
               secret-without-cookie (dissoc account-secret :cookie)
               cookie-data (str/join "::" [(:cookie account-secret) account-id])]
           (utils/log! ::ACK 'signin cookie-data)
