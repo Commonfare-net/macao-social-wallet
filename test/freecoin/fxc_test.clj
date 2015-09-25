@@ -52,8 +52,9 @@
 
   (def secret (fxc/create-secret param/encryption "STUB" (:ah fake) (:al fake)))
 
-  (pp/pprint (format "%x FXC %x" (:ah fake) (:al fake)))
+
   (pp/pprint nxtpass)
+  (pp/pprint secret)
   
   (fact "cookie is first slice" (first (:slices secret)) => (:cookie secret))
 
