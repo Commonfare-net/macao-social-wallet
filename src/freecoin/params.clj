@@ -69,7 +69,7 @@
    :salt "La gatta sul tetto che scotta"
    
    ;; random number generator settings
-   :length 15
+   :length 12
    :entropy 3.1
    })
 
