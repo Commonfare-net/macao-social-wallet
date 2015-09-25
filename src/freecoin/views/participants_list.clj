@@ -26,7 +26,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views.participants-list
-  (:require [freecoin.routes :as routes]))
+  (:require [freecoin.routes :as routes]
+            [clavatar.core :as clavatar]))
 
 (defn render-participant [wallet]
   [:li {:style "margin: 1em" :class "clj--participant__item"}
@@ -38,7 +39,7 @@
     [:span {:class "qrcode pull-left"}
      [:img {:src (routes/path :qrcode :uid (:uid wallet))} ]]
     [:span {:class "gravatar pull-right"}
-     [:img {:src (clavatar.core/gravatar (:email wallet) :size 87 :default :mm)}]]]])
+     [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]]])
 
 (defn participants-list [content]
   (let [wallets (:wallets content)]
