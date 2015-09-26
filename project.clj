@@ -37,7 +37,8 @@
   :jvm-opts ["-Djava.security.egd=file:/dev/random"] ;use a proper random source (install haveged)
   :env [[:base-url "http://localhost:8000"]]
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
-            "prod" ["with-profile" "production" "run"]}
+            "prod" ["with-profile" "production" "run"]
+            "test-transactions" ["with-profile" "transaction-graph" "run"]}
   :profiles {:dev [:dev-common :dev-local]
              :dev-common {:dependencies [[midje "1.6.3"]
                                          [peridot "0.3.1"]
@@ -47,6 +48,10 @@
                                 [:client-secret "freecoin-secret"]
                                 [:auth-url "http://localhost:3000"]]
                           :plugins [[lein-midje "3.1.3"]]}
+             :transaction-graph [:dev :user
+                                 {:dependencies [[org.clojure/test.check "0.8.2"]]
+                                  :source-paths ["src" "scripts"]
+                                  :main transaction-graph.main}]
              :production {:source-paths ["src" "prod"]
                           :main freecoin.main}
              :uberjar {:aot :all

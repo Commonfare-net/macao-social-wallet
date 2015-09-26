@@ -8,8 +8,8 @@ txeval() {
         | awk '
 
 /amount" :/ { amount=$3 }
-/to" :/ { recipient=$3 }
-/from" :/ { sender=$3 }
+/to-id" :/ { recipient=$3 }
+/from-id" :/ { sender=$3 }
 /^}/ { print "txarr+=(" sender ":" recipient ":" amount ")" }
 '}
 
