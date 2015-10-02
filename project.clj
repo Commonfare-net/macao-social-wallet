@@ -3,7 +3,7 @@
   :url "http://freecoin.ch"
   :license {:name "GNU GPL Affero v3 and "
             :url "http://www.d-centproject.eu"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [liberator "0.12.2"]
                  [scenic "0.2.5"]
@@ -45,8 +45,9 @@
                                          [kerodon "0.6.1"]]
                           :env [[:base-url "http://localhost:8000"]
                                 [:client-id "freecoin"]
-                                [:client-secret "freecoin-secret"]
-                                [:auth-url "http://localhost:3000"]]
+                                [:client-secret "secret"]
+                                [:auth-url "http://localhost:3000"]
+                                [:secure "false"]]
                           :plugins [[lein-midje "3.1.3"]]}
              :transaction-graph [:dev :user
                                  {:dependencies [[org.clojure/test.check "0.8.2"]]
