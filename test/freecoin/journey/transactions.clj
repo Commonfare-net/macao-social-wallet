@@ -21,23 +21,30 @@
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain}))
 
-(def ^:dynamic sso-id "sso-id-1")
-(def ^:dynamic email "id-1@email.com")
-
 (background
- (soc/request-access-token! anything anything) => {:user-info {:sub sso-id
-                                                               :email email}})
+  (soc/request-access-token! anything "sender") => {:user-info {:sub "sender"
+                                                                :email "sender@email.com"}}
+  (soc/request-access-token! anything "recipient") => {:user-info {:sub "recipient"
+                                                                   :email "recipient@email.com"}})
 
-(defn sign-in [state]
-  (k/visit state (str (routes/absolute-path (c/create-config) :sso-callback) "?code=auth-code")))
+(defn sign-up [state auth-code]
+  (k/visit state (str (routes/absolute-path (c/create-config) :sso-callback) "?code=" auth-code)))
+
+(defn sign-out [state]
+  (k/visit state (routes/absolute-path (c/create-config) :sign-out))
+  ;; TODO: May need to follow redirect to actually
+  ;; sign out...
+  )
 
 (facts "Participant can send freecoins to another account"
        (-> (k/session test-app)
-           sign-in
+           (sign-up "recipient")
+           sign-out
+           (sign-up "sender")
            (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
            (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
            (kc/check-and-fill-in ks/transaction-form--amount "10.0")
            (kc/check-and-press ks/transaction-form--submit)
-           ;; TODO: DM 20150921 - Need to create recipient account
-           ;; before attempting transaction.
+           (kc/check-and-follow-redirect "to confirm transaction")
+;           (kc/check-and-press ks/confirm-transaction-form--submit)
            ))
