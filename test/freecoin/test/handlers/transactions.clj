@@ -6,6 +6,8 @@
             [freecoin.db.confirmation :as c]
             [freecoin.db.uuid :as uuid]
             [freecoin.blockchain :as fb]
+            [freecoin.routes :as routes]
+            [freecoin.config :as config]
             [freecoin.handlers.transactions :as ft]
             [freecoin.test-helpers.store :as test-store]))
 
@@ -31,23 +33,30 @@
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
              transaction-form-handler (ft/get-transaction-form wallet-store)]
          (fact "returns 401 when participant is not authenticated"
-               (-> (th/create-request :get "/get-transaction-form" {})
+               (-> (th/create-request :get (routes/absolute-path (config/create-config)
+                                                                 :get-transaction-form)
+                                      {})
                    transaction-form-handler
                    :status) => 401)
          
          (fact "returns 401 when participant authenticated but without cookie-data"
-               (-> (th/create-request :get "/get-transaction-form"
+               (-> (th/create-request :get (routes/absolute-path (config/create-config)
+                                                                 :get-transaction-form)
                                       {} {:signed-in-uid "sender-uid"})
                    transaction-form-handler
                    :status) => 401)
 
-         ;; TODO: DM 20150916 - May not be necessary, but perhaps poor
-         ;; UX if user can attempt to make a transaction but fail due to
-         ;; an invalid cookie-data
+         ;; TODO:
+         ;; DM 20150916 - May not be necessary, but perhaps poor UX if
+         ;; user can attempt to make a transaction but fail due to
+         ;; an invalid cookie-data.
+         ;; DM 20151001 - Might be better to prompt user to recover
+         ;; their cookie-data, rather than locking out.
          (future-fact "cannot be accessed by authenticated user with invalid cookie-data")
          
          (fact "returns 200 when participant authenticated with cookie-data"
-               (let [response (-> (th/create-request :get "/get-transaction-form"
+               (let [response (-> (th/create-request :get (routes/absolute-path (config/create-config)
+                                                                                :get-transaction-form)
                                                      {} {:signed-in-uid "sender-uid"
                                                          :cookie-data sender-apikey})
                                   transaction-form-handler)]
@@ -93,7 +102,8 @@
                                                       {:signed-in-uid "sender-uid"
                                                        :cookie-data sender-apikey})
                                    form-post-handler)]
-                  response => (th/check-redirects-to "/get-transaction-form")))
+                  response => (th/check-redirects-to (routes/absolute-path (config/create-config)
+                                                                           :get-transaction-form))))
 
           ?amount        ?recipient
           "0.0"          "recipient-uid"
