@@ -32,11 +32,10 @@
       (k/visit (str (routes/absolute-path (c/create-config) :sso-callback) "?code=" auth-code))
       (kc/check-and-follow-redirect "to account page")))
 
+(def sign-in sign-up)
+
 (defn sign-out [state]
-  (k/visit state (routes/absolute-path (c/create-config) :sign-out))
-  ;; TODO: May need to follow redirect to actually
-  ;; sign out...
-  )
+  (k/visit state (routes/absolute-path (c/create-config) :sign-out)))
 
 (facts "Participant can send freecoins to another account"
        (let [memory (atom {})]
@@ -59,4 +58,8 @@
              
              (kc/check-and-follow-redirect "to sender's account page")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
-             (kc/selector-includes-content [ks/account-page--balance] "-10"))))
+             (kc/selector-includes-content [ks/account-page--balance] "-10")
+
+             (sign-in "recipient")
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :recipient-uid))
+             (kc/selector-includes-content [ks/account-page--balance] "10"))))
