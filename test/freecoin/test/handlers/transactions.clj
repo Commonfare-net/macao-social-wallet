@@ -147,3 +147,35 @@
                    :status) => 404)
          
          (future-fact "returns 404 when confirmation with provided uid is not a transaction confirmation")))
+
+(facts "about post requests from the confirm transaction form"
+       (let [{:keys [blockchain wallet-store
+                     sender-wallet sender-apikey recipient-wallet]} (setup-with-sender-and-recipient)
+             confirmation-store (fm/create-memory-store)
+             form-post-handler (ft/post-confirm-transaction-form blockchain wallet-store confirmation-store)]
+
+         (fact "returns 401 when participant not authenticated"
+               (-> (th/create-request :post "/post-confirm-transaction-form" {})
+                   form-post-handler
+                   :status) => 401)
+         
+         (fact "returns 401 when participant authenticated but not authorised"
+               (-> (th/create-request :post "/post-confirm-transaction-form"
+                                      {} {:signed-in-uid "sender-uid"})
+                   form-post-handler
+                   :status) => 401)
+
+         (facts "when participant is authenticated and authorised"
+                (let [confirmation (c/new-transaction-confirmation!
+                                    confirmation-store (constantly "confirmation-uid")
+                                    "sender-uid" "recipient-uid" 10.0)
+                      confirmation-for-different-sender (c/new-transaction-confirmation!
+                                                         confirmation-store (constantly "confirmation-for-different-sender-uid")
+                                                         "different-sender-uid" "recipient-uid" 10.0)]
+
+                  (fact "returns 401 when transaction was not created by the signed-in participant"
+                        (-> (th/create-request :post "/post-confirm-transaction-form"
+                                               {:confirmation-uid "confirmation-for-different-sender-uid"}
+                                               {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
+                            form-post-handler
+                            :status) => 401)))))

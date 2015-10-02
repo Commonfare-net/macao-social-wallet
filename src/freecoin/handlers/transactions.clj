@@ -101,3 +101,15 @@
                (-> {:confirmation-uid (:uid (::confirmation ctx))}
                    confirm-transaction-form/build
                    fv/render-page)))
+
+(lc/defresource post-confirm-transaction-form [blockchain wallet-store confirmation-store]
+  :allowed-methods [:post]
+  :authorized? (fn [ctx]
+                 (let [signed-in-uid (ch/context->signed-in-uid ctx)
+                       sender-wallet (wallet/fetch wallet-store signed-in-uid)
+                       confirmation-uid (:confirmation-uid (ch/context->params ctx))
+                       confirmation (confirmation/fetch confirmation-store confirmation-uid)]
+                   (when (and sender-wallet
+                              confirmation
+                              (= signed-in-uid (:sender-uid confirmation)))
+                     true))))
