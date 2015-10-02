@@ -63,6 +63,7 @@
 
 (lc/defresource post-transaction-form [wallet-store confirmation-store]
   :allowed-methods [:post]
+  :available-media-types ["text/html"]
   :authorized? (fn [ctx]
                  (when-let [uid (ch/context->signed-in-uid ctx)]
                    (when (and (wallet/fetch wallet-store uid)
@@ -82,17 +83,21 @@
                                       confirmation-store uuid/uuid
                                       sender-uid recipient-uid amount)]
                {::confirmation confirmation})))
+  :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config)
+                                                             :get-confirm-transaction-form
+                                                             :confirmation-uid (:uid (::confirmation ctx)))})
   :handle-forbidden (lr/ring-response (r/redirect (routes/absolute-path (config/create-config) :get-transaction-form))))
 
 (lc/defresource get-confirm-transaction-form [confirmation-store]
   :allowed-methods [:get]
+  :available-media-types ["text/html"]
   :exists? (fn [ctx]
              (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
                    signed-in-uid (ch/context->signed-in-uid ctx)]
                (when-let [confirmation (confirmation/fetch confirmation-store confirmation-uid)]
                  (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
-                   true))))
+                   {::confirmation confirmation}))))
   :handle-ok (fn [ctx]
-               (-> {}
+               (-> {:confirmation-uid (:uid (::confirmation ctx))}
                    confirm-transaction-form/build
                    fv/render-page)))

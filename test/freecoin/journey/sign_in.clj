@@ -7,6 +7,7 @@
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.test-helpers.integration :as ih]
             [freecoin.db.storage :as s]
+            [freecoin.db.uuid :as uuid]
             [freecoin.blockchain :as blockchain]
             [freecoin.routes :as routes]
             [freecoin.config :as c]
@@ -43,12 +44,13 @@
        (against-background
         (soc/authorisation-redirect-response anything)
         => (r/redirect (str (routes/absolute-path (c/create-config) :sso-callback)
-                            "?code=auth-code")))
+                            "?code=auth-code"))
+        (uuid/uuid) => "some-uuid")
        (-> (k/session test-app)
            (k/visit (routes/absolute-path (c/create-config) :sign-in))
            (kc/check-and-follow-redirect "to stonecutter callback")
            (kc/check-and-follow-redirect "to account page")
-           (kc/check-page-is :account [ks/account-page-body])))
+           (kc/check-page-is :account [ks/account-page-body] :uid "some-uuid")))
 
 (facts "Participant can sign out"
        (-> (k/session test-app)

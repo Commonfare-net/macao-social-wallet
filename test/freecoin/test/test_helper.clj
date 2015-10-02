@@ -16,7 +16,7 @@
 
 (defn check-redirects-to [path]
   (midje/chatty-checker [response] (and
-                             (= (:status response) 302)
+                             (#{302 303} (:status response))
                              (= (get-in response [:headers "Location"]) path))))
 
 (defn check-signed-in-as [uid]

@@ -29,19 +29,19 @@
      :recipient-wallet (:wallet recipient-details)
      :recipient-apikey (:apikey recipient-details)}))
 
+(def absolute-path (partial routes/absolute-path (config/create-config)))
+
 (facts "about the create transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
              transaction-form-handler (ft/get-transaction-form wallet-store)]
          (fact "returns 401 when participant is not authenticated"
-               (-> (th/create-request :get (routes/absolute-path (config/create-config)
-                                                                 :get-transaction-form)
+               (-> (th/create-request :get (absolute-path :get-transaction-form)
                                       {})
                    transaction-form-handler
                    :status) => 401)
          
          (fact "returns 401 when participant authenticated but without cookie-data"
-               (-> (th/create-request :get (routes/absolute-path (config/create-config)
-                                                                 :get-transaction-form)
+               (-> (th/create-request :get (absolute-path :get-transaction-form)
                                       {} {:signed-in-uid "sender-uid"})
                    transaction-form-handler
                    :status) => 401)
@@ -55,8 +55,7 @@
          (future-fact "cannot be accessed by authenticated user with invalid cookie-data")
          
          (fact "returns 200 when participant authenticated with cookie-data"
-               (let [response (-> (th/create-request :get (routes/absolute-path (config/create-config)
-                                                                                :get-transaction-form)
+               (let [response (-> (th/create-request :get (absolute-path :get-transaction-form)
                                                      {} {:signed-in-uid "sender-uid"
                                                          :cookie-data sender-apikey})
                                   transaction-form-handler)]
@@ -87,10 +86,14 @@
                                     :post "/post-transaction-form"
                                     {:amount "5.00" :recipient "recipient-uid"}
                                     {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
-                                   form-post-handler)]
+                                   form-post-handler)
+                      transaction-confirmation (first (fm/query confirmation-store {}))]
                   (fact "creates a transaction confirmation"
-                        (test-store/entry-count confirmation-store) => 1
-                        (:status response) => 201)))
+                        (test-store/entry-count confirmation-store) => 1)
+
+                  (fact "redirects to the confirm transaction form"
+                        response => (th/check-redirects-to (absolute-path :get-confirm-transaction-form
+                                                                          :confirmation-uid (:uid transaction-confirmation))))))
 
          (tabular
           (fact "redirects to the transaction form page when posted data is invalid"
@@ -102,8 +105,7 @@
                                                       {:signed-in-uid "sender-uid"
                                                        :cookie-data sender-apikey})
                                    form-post-handler)]
-                  response => (th/check-redirects-to (routes/absolute-path (config/create-config)
-                                                                           :get-transaction-form))))
+                  response => (th/check-redirects-to (absolute-path :get-transaction-form))))
 
           ?amount        ?recipient
           "0.0"          "recipient-uid"

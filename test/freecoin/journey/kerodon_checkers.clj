@@ -10,8 +10,8 @@
         (-> state :request :uri) => uri)
   state)
 
-(defn page-route-is [state scenic-action]
-  (page-uri-is state (r/path scenic-action)))
+(defn page-route-is [state scenic-action & route-params]
+  (page-uri-is state (apply r/path scenic-action route-params)))
 
 (defn response-status-is [state status]
   (fact {:midje/name (str "Checking response status is " status)}
@@ -23,8 +23,8 @@
         (-> state :enlive (html/select selector)) =not=> empty?)
   state)
 
-(defn check-page-is [state route-action body-selector]
-  (page-route-is state route-action)
+(defn check-page-is [state route-action body-selector & route-params]
+  (apply page-route-is state route-action route-params)
   (response-status-is state 200)
   (selector-exists state body-selector))
 
@@ -32,7 +32,7 @@
   ([state description]
    "Possibly a double redirect"
    (fact {:midje/name (format "Attempting to follow redirect - %s" description)}
-         (-> state :response :status) => 302)
+         (-> state :response :status) => (some-checker 302 303))
    (try (k/follow-redirect state)
         (catch Exception state)))
   ([state]

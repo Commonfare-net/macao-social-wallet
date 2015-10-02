@@ -57,7 +57,7 @@
                {}))
   :handle-ok (fn [ctx]
                (if-let [wallet (::wallet ctx)]
-                 (-> (routes/absolute-path (config/create-config) :account)
+                 (-> (routes/absolute-path (config/create-config) :account :uid (:uid wallet))
                      r/redirect
                      lr/ring-response)
                  (-> {:sign-in-url "/sign-in-with-sso"}
@@ -99,7 +99,7 @@
                     ::cookie-data apikey}))))
   :handle-ok (fn [ctx]
                (lr/ring-response
-                (cond-> (r/redirect (routes/absolute-path (config/create-config) :account))
+                (cond-> (r/redirect (routes/absolute-path (config/create-config) :account :uid (::uid ctx)))
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
                   true (assoc-in [:session :signed-in-uid] (::uid ctx)))))
   :handle-not-found (-> (routes/absolute-path (config/create-config) :landing-page)

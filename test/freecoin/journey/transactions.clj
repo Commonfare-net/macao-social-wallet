@@ -28,7 +28,9 @@
                                                                    :email "recipient@email.com"}})
 
 (defn sign-up [state auth-code]
-  (k/visit state (str (routes/absolute-path (c/create-config) :sso-callback) "?code=" auth-code)))
+  (-> state
+      (k/visit (str (routes/absolute-path (c/create-config) :sso-callback) "?code=" auth-code))
+      (kc/check-and-follow-redirect "to account page")))
 
 (defn sign-out [state]
   (k/visit state (routes/absolute-path (c/create-config) :sign-out))
@@ -37,14 +39,25 @@
   )
 
 (facts "Participant can send freecoins to another account"
-       (-> (k/session test-app)
-           (sign-up "recipient")
-           sign-out
-           (sign-up "sender")
-           (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
-           (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
-           (kc/check-and-fill-in ks/transaction-form--amount "10.0")
-           (kc/check-and-press ks/transaction-form--submit)
-           (kc/check-and-follow-redirect "to confirm transaction")
-;           (kc/check-and-press ks/confirm-transaction-form--submit)
-           ))
+       (let [memory (atom {})]
+         (-> (k/session test-app)
+             
+             (sign-up "recipient")
+             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             sign-out
+             
+             (sign-up "sender")
+             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+             
+             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (kc/check-and-fill-in ks/transaction-form--recipient (kh/recall memory :recipient-uid))
+             (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-press ks/transaction-form--submit)
+             
+             (kc/check-and-follow-redirect "to confirm transaction")
+             (kc/check-and-press ks/confirm-transaction-form--submit)
+             
+             ;(kc/check-and-follow-redirect "to sender's account page")
+             ;(kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+             
+             )))

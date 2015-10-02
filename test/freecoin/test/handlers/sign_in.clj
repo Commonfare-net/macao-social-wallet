@@ -46,7 +46,7 @@
                    landing-page-handler (fs/landing-page wallet-store blockchain)
                    response (landing-page-handler (-> (rmr/request :get "/landing-page")
                                                       (assoc :session {:signed-in-uid (:uid wallet)})))]
-               response => (th/check-redirects-to (absolute-path :account)))))
+               response => (th/check-redirects-to (absolute-path :account :uid (:uid wallet))))))
 
 (fact "the sign-in endpoint redirects to the stonecutter authorisation url"
       (let [sign-in-handler (fs/sign-in test-sso-config)
@@ -74,7 +74,7 @@
                           response (-> (rmr/request :get "/sso-callback")
                                        (assoc :params {:code ...auth-code...})
                                        callback-handler)]
-                      response => (th/check-redirects-to (absolute-path :account))
+                      response => (th/check-redirects-to (absolute-path :account :uid "a-uuid"))
                       response => (th/check-signed-in-as "a-uuid")
                       response => th/check-has-wallet-key
                       (test-store/entry-count wallet-store) => 1))
@@ -88,7 +88,7 @@
                           response (-> (rmr/request :get "/sso-callback")
                                        (assoc :params {:code ...auth-code...})
                                        callback-handler)]
-                      response => (th/check-redirects-to (absolute-path :account))
+                      response => (th/check-redirects-to (absolute-path :account :uid (:uid wallet)))
                       response => (th/check-signed-in-as (:uid wallet))
                       response =not=> th/check-has-wallet-key
                       (test-store/entry-count wallet-store) => 1)))

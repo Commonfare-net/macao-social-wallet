@@ -15,7 +15,7 @@
    :action (routes/absolute-path (config/create-config) :post-transaction-form)
    :method "post"})
 
-(defn build [_content]
+(defn build [_context]
   {:title "Make a transaction"
    :heading "Send freecoins"
    :body (fc/render-form transaction-form-spec)})
