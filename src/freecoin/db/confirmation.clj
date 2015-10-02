@@ -39,3 +39,6 @@
 
 (defn fetch [confirmation-store uid]
   (mongo/fetch confirmation-store uid))
+
+(defn delete! [confirmation-store uid]
+  (mongo/delete! confirmation-store uid))

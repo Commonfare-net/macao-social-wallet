@@ -153,8 +153,14 @@
   (list-transactions [bk account-id] ;; TODO
     )
   (get-transaction   [bk account-id txid] nil)
-  (make-transaction  [bk from-account-id amount to-account-id secret] ;; TODO
-    )
+  (make-transaction  [bk from-account-id amount to-account-id secret]
+    (let [now (time/format (time/now))
+          transaction {:transaction-id (str now "-" from-account-id)
+                       :from-account-id from-account-id
+                       :to-account-id to-account-id
+                       :amount amount}]
+      (swap! transactions-atom assoc (:transaction-id transaction) transaction)
+      transaction))
 
   ;; vouchers
   (create-voucher [bk account-id amount expiration secret])

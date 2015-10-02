@@ -78,7 +78,7 @@
      :get-transaction-form          (transactions/get-transaction-form wallet-store)
      :post-transaction-form         (transactions/post-transaction-form wallet-store confirmation-store)
      :get-confirm-transaction-form  (transactions/get-confirm-transaction-form confirmation-store)
-     :post-confirm-transaction-form todo
+     :post-confirm-transaction-form (transactions/post-confirm-transaction-form blockchain wallet-store confirmation-store)
      :transactions                  todo
      :nxt                           todo}))
 

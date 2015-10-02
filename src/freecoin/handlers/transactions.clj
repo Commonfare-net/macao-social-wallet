@@ -34,6 +34,7 @@
             [formidable.parse :as fp]
             [freecoin.db.wallet :as wallet]
             [freecoin.db.confirmation :as confirmation]
+            [freecoin.blockchain :as blockchain]
             [freecoin.db.uuid :as uuid]
             [freecoin.context-helpers :as ch]
             [freecoin.routes :as routes]
@@ -111,5 +112,18 @@
                        confirmation (confirmation/fetch confirmation-store confirmation-uid)]
                    (when (and sender-wallet
                               confirmation
-                              (= signed-in-uid (:sender-uid confirmation)))
-                     true))))
+                              (= signed-in-uid (-> confirmation :data :sender-uid)))
+                     {::confirmation confirmation})))
+  :post! (fn [ctx]
+           (let [{:keys [sender-uid recipient-uid amount]} (:data (::confirmation ctx))
+                 sender-wallet (wallet/fetch wallet-store sender-uid)
+                 recipient-wallet (wallet/fetch wallet-store recipient-uid)
+                 secret (ch/context->cookie-data ctx)]
+             (blockchain/make-transaction blockchain
+                                          (:account-id sender-wallet) amount
+                                          (:account-id recipient-wallet) secret)
+             (confirmation/delete! confirmation-store (-> ctx ::confirmation :uid))
+             {::sender-uid (:uid sender-wallet)}))
+  :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config) :account
+                                                             :uid (::sender-uid ctx))}))
+

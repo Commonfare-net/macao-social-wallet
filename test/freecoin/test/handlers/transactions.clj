@@ -149,8 +149,7 @@
          (future-fact "returns 404 when confirmation with provided uid is not a transaction confirmation")))
 
 (facts "about post requests from the confirm transaction form"
-       (let [{:keys [blockchain wallet-store
-                     sender-wallet sender-apikey recipient-wallet]} (setup-with-sender-and-recipient)
+       (let [{:keys [blockchain wallet-store sender-wallet sender-apikey recipient-wallet]} (setup-with-sender-and-recipient)
              confirmation-store (fm/create-memory-store)
              form-post-handler (ft/post-confirm-transaction-form blockchain wallet-store confirmation-store)]
 
@@ -165,17 +164,34 @@
                    form-post-handler
                    :status) => 401)
 
-         (facts "when participant is authenticated and authorised"
-                (let [confirmation (c/new-transaction-confirmation!
+         (fact "returns 401 when transaction was not created by the signed-in participant"
+               (let [confirmation-store (fm/create-memory-store)
+                     confirmation-for-different-sender (c/new-transaction-confirmation!
+                                                        confirmation-store (constantly "confirmation-for-different-sender-uid")
+                                                        "different-sender-uid" "recipient-uid" 10.0)
+                     form-post-handler (ft/post-confirm-transaction-form blockchain wallet-store confirmation-store)]
+                 (-> (th/create-request :post "/post-confirm-transaction-form"
+                                        {:confirmation-uid "confirmation-for-different-sender-uid"}
+                                        {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
+                     form-post-handler
+                     :status)) => 401)
+
+         (facts "when participant is authenticated and authorised, and is attempting to confirm own transaction"
+                (let [confirmation-store (fm/create-memory-store)
+                      confirmation (c/new-transaction-confirmation!
                                     confirmation-store (constantly "confirmation-uid")
                                     "sender-uid" "recipient-uid" 10.0)
-                      confirmation-for-different-sender (c/new-transaction-confirmation!
-                                                         confirmation-store (constantly "confirmation-for-different-sender-uid")
-                                                         "different-sender-uid" "recipient-uid" 10.0)]
+                      form-post-handler (ft/post-confirm-transaction-form blockchain wallet-store confirmation-store)
+                      response (-> (th/create-request :post "/post-confirm-transaction-form"
+                                                      {:confirmation-uid "confirmation-uid"}
+                                                      {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
+                                   form-post-handler)]
 
-                  (fact "returns 401 when transaction was not created by the signed-in participant"
-                        (-> (th/create-request :post "/post-confirm-transaction-form"
-                                               {:confirmation-uid "confirmation-for-different-sender-uid"}
-                                               {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
-                            form-post-handler
-                            :status) => 401)))))
+                  (fact "creates a transaction"
+                        (:transaction-count (test-store/summary blockchain)) => 1)
+
+                  (fact "deletes the confirmation"
+                        (:entry-count (test-store/summary confirmation-store)) => 0)
+                  
+                  (fact "redirects to signed-in participant's account page"
+                        response => (th/check-redirects-to (absolute-path :account :uid (:uid sender-wallet))))))))

@@ -47,7 +47,9 @@
   (fetch [e k]
     "Retrieve item based on primary id")
   (query [e query]
-    "Items are returned using a query map"))
+    "Items are returned using a query map")
+  (delete! [e k]
+    "Delete item based on primary id"))
 
 (defrecord MongoStore [mongo-db coll]
   FreecoinStore
@@ -68,7 +70,11 @@
 
   (query [this query]
     (->> (mc/find-maps mongo-db coll query)
-         (map #(dissoc % :_id)))))
+         (map #(dissoc % :_id))))
+
+  (delete! [this k]
+    (when k
+      (mc/remove-by-id mongo-db coll k))))
 
 (defn create-mongo-store [mongo-db coll]
   (MongoStore. mongo-db coll))
@@ -88,7 +94,10 @@
   (fetch [this k] (@data k))
 
   (query [this query]
-    (filter #(= query (select-keys % (keys query))) (vals @data))))
+    (filter #(= query (select-keys % (keys query))) (vals @data)))
+
+  (delete! [this k]
+    (swap! data dissoc k)))
 
 (defn create-memory-store
   "Create a memory store"

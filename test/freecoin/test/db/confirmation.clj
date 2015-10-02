@@ -28,7 +28,8 @@
 (ns freecoin.test.db.confirmation
   (:require [midje.sweet :refer :all]
             [freecoin.db.mongo :as fm]
-            [freecoin.db.confirmation :as confirmation]))
+            [freecoin.db.confirmation :as confirmation]
+            [freecoin.test-helpers.store :as test-store]))
 
 (facts "Can create and fetch a transaction confirmation"
        (let [uuid-generator (constantly "a-uuid")
@@ -49,3 +50,11 @@
                          :data {:sender-uid "sender-uid"
                                 :recipient-uid "recipient-uid"
                                 :amount 10.0}}))))
+
+(fact "Can delete a confirmation"
+      (let [confirmation-store (fm/create-memory-store)
+            confirmation (confirmation/new-transaction-confirmation! confirmation-store (constantly "uid")
+                                                                     "sender-uid" "recipient-uid" 10.0)]
+        (test-store/summary confirmation-store) => (contains {:entry-count 1})
+        (confirmation/delete! confirmation-store "uid")
+        (test-store/summary confirmation-store) => (contains {:entry-count 0})))

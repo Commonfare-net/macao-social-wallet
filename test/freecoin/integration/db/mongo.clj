@@ -84,4 +84,17 @@
        (run-update-tests (m/create-memory-store) "in-memory")
        (run-update-tests (create-empty-test-store @db) "mongo"))
 
+(defn run-delete-tests [store type]
+  (facts {:midje/name (format "can delete records by primary id for %s store" type)}
+         (let [record {:key "key"}
+               stored-record (m/store! store :key record)]
+           (fact "record is deleted"
+                 (m/fetch store "key") => stored-record
+                 (m/delete! store "key")
+                 (m/fetch store "key") => nil))))
+
+(facts "run delete tests for both in-memory and mongo stores"
+       (run-delete-tests (m/create-memory-store) "in-memory")
+       (run-delete-tests (create-empty-test-store @db) "mongo"))
+
 (disconnect)
