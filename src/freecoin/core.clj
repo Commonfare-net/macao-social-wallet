@@ -58,7 +58,7 @@
                  (routes/absolute-path config-m :sso-callback)))
 
 (defn todo [_]
-  {:status 200 :body "Work-in-progress"})
+  {:status 200 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})
 
 (defn handlers [config-m stores-m blockchain]
   (let [wallet-store (storage/get-wallet-store stores-m)
@@ -86,7 +86,7 @@
   {:status 403 :body "CSRF token mismatch"})
 
 (defn wrap-defaults-config [session-store secure?]
-  (-> (if secure? (ring-mw/secure-site-defaults :proxy true) ring-mw/site-defaults)
+  (-> (if secure? (assoc ring-mw/secure-site-defaults :proxy true) ring-mw/site-defaults)
       (assoc-in [:session :cookie-name] "freecoin-session")
       (assoc-in [:session :store] session-store)
       (assoc-in [:security :anti-forgery] {:error-handler handle-anti-forgery-error})))
@@ -124,7 +124,7 @@
         (assoc app-state :server server)))))
 
 (defn halt [app-state]
-  (when-let [server (app-state)]
+  (when-let [server (:server app-state)]
     (server))
   (dissoc app-state :server))
 
