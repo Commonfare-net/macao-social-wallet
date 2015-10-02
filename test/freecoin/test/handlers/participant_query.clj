@@ -31,7 +31,7 @@
                    response (account-page-handler (-> (rmr/request :get "/account")
                                                       (assoc :session {:signed-in-uid (:uid wallet)})))]
                (:status response) => 200
-               (:body response) => (contains #"Balance:\s*0")))
+               (:body response) => (contains #"Balance:")))
        
        (fact "can not be accessed when user is not signed in"))
 

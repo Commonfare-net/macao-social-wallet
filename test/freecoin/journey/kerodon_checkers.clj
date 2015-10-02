@@ -52,3 +52,8 @@
   (try (k/press state kerodon-selector)
        (catch Exception state)))
 
+(defn selector-includes-content [state selector content]
+  (fact {:midje/name "Check if element contains string"}
+        (-> state :enlive (html/select selector) first html/text) => (contains content))
+  state)
+

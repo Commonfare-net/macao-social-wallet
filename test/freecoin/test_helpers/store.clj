@@ -17,4 +17,3 @@
   InMemoryBlockchain
   (entry-count [this] nil)
   (summary [this] {:transaction-count (count @(:transactions-atom this))}))
-

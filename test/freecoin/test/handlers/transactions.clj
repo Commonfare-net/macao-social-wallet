@@ -118,7 +118,7 @@
        (let [confirmation-store (fm/create-memory-store)
              confirmation (c/new-transaction-confirmation! confirmation-store
                                                            (constantly "confirmation-uid")
-                                                           "sender-uid" "recipient-uid" 10.0)
+                                                           "sender-uid" "recipient-uid" 10M)
              confirm-transaction-handler (ft/get-confirm-transaction-form confirmation-store)]
 
          (fact "displays confirm transaction form"
@@ -168,7 +168,7 @@
                (let [confirmation-store (fm/create-memory-store)
                      confirmation-for-different-sender (c/new-transaction-confirmation!
                                                         confirmation-store (constantly "confirmation-for-different-sender-uid")
-                                                        "different-sender-uid" "recipient-uid" 10.0)
+                                                        "different-sender-uid" "recipient-uid" 10M)
                      form-post-handler (ft/post-confirm-transaction-form blockchain wallet-store confirmation-store)]
                  (-> (th/create-request :post "/post-confirm-transaction-form"
                                         {:confirmation-uid "confirmation-for-different-sender-uid"}
@@ -180,7 +180,7 @@
                 (let [confirmation-store (fm/create-memory-store)
                       confirmation (c/new-transaction-confirmation!
                                     confirmation-store (constantly "confirmation-uid")
-                                    "sender-uid" "recipient-uid" 10.0)
+                                    "sender-uid" "recipient-uid" 10M)
                       form-post-handler (ft/post-confirm-transaction-form blockchain wallet-store confirmation-store)
                       response (-> (th/create-request :post "/post-confirm-transaction-form"
                                                       {:confirmation-uid "confirmation-uid"}

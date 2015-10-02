@@ -5,6 +5,7 @@
 (def index-page-body :.func--index-page)
 
 (def account-page-body :.func--account-page--body)
+(def account-page--balance :.func--account-page--balance)
 
 (def transaction-form--amount :.func--transaction-form--amount)
 (def transaction-form--recipient :.func--transaction-form--recipient)

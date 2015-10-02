@@ -70,12 +70,11 @@
                    (when (and (wallet/fetch wallet-store uid)
                               (ch/context->cookie-data ctx)) true)))
   :allowed? (fn [ctx]
-              (let [{:keys [status data problems]}
-                    (validate-form transaction-form/transaction-form-spec
-                                   (ch/context->params ctx))]
+              (let [{:keys [status data problems]} (validate-form transaction-form/transaction-form-spec
+                                                                  (ch/context->params ctx))]
                 (when (= :ok status)
                   (when-let [recipient-wallet (wallet/fetch wallet-store (:recipient data))]
-                    true))))
+                    {::form-data data}))))
   :post! (fn [ctx]
            (let [amount (get-in ctx [::form-data :amount])
                  recipient-uid (get-in ctx [::form-data :recipient])

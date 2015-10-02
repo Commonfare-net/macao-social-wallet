@@ -58,4 +58,5 @@
              (kc/check-and-press ks/confirm-transaction-form--submit)
              
              (kc/check-and-follow-redirect "to sender's account page")
-             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid)))))
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+             (kc/selector-includes-content [ks/account-page--balance] "-10"))))

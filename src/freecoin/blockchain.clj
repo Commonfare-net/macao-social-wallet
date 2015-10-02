@@ -26,6 +26,7 @@
   (:require [clojure.string :as str]
             [freecoin.fxc :as fxc]
             [freecoin.params :as param]
+            [freecoin.utils :as util]
             [freecoin.storage :as storage]
             [simple-time.core :as time]))
 
@@ -96,34 +97,32 @@
   (get-balance [bk account-id]
     ;; we use the aggregate function in mongodb, sort of simplified map/reduce
     (let [received-map (first (storage/aggregate db "transactions"
-                                      [{"$group" {:_id "$to"
-                                                  :total {"$sum" "$amount"}}}
-                                       {"$match" {:_id account-id}}]))
+                                                 [{"$match" {:to-id account-id}}
+                                                  {"$group" {:_id "$to-id"
+                                                             :total {"$sum" "$amount"}}}]))
           sent-map  (first (storage/aggregate db "transactions"
-                                   [{"$group" {:_id "$from"
-                                               :total {"$sum" "$amount"}}}
-                                    {"$match" {:_id account-id}}]))
+                                              [{"$match" {:from-id account-id}}
+                                               {"$group" {:_id "$from-id"
+                                                          :total {"$sum" "$amount"}}}]))
           received (if (nil? received-map) 0 (:total received-map))
           sent      (if (nil? sent-map) 0 (:total sent-map))]
-      ;; return the balance
-      (- received sent)
-      ))
+      (util/long->bigdecimal (- received sent))))
       
   (list-transactions [bk account-id] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
 
   (get-transaction   [bk account-id txid] nil)
 
   (make-transaction  [bk from-account-id amount to-account-id secret]
-    (let [now (time/format (time/now))]
+    (let [now (time/format (time/now))
+          transaction {:_id (str now "-" from-account-id)
+                       :blockchain "STUB"
+                       :timestamp now
+                       :from-id from-account-id
+                       :to-id to-account-id
+                       :amount (util/bigdecimal->long amount)}]
       ;; TODO: Keep track of accounts to verify validity of from- and
       ;; to- accounts
-      (storage/insert db "transactions"
-       {:_id (str now "-" from-account-id)
-        :blockchain "STUB"
-        :timestamp now
-        :from-id from-account-id
-        :to-id to-account-id
-        :amount amount})))
+      (storage/insert db "transactions" transaction)))
 
   (create-voucher [bk account-id amount expiration secret] nil)
   
@@ -147,15 +146,25 @@
        :account-secret secret}))
 
   (get-address [bk account-id] nil)
-  (get-balance [bk account-id] 0) ;; TODO: Will be implemented when driving out transaction code
+  (get-balance [bk account-id]
+    (let [all-transactions (vals @transactions-atom)
+          total-withdrawn (->> all-transactions
+                               (filter (comp (partial = account-id) :from-account-id))
+                               (map :amount)
+                               (reduce +))
+          total-deposited (->> all-transactions
+                               (filter (comp (partial = account-id) :to-account-id))
+                               (map :amount)
+                               (reduce +))]
+      (- total-deposited total-withdrawn)))
 
   ;; transactions
-  (list-transactions [bk account-id] ;; TODO
-    )
+  (list-transactions [bk account-id])
   (get-transaction   [bk account-id txid] nil)
   (make-transaction  [bk from-account-id amount to-account-id secret]
     (let [now (time/format (time/now))
           transaction {:transaction-id (str now "-" from-account-id)
+                       :timestamp now
                        :from-account-id from-account-id
                        :to-account-id to-account-id
                        :amount amount}]

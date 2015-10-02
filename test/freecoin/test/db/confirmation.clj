@@ -36,12 +36,12 @@
              confirmation-store (fm/create-memory-store)]
          (fact "can create a transaction confirmation"
                (let [confirmation (confirmation/new-transaction-confirmation! confirmation-store uuid-generator
-                                                                              "sender-uid" "recipient-uid" 10.0)]
+                                                                              "sender-uid" "recipient-uid" 10M)]
                  confirmation => (just {:uid "a-uuid"
                                         :type :transaction
                                         :data {:sender-uid "sender-uid"
                                                :recipient-uid "recipient-uid"
-                                               :amount 10.0}})))
+                                               :amount 10M}})))
 
          (fact "can fetch a transaction confirmation by its uid"
                (confirmation/fetch confirmation-store "a-uuid")
@@ -49,12 +49,12 @@
                          :type :transaction
                          :data {:sender-uid "sender-uid"
                                 :recipient-uid "recipient-uid"
-                                :amount 10.0}}))))
+                                :amount 10M}}))))
 
 (fact "Can delete a confirmation"
       (let [confirmation-store (fm/create-memory-store)
             confirmation (confirmation/new-transaction-confirmation! confirmation-store (constantly "uid")
-                                                                     "sender-uid" "recipient-uid" 10.0)]
+                                                                     "sender-uid" "recipient-uid" 10M)]
         (test-store/summary confirmation-store) => (contains {:entry-count 1})
         (confirmation/delete! confirmation-store "uid")
         (test-store/summary confirmation-store) => (contains {:entry-count 0})))

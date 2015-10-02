@@ -49,5 +49,7 @@
             [:ul {:style "list-style-type: none;"}
              (render-wallet wallet)]
             [:div {:class "balance pull-left"}
-             (str "Balance: " balance)]]
+             (str "Balance: ")
+             [:span {:class "func--account-page--balance"}
+              balance]]]
      :title "Welcome to freecoin"}))

@@ -26,7 +26,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.db.confirmation
-  (:require [freecoin.db.mongo :as mongo]))
+  (:require [freecoin.db.mongo :as mongo]
+            [freecoin.utils :as util]))
 
 (defn new-transaction-confirmation! [confirmation-store uuid-generator
                                      sender-uid recipient-uid amount]
@@ -34,11 +35,13 @@
                       :type :transaction
                       :data {:sender-uid sender-uid
                              :recipient-uid recipient-uid
-                             :amount amount}}]
-    (mongo/store! confirmation-store :uid confirmation)))
+                             :amount (util/bigdecimal->long amount)}}]
+    (some-> (mongo/store! confirmation-store :uid confirmation)
+            (update-in [:data :amount] util/long->bigdecimal))))
 
 (defn fetch [confirmation-store uid]
-  (mongo/fetch confirmation-store uid))
+  (some-> (mongo/fetch confirmation-store uid)
+          (update-in [:data :amount] util/long->bigdecimal)))
 
 (defn delete! [confirmation-store uid]
   (mongo/delete! confirmation-store uid))

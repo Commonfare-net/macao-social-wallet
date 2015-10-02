@@ -78,3 +78,11 @@
     (dolog n t d)
     )
   )
+
+;; Converting to and from BigDecimal for storage and retrieval from mongo
+(defn bigdecimal->long [bd]
+  (.longValue (* bd 100000)))
+
+(defn long->bigdecimal [l]
+  (/ (BigDecimal. l) 100000))
+
