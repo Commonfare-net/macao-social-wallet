@@ -6,4 +6,4 @@
      :body [:h2 [:a {:class "clj--sign-in-link"
                 :href sign-in-url}
             "Sign in"]]
-     :title "Welcome to Freecoin"}))
+     :title "Welcome to Dyne.org"}))

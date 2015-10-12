@@ -1,4 +1,4 @@
-(defproject freecoin "0.2.0-SNAPSHOT"
+(defproject freecoin "0.2.0"
   :description "Freecoin digital currency toolkit"
   :url "http://freecoin.ch"
   :license {:name "GNU GPL Affero v3 and "
@@ -49,6 +49,14 @@
                                 [:auth-url "http://localhost:3000"]
                                 [:secure "false"]]
                           :plugins [[lein-midje "3.1.3"]]}
+
+             :rel [:release :release-local]
+             :release {:env [[:base-url "http://demo.freecoin.ch:8000"]
+                             [:client-id "dyne-demo-freecoin"]
+                             [:client-secret "secret"]
+                             [:auth-url "https://sso.dcentproject.eu"]
+                             [:secure "true"]]}
+
              :transaction-graph [:dev :user
                                  {:dependencies [[org.clojure/test.check "0.8.2"]]
                                   :source-paths ["src" "scripts"]
