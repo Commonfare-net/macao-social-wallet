@@ -1,8 +1,0 @@
-backend_port: 3000
-
-database_ip: 127.0.0.1
-
-mongo_bind_ip: 0.0.0.0
-mongo_database: freecoin
-mongo_user: freecoin
-mongo_password: an_insecure_password_because_we_are_spiking

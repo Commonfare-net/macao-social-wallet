@@ -6,39 +6,25 @@ digital_ocean_memory = 1024
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
-  config.vm.box = "ubuntu/trusty64"
+ config.vm.box = "http://vagrant.devuan.org/devuan-jessie-amd64-alpha2.box"
+           #i386 "http://vagrant.devuan.org/devuan-jessie-i386-alpha2.box"
+    config.vm.define "development", primary: true do |dev|
+      dev.vm.network "private_network", ip: "192.168.50.80"
+      dev.vm.network :forwarded_port, guest: 22, host: 2280, id: "ssh", auto_correct: false
+      config.vm.synced_folder ".", "/vagrant", disabled: true
+      config.ssh.username = "root"
+      config.ssh.password = "devuan"
+      #confing.vm.guest = :debian
 
-  config.vm.define "development", primary: true do |dev|
-    dev.vm.network "private_network", ip: "192.168.50.80"
-    dev.vm.network :forwarded_port, guest: 22, host: 2280, id: "ssh", auto_correct: false
+      dev.vm.provider :virtualbox do |vbox|
+        vbox.customize ["modifyvm", :id, "--memory", 2048]
+      end
 
-    dev.vm.synced_folder "../", "/var/freecoin"
-    
-    dev.vm.provider :virtualbox do |vbox|
-      vbox.customize ["modifyvm", :id, "--memory", 2048]
-    end
-
-    dev.vm.provision "ansible" do |ansible|
-      ansible.playbook = "development_playbook.yml"
-      ansible.inventory_path = "development.inventory"
-      ansible.sudo = true
-    end
-  end
-
-  config.vm.define "dob_vm" do |dob|
-    dob.vm.network "private_network", ip: "192.168.50.81"
-    dob.vm.network :forwarded_port, guest: 22, host: 2281, id: "ssh", auto_correct: false
-
-    dob.vm.synced_folder "../", "/var/freecoin"
-    
-    dob.vm.provider "virtualbox" do |vbox|
-      vbox.customize ["modifyvm", :id, "--memory", digital_ocean_memory, "--cpus", 1]
-    end
-
-    dob.vm.provision "ansible" do |ansible|
-      ansible.playbook = "dob_vm_playbook.yml"
-      ansible.inventory_path = "dob_vm.inventory"
-      ansible.sudo = true
-    end
-  end
+     dev.vm.provision "ansible" do |ansible|
+       ansible.playbook = "staging_playbook.yml"
+     # ansible.playbook = "development_playbook.yml"
+       ansible.sudo = true
+     end
+   end
 end
+

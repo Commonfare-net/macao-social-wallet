@@ -1,8 +1,0 @@
-server {
-  location /static/ {
-    alias /var/www/freecoin/public/;
-  }
-  location / {
-    proxy_pass http://localhost:5000;
-  }
-}
