@@ -1,4 +1,0 @@
-default ansible_ssh_host=127.0.0.1 ansible_ssh_port=2281
-
-[dob_vm]
-default site_address="https://192.168.50.81"

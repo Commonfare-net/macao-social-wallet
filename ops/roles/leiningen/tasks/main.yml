@@ -1,9 +1,0 @@
----
- - name: install jdk7
-   apt: name="openjdk-7-jdk" state=present
-
- - name: create /home/vagrant/bin
-   command: "mkdir -p /home/vagrant/bin"
-
- - name: copy lein script
-   copy: src="lein" dest="/home/vagrant/bin/lein" mode=0755
