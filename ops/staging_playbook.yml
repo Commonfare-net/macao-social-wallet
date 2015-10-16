@@ -3,21 +3,21 @@
   remote_user: root
   
   tasks:
-      # Running update on pre-installed packages
-    - apt: update_cache=yes upgrade=full
+    - name: Running update on pre-installed packages
+      apt: update_cache=yes upgrade=full
 
-      # Installing git, mongodb, libversioneer-clojure
-    - apt: name={{ item }} state=latest
+    - name: Installing git, mongodb, libversioneer-clojure
+      apt: name={{ item }} state=latest
       with_items:
         - libversioneer-clojure
         - mongodb
         - git
 
-      # reating freecoin group
-    - group: name=freecoin state=present
+    - name: reating freecoin group
+      group: name=freecoin state=present
 
-      # reating freecoin user
-    - user: name=freecoin 
+    - name: Creating freecoin user
+      user: name=freecoin 
             comment="freecoin user" 
             shell=/bin/bash 
             group=freecoin 
@@ -25,13 +25,21 @@
             createhome=yes 
             state=present	
 
-      # copy lein install script
-    - copy: src=./lein_install.sh dest=/tmp/lein_install.sh owner=root group=root mode=0755
-
-      # run lein install script
-    - command: /tmp/lein_install.sh
-      args:
-        chdir: /home/freecoin
-        creates: /home/freecoin/.lein/self-installs/leiningen-2.5.3-standalone.jar 
-
+    - block:
+      # this part is being run under the freecoin user
+      - name: Running lein install script
+        script: ./lein_install.sh creates=/home/freecoin/.lein/self-installs/leiningen-2.5.3-standalone.jar 
       
+      - name: Cloning the frecoin repository
+        git: repo=https://github.com/d-cent/freecoin.git 
+          dest=/home/freecoin/freecoin
+          force=yes
+      - name: Creating the jar
+        shell: /home/freecoin/bin/lein uberjar >> lein_uberjar.log
+        args:
+          chdir: /home/freecoin/freecoin
+
+      become: true
+      become_user: freecoin
+
+      # end of block
