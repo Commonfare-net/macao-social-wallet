@@ -1,0 +1,8 @@
+---
+
+# the user under which we are deploying 
+stg_user: staging
+stg_group: freecoin
+stg_homedir: "/home/{{ stg_user }}"
+stg_shell: "/usr/bin/zsh"
+stg_user_comment: "freecoin staging user"

@@ -1,0 +1,12 @@
+---
+- name: Running update on pkg repositories
+  apt: update_cache=yes 
+
+- name: Installing git, mongodb, libversioneer-clojure
+  apt: name={{ item }} state=latest
+  with_items:
+    - libversioneer-clojure
+    - mongodb
+    - git
+    - zsh
+

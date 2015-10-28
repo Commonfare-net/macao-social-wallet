@@ -1,0 +1,18 @@
+---
+- name: Creating freecoin group
+  group: name="{{ stg_group }}" state=present
+
+- name: Creating staging user
+  user: name={{ stg_user }} 
+        comment={{ stg_user_comment }} 
+        shell={{ stg_shell }}
+        group={{ stg_group }}
+        home={{ stg_homedir }}
+        createhome=yes 
+        state=present	
+
+- name: Creating {{ stg_homedir }}/bin
+  file: path="{{ stg_homedir }}/bin" state=directory owner="{{ stg_user }}" group="{{ stg_group }}" mode=755
+
+- name: Copying stock .zshrc
+  copy: src=./roles/user/files/.zshrc dest="{{ stg_homedir }}/.zshrc" owner="{{ stg_user }}" group="{{ stg_group }}" mode=644

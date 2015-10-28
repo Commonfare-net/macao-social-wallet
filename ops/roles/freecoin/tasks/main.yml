@@ -1,0 +1,20 @@
+---
+- block:
+  - name: Downloading lein
+    get_url: dest="{{ stg_homedir }}/bin/lein" url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein mode=750
+
+  - name: Running lein for the first time
+    command: chdir={{ stg_homedir }}/bin ./lein creates={{ stg_homedir }}/.lein/self-installs/leiningen-2.5.3-standalone.jar
+
+  - name: Cloning the frecoin repository
+    git: repo=https://github.com/d-cent/freecoin.git 
+          dest="{{ stg_homedir }}/freecoin"
+          force=yes
+
+  - name: Creating the jar
+    shell: "{{ stg_homedir }}/bin/lein uberjar >> lein_uberjar.log"
+    args:
+      chdir: "{{ stg_homedir }}/freecoin"
+
+  become: true
+  become_user: "{{ stg_user }}"
