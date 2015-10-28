@@ -23,7 +23,7 @@ After the build is complete, log in the container and change to the staging user
 
 ```
 $ vagrant ssh
-su - staging
+# su - staging
 ```
 
 The cloned freecoin repository can be found in ~/freecoin. This install also builds the jar, which can be found in the usual location, ~/freecoin/target
