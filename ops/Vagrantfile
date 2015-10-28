@@ -8,7 +8,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
  config.vm.box = "http://vagrant.devuan.org/devuan-jessie-amd64-alpha2.box"
            #i386 "http://vagrant.devuan.org/devuan-jessie-i386-alpha2.box"
-    config.vm.define "development", primary: true do |dev|
+    config.vm.define "staging_vm", primary: true do |dev|
       dev.vm.network "private_network", ip: "192.168.50.80"
       dev.vm.network :forwarded_port, guest: 22, host: 2280, id: "ssh", auto_correct: false
       config.vm.synced_folder ".", "/vagrant", disabled: true
