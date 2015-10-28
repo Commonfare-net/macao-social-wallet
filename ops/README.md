@@ -9,6 +9,7 @@ You'll need the following tools installet in your $PATH. The quoted versions (or
 * virtualbox 5.0
 * vagrant 1.7.4
 * ansible 2.0.0
+* cowsay 3.03
 
 
 ## INSTALL
