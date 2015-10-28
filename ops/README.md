@@ -5,7 +5,7 @@ This folder contains tools enabling an automagic deployment of the staging envir
 
 ## Prerequisities
 
-You'll need the following tools installet in your $PATH. The quoted versions (or newer) are recommended
+You'll need the following tools installed in your $PATH. The quoted versions (or newer) are recommended
 * virtualbox 5.0
 * vagrant 1.7.4
 * ansible 2.0.0
