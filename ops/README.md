@@ -19,14 +19,14 @@ The from the ops/ directory simply run:
 $ vagrant up staging_vm
 ```
 
-After the build is complete, log in and change to the staging user:
+After the build is complete, log in the container and change to the staging user:
 
 ```
 $ vagrant ssh
 su - staging
 ```
 
-The cloned repository can be found in ./freecoin. This install als builds the jar, which can be found in the usual location, ./freecoin/target
+The cloned freecoin repository can be found in ~/freecoin. This install also builds the jar, which can be found in the usual location, ~/freecoin/target
 
 ## Rebuild from scratch
 In case something goes terribly wrong or you simply want to rebuild the whole machine, run the following commands:
