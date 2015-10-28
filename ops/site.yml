@@ -1,0 +1,10 @@
+---
+- name: Build a vagrant machine with latest devuan, clone and build the freecoin jar
+  hosts: staging_vm
+  remote_user: root
+  
+  roles:
+    - base
+    - user
+    - freecoin
+

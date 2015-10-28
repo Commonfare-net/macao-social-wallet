@@ -11,6 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.define "staging_vm", primary: true do |dev|
       dev.vm.network "private_network", ip: "192.168.50.80"
       dev.vm.network :forwarded_port, guest: 22, host: 2280, id: "ssh", auto_correct: false
+      dev.vm.network :forwarded_port, guest: 8000, host: 8000, id: "freecoin", auto_correct: false
       config.vm.synced_folder ".", "/vagrant", disabled: true
       config.ssh.username = "root"
       config.ssh.password = "devuan"
@@ -21,8 +22,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
      dev.vm.provision "ansible" do |ansible|
-       ansible.playbook = "staging_playbook.yml"
-     # ansible.playbook = "development_playbook.yml"
+       ansible.playbook = "site.yml"
        ansible.sudo = true
      end
    end
