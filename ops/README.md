@@ -11,13 +11,6 @@ You'll need the following tools installet in your $PATH. The quoted versions (or
 * ansible 2.0.0
 
 
-For deployment, configuration can be provided via environment variables:
-```
-TWITTER_CONSUMER_TOKEN="YOUR_CONSUMER_TOKEN_FROM_TWITTER"\
-TWITTER_SECRET_TOKEN="YOUR_SECRET_TOKEN_FROM_TWITTER"\
-java -jar freecoin.jar
-```
-
 ## INSTALL
 
 The from the ops/ directory simply run:
