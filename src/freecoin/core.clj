@@ -45,7 +45,9 @@
             [freecoin.config :as config]
             [freecoin.handlers.sign-in :as sign-in]
             [freecoin.handlers.participants :as participants]
-            [freecoin.handlers.transactions :as transactions]))
+            [freecoin.handlers.transactions :as transactions]
+            [freecoin.handlers.debug :as debug]
+            ))
 
 (defn not-found [request]
   {:status 404
@@ -66,7 +68,9 @@
         sso-configuration (create-stonecutter-config config-m)]
     (when (= :invalid-configuration sso-configuration)
       (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
-    {:qrcode                        todo
+    {:version                       (debug/version sso-configuration)
+     :echo                          (debug/echo sso-configuration)
+     :qrcode                        todo
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store blockchain)
      :sign-in                       (sign-in/sign-in sso-configuration)

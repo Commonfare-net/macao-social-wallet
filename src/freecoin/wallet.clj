@@ -52,59 +52,50 @@
 ;;      blockchain-secrets  ;; list of secrets enabling the access to private blockchain operations
 ;;      ])
 
-(def participants-form-spec
-  {:fields [{:name :field
-             :type :select
-             :options ["name" "email"]}
-            {:name :value :type :text}]
-   :validations [[:required [:field :value]]]
-   :action "/participants/find"
-   :method "get"})
+;; (lc/defresource participants-form [request]
+;;   :allowed-methods       [:get]
+;;   :available-media-types ["text/html"]
+;;   :authorized?           (:result (auth/check request))
+;;   ;; uncomment this to deny access to non-participants
+;;   ;; :unauthorized          (:problem (auth/check request))
 
-(lc/defresource participants-form [request]
-  :allowed-methods       [:get]
-  :available-media-types ["text/html"]
-  :authorized?           (:result (auth/check request))
-  ;; uncomment this to deny access to non-participants
-  ;; :unauthorized          (:problem (auth/check request))
+;;   ;; :handle-unauthorized   {:status 200
+;;   ;;                         :body (:problem (auth/check request))}
 
-  ;; :handle-unauthorized   {:status 200
-  ;;                         :body (:problem (auth/check request))}
+;;   :handle-ok
+;;   (fn [ctx]
+;;     (views/render-template
+;;      views/simple-form-template
+;;      {:title "Find wallet"
+;;       :heading "Search for a wallet"
+;;       :form-spec participants-form-spec}))
+;;   )
 
-  :handle-ok
-  (fn [ctx]
-    (views/render-template
-     views/simple-form-template
-     {:title "Find wallet"
-      :heading "Search for a wallet"
-      :form-spec participants-form-spec}))
-  )
+;; (defn render-wallet [wallet]
+;;   [:li {:style "margin: 1em"}
+;;    [:div {:class "card pull-left" }
+;;     [:span (str "name: " (:name wallet))]
+;;     [:br]
+;;     [:span (str "email: " (:email wallet))]
+;;     [:br]
+;;     [:span {:class "qrcode pull-left"}
+;;      [:img {:src (format "/qrcode/%s" (:name wallet))} ]]
+;;     [:span {:class "gravatar pull-right"}
+;;      [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]
+;;     ]])
 
-(defn render-wallet [wallet]
-  [:li {:style "margin: 1em"}
-   [:div {:class "card pull-left" }
-    [:span (str "name: " (:name wallet))]
-    [:br]
-    [:span (str "email: " (:email wallet))]
-    [:br]
-    [:span {:class "qrcode pull-left"}
-     [:img {:src (format "/qrcode/%s" (:name wallet))} ]]
-    [:span {:class "gravatar pull-right"}
-     [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]
-    ]])
-
-(defn welcome-template [{:keys [wallet] :as content}]
-   (if (empty? wallet)
-     [:span (str "Error creating wallet")]
-     (let [name (:name wallet)
-           email (:email wallet)]
-       [:h1 (str "Welcome " name)]
-       [:p (str "We have sent an email to the address " email "with recommendations on how to store your wallet safely")]
-       [:p "You can access " [:a {:href "/" } "your balance here." ]]
-       [:ul {:style "list-style-type: none;"}
-        (render-wallet wallet)])
-     )
-   )
+;; (defn welcome-template [{:keys [wallet] :as content}]
+;;    (if (empty? wallet)
+;;      [:span (str "Error creating wallet")]
+;;      (let [name (:name wallet)
+;;            email (:email wallet)]
+;;        [:h1 (str "Welcome " name)]
+;;        [:p (str "We have sent an email to the address " email "with recommendations on how to store your wallet safely")]
+;;        [:p "You can access " [:a {:href "/" } "your balance here." ]]
+;;        [:ul {:style "list-style-type: none;"}
+;;         (render-wallet wallet)])
+;;      )
+;;    )
 
 (defn balance-template [{:keys [wallet balance] :as content}]
    (if (empty? wallet)

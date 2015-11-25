@@ -5,6 +5,10 @@
             :url "http://www.d-centproject.eu"}
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.logging "0.3.1"]
+                 [log4j/log4j "1.2.17" :exclusions [javax.mail/mail
+                                                    javax.jms/jms
+                                                    com.sun.jmdk/jmxtools
+                                                    com.sun.jmx/jmxri]]
                  [liberator "0.12.2"]
                  [scenic "0.2.5"]
                  [ring/ring-core "1.3.2"]
@@ -32,7 +36,10 @@
                  [clojure-humanize "0.1.0"]
                  [clj.qrgen "0.3.0"]
                  [clavatar "0.2.1"]
-                 [cc.artifice/lein-gossip "0.2.1"]]
+                 [cc.artifice/lein-gossip "0.2.1"]
+                 ]
+
+
   :source-paths ["src"]
   :jvm-opts ["-Djava.security.egd=file:/dev/random"] ;use a proper random source (install haveged)
   :env [[:base-url "http://localhost:8000"]]
@@ -44,8 +51,8 @@
                                          [peridot "0.3.1"]
                                          [kerodon "0.6.1"]]
                           :env [[:base-url "http://localhost:8000"]
-                                [:client-id "freecoin"]
-                                [:client-secret "secret"]
+                                [:client-id "QI7UVfyl6kepommh"]
+                                [:client-secret "iEJGGyJwrB8bfIvC"]
                                 [:auth-url "http://localhost:3000"]
                                 [:secure "false"]]
                           :plugins [[lein-midje "3.1.3"]]}

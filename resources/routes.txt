@@ -18,3 +18,7 @@ GET  /send/confirm/:confirmation-uid    get-confirm-transaction-form
 POST /send/confirm/:confirmation-uid    post-confirm-transaction-form
 
 GET  /transactions                      transactions
+
+# DEBUG
+GET  /echo                              echo
+GET  /version                           version

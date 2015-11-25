@@ -64,8 +64,9 @@
                    fv/render-page)))
 
 (defn request->wallet-query [request]
-  (if-let [{:keys [field value]} (-> request :params
-                                     (utils/select-all-or-nothing [:field :value]))]
+  (if-let [{:keys [field value]}
+           (-> request :params
+               (utils/select-all-or-nothing [:field :value]))]
     {(keyword field) value}
     {}))
 
