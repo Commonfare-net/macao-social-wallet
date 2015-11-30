@@ -33,7 +33,7 @@
 (defprotocol Blockchain
   ;; blockchain identifier
   (label [bk])
-  
+
   ;; account
   (import-account [bk account-id secret])
   (create-account [bk])
@@ -83,7 +83,7 @@
 (defrecord Stub [db]
   Blockchain
   (label [bk] (keyword (recname bk)))
-  
+
   (import-account [bk account-id secrets] nil)
 
   (create-account [bk]
@@ -107,7 +107,7 @@
           received (if (nil? received-map) 0 (:total received-map))
           sent      (if (nil? sent-map) 0 (:total sent-map))]
       (util/long->bigdecimal (- received sent))))
-      
+
   (list-transactions [bk account-id] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
 
   (get-transaction   [bk account-id txid] nil)
@@ -125,7 +125,7 @@
       (storage/insert db "transactions" transaction)))
 
   (create-voucher [bk account-id amount expiration secret] nil)
-  
+
   (redeem-voucher [bk account-id voucher] nil))
 
 (defn new-stub [db]
@@ -137,7 +137,7 @@
   Blockchain
   ;; identifier
   (label [bk] blockchain-label)
-  
+
   ;; account
   (import-account [bk account-id secret] nil)
   (create-account [bk]
@@ -177,6 +177,6 @@
 
 (defn create-in-memory-blockchain
   ([label] (create-in-memory-blockchain label (atom {}) (atom {})))
-  
+
   ([label transactions-atom accounts-atom]
    (InMemoryBlockchain. label transactions-atom accounts-atom)))

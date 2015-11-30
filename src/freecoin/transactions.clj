@@ -81,7 +81,7 @@
 
   :allowed? (fn [ctx]
               (let [{:keys [status data problems]}
-                    (views/parse-hybrid-form (:request ctx) 
+                    (views/parse-hybrid-form (:request ctx)
                                              (transaction-form-spec nil)
                                              (::content-type ctx))]
                 (case status
@@ -123,7 +123,7 @@
                                                {:amount amount
                                                 :recipient recipient})]
              {::confirmation confirmation}))
-  
+
   :post-redirect? (fn [ctx]
                     (case (::content-type ctx)
                       "application/json" false
@@ -179,7 +179,7 @@
                                            :body "Wallet not found."}
 
                             ;; else
-                          (utils/pretty 
+                          (utils/pretty
                            (blockchain/make-transaction
                             (blockchain/new-stub (:db db)) wallet
                             (:amount params) (:recipient params)

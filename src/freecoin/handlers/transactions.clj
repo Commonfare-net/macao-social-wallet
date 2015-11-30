@@ -88,6 +88,7 @@
   :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config)
                                                              :get-confirm-transaction-form
                                                              :confirmation-uid (:uid (::confirmation ctx)))})
+
   :handle-forbidden (lr/ring-response (r/redirect (routes/absolute-path (config/create-config) :get-transaction-form))))
 
 (lc/defresource get-confirm-transaction-form [confirmation-store]

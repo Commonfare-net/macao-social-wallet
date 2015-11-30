@@ -47,12 +47,26 @@
 (defn secret->apikey [secret]
   (str (:cookie secret) "::" (:_id secret)))
 
+(defn secret->participant-shares [secret]
+  (take 4 (:slices secret)))
+
+(defn secret->organization-shares [secret]
+  (->> (:slices secret)
+       (drop 3) (take 4)))
+
+(defn secret->auditor-shares [secret]
+  (take-last 3 (:slices secret)))
+
 (defn new-empty-wallet! [wallet-store blockchain uuid-generator sso-id name email]
   (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
         wallet (-> (empty-wallet (uuid-generator) sso-id name email)
                    (assoc :account-id account-id))]
     {:wallet (mongo/store! wallet-store :uid wallet)
-     :apikey (secret->apikey account-secret)}))
+     :apikey       (secret->apikey              account-secret)
+     :participant  (secret->participant-shares  account-secret)
+     :organization (secret->organization-shares account-secret)
+     :auditor      (secret->auditor-shares      account-secret)
+     }))
 
 (defn fetch [wallet-store uid]
   (mongo/fetch wallet-store uid))

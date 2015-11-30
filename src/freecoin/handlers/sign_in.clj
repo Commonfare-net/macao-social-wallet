@@ -92,12 +92,30 @@
                    sso-id (get-in token-response [:user-info :sub])
                    email (get-in token-response [:user-info :email])
                    name (first (s/split email #"@"))]
+               ;; the wallet exists already
                (if-let [wallet (wallet/fetch-by-sso-id wallet-store sso-id)]
                  {::uid (:uid wallet)}
-                 (when-let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain uuid/uuid
-                                                                              sso-id name email)]
+
+                 ;; a new wallet has to be made
+                 (when-let [{:keys [wallet apikey]}
+                            (wallet/new-empty-wallet!
+                                wallet-store
+                              blockchain uuid/uuid
+                              sso-id name email)]
+
+                   ;; TODO: distribute other shares to organization and auditor
+                   ;; see in freecoin.db.wallet
+                   ;; {:wallet (mongo/store! wallet-store :uid wallet)
+                   ;;  :apikey       (secret->apikey              account-secret)
+                   ;;  :participant  (secret->participant-shares  account-secret)
+                   ;;  :organization (secret->organization-shares account-secret)
+                   ;;  :auditor      (secret->auditor-shares      account-secret)
+                   ;;  }))
+
+                   ;; saved in context
                    {::uid (:uid wallet)
                     ::cookie-data apikey}))))
+
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (cond-> (r/redirect (routes/absolute-path (config/create-config) :account :uid (::uid ctx)))
