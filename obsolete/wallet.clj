@@ -138,38 +138,6 @@
        participants-template {:title "wallets"
                               :wallets wallets}))))
 
-(lc/defresource qrcode [request id]
-  :allowed-methods [:get]
-  :available-media-types ["image/png"]
-  :authorized?           (:result (auth/check request))
-  :handle-unauthorized   (:problem (auth/check request))
-
-  :handle-ok
-  (fn [ctx]
-    (if (nil? id) ;; name is the currently logged in user
-      (let [wallet (auth/get-wallet request)]
-        (if (empty? wallet) ""
-            (qr/as-input-stream
-             (qr/from (format "http://%s:%d/send/to/%s"
-                              (:address param/host)
-                              (:port param/host)
-                              (:name wallet))))
-            ))
-
-      ;; else a name is specified
-      (let [wallet (first (storage/find-by-key
-                           (:db (get-in request [:config :db-connection]))
-                           "wallets" {:name (rc/percent-decode id)}))]
-
-        (if (empty? wallet) ""
-            (qr/as-input-stream
-             (qr/from (format "http://%s:%d/send/to/%s"
-                              (:address param/host)
-                              (:port param/host)
-                              (:name wallet))))
-            ))
-      )))
-
 ;; Methods:
 ;; create
 ;; confirm_create (request-id)
@@ -278,7 +246,7 @@
       "application/json" false
       "application/x-www-form-urlencoded"
       (::confirmation ctx)
-      
+
       false ;; other content-types
       ))
 
