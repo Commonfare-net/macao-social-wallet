@@ -9,7 +9,7 @@
                                                     javax.jms/jms
                                                     com.sun.jmdk/jmxtools
                                                     com.sun.jmx/jmxri]]
-                 [liberator "0.12.2"]
+                 [liberator "0.13"]
                  [scenic "0.2.5"]
                  [ring/ring-core "1.3.2"]
                  [ring/ring-anti-forgery "1.0.0"]

@@ -8,78 +8,59 @@ API design is work in progress on http://freecoin.ch/api
 
 ## Configuration
 
-Application configuration is done using `environ.clj` (see https://github.com/weavejester/environ).
+Freecoin identity management is delegated to Stonecutter, the D-CENT SSO. To run Freecoin one also needs to configure integration with a running instance of Stonecutter configured to accept the Freecoin application. The configuration locations are:
 
-For development, provide configuration variables in the `profiles.clj` file in the freecoin root directory.
-E.G.: To provide values for twitter OAuth tokens:
+- Freecoin: `profiles.clj`
+- Stonecutter: `resources/client-credentials.yml`
+
+
+## Running the app inside a Vagrant virtual machine
+
+Install the **latest** version of Vagrant and VirtualboxISO (be warned, most distributions have outdated packages which won't function well)
+
+Then go into the `ops/` directory in Freecoin and run `vagrant up`, this will create and provision a new virtual machine running Freecoin.
+
+Inside `ops/stonecutter` there is another setup to create and run a local Stonecutter SSO with the same command `vagrant up` given inside it.
+
+## Running the app locally
+
+Install Leiningen and Clojure, then start with
 
 ```
-{:dev-local {:env {:twitter-consumer-token "YOUR_CONSUMER_TOKEN_FROM_TWITTER"
-                   :twitter-secret-token "YOUR_SECRET_TOKEN_FROM_TWITTER"}}}
+lein ring server
 ```
 
-For deployment, configuration can be provided via environment variables:
-```
-TWITTER_CONSUMER_TOKEN="YOUR_CONSUMER_TOKEN_FROM_TWITTER"\
-TWITTER_SECRET_TOKEN="YOUR_SECRET_TOKEN_FROM_TWITTER"\
-java -jar freecoin.jar
-```
+This command will open a browser on localhost port 8000
 
-## Running the app from the repl
+## Running the app from a live repl (for developers)
 
 The server can be started and stopped from the repl by doing the following
 
 ```
-$ lein repl
+lein repl
 user=> (use 'freecoin.core)
 user=> (start) ;; starts the server
 user=> (stop) ;; stops the server
+user=> (use 'freecoin.handlers.debug :reload) (stop) (start) ;; refresh specific namespaces
 ```
-
-## Running the app using ring server
-
-```
-$ lein ring server
-```
-
-Will open a browser on localhost port 8000
 
 ## Running the tests
 
+Freecoin comes complete with test units which are run by the CI but can also be run locally.
+
+For the purpose we use Clojure's `midje` package, to be run with:
+
 ```
-$ lein midje
+lein midje
 ```
-or
-```
-$ ./go.sh ;; convenience script for running all tests
-```
+
 See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced testing features.
-
-## Deployment
-
-Deployment to a digital-ocean-like VM:
-
-1) Build using ```lein uberjar```
-
-2) Deploy to the dob_vm with:
-
-   ```
-   $ cd ops/
-   $ vagrant up dob_vm
-   $ ./deploy_vagrant.sh
-   ```
-
-The site should then be accessible at http://192.168.50.81:5000
-
-## Usage
-
-WIP
 
 ## License
 
 Part of Decentralized Citizen Engagement Technologies (D-CENT)
 
-R&D funded by the European Commission (FP7/CAPS 610349) 
+R&D funded by the European Commission (FP7/CAPS 610349)
 
 ```
 Copyright (C) 2015 Dyne.org foundation
@@ -106,4 +87,3 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
