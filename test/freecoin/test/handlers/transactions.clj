@@ -39,12 +39,12 @@
                                       {})
                    transaction-form-handler
                    :status) => 401)
-         
-         (fact "returns 401 when participant authenticated but without cookie-data"
+
+         (fact "returns 200 when participant authenticated but without cookie-data"
                (-> (th/create-request :get (absolute-path :get-transaction-form)
                                       {} {:signed-in-uid "sender-uid"})
                    transaction-form-handler
-                   :status) => 401)
+                   :status) => 200)
 
          ;; TODO:
          ;; DM 20150916 - May not be necessary, but perhaps poor UX if
@@ -53,7 +53,7 @@
          ;; DM 20151001 - Might be better to prompt user to recover
          ;; their cookie-data, rather than locking out.
          (future-fact "cannot be accessed by authenticated user with invalid cookie-data")
-         
+
          (fact "returns 200 when participant authenticated with cookie-data"
                (let [response (-> (th/create-request :get (absolute-path :get-transaction-form)
                                                      {} {:signed-in-uid "sender-uid"
@@ -73,12 +73,12 @@
                    form-post-handler
                    :status) => 401)
 
-         (fact "returns 401 when participant authenticated but without cookie-data"
+         (fact "returns 302 when participant authenticated but without cookie-data"
                (-> (th/create-request :post "/post-transaction-form"
                                       {} {:signed-in-uid "sender-uid"})
                    form-post-handler
-                   :status) => 401)
-         
+                   :status) => 302)
+
          (facts "when participant is authenticated, has cookie-data, and posts a valid form"
                 (let [confirmation-store (fm/create-memory-store)
                       form-post-handler (ft/post-transaction-form wallet-store confirmation-store)
@@ -131,21 +131,21 @@
                  (:body response) => (contains #"Confirm transaction")))
 
          (future-fact "returns 401 when participant not signed in, or does not have apikey")
-         
+
          (fact "returns 404 when confirmation does not exist"
                (-> (th/create-request :get "/confirm-transaction/nonexisting-confirmation-uid"
                                       {:confirmation-uid "nonexisting-confirmation-uid"}
                                       {:signed-in-uid "sender-uid"})
                    confirm-transaction-handler
                    :status) => 404)
-         
+
          (fact "returns 404 when confirmation sender-uid does not match signed in user's uid"
                (-> (th/create-request :get "/confirm-transaction/confirmation-uid"
                                       {:confirmation-uid "confirmation-uid"}
                                       {:signed-in-uid "not-the-senders-uid"})
                    confirm-transaction-handler
                    :status) => 404)
-         
+
          (future-fact "returns 404 when confirmation with provided uid is not a transaction confirmation")))
 
 (facts "about post requests from the confirm transaction form"
@@ -157,7 +157,7 @@
                (-> (th/create-request :post "/post-confirm-transaction-form" {})
                    form-post-handler
                    :status) => 401)
-         
+
          (fact "returns 401 when participant authenticated but not authorised"
                (-> (th/create-request :post "/post-confirm-transaction-form"
                                       {} {:signed-in-uid "sender-uid"})
@@ -192,6 +192,6 @@
 
                   (fact "deletes the confirmation"
                         (:entry-count (test-store/summary confirmation-store)) => 0)
-                  
+
                   (fact "redirects to signed-in participant's account page"
                         response => (th/check-redirects-to (absolute-path :account :uid (:uid sender-wallet))))))))

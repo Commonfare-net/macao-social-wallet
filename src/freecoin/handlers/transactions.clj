@@ -48,8 +48,8 @@
   :available-media-types ["text/html"]
   :authorized? (fn [ctx]
                  (when-let [uid (ch/context->signed-in-uid ctx)]
-                   (when (and (wallet/fetch wallet-store uid)
-                              (ch/context->cookie-data ctx)) true)))
+                   (when (wallet/fetch wallet-store uid) true)))
+
   :handle-ok (fn [ctx]
                (-> {}
                    transaction-form/build
@@ -67,14 +67,15 @@
   :available-media-types ["text/html"]
   :authorized? (fn [ctx]
                  (when-let [uid (ch/context->signed-in-uid ctx)]
-                   (when (and (wallet/fetch wallet-store uid)
-                              (ch/context->cookie-data ctx)) true)))
+                   (when (wallet/fetch wallet-store uid) true)))
+
   :allowed? (fn [ctx]
               (let [{:keys [status data problems]} (validate-form transaction-form/transaction-form-spec
                                                                   (ch/context->params ctx))]
                 (when (= :ok status)
                   (when-let [recipient-wallet (wallet/fetch wallet-store (:recipient data))]
                     {::form-data data}))))
+
   :post! (fn [ctx]
            (let [amount (get-in ctx [::form-data :amount])
                  recipient-uid (get-in ctx [::form-data :recipient])
@@ -83,6 +84,7 @@
                                       confirmation-store uuid/uuid
                                       sender-uid recipient-uid amount)]
                {::confirmation confirmation})))
+
   :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config)
                                                              :get-confirm-transaction-form
                                                              :confirmation-uid (:uid (::confirmation ctx)))})
@@ -125,4 +127,3 @@
              {::sender-uid (:uid sender-wallet)}))
   :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config) :account
                                                              :uid (::sender-uid ctx))}))
-

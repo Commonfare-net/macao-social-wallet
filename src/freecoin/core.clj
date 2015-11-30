@@ -47,6 +47,7 @@
             [freecoin.handlers.participants :as participants]
             [freecoin.handlers.transactions :as transactions]
             [freecoin.handlers.debug :as debug]
+            [freecoin.handlers.qrcode :as qrcode]
             ))
 
 (defn not-found [request]
@@ -70,7 +71,7 @@
       (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
     {:version                       (debug/version sso-configuration)
      :echo                          (debug/echo sso-configuration)
-     :qrcode                        todo
+     :qrcode                        qrcode/qr-participant-sendto
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store blockchain)
      :sign-in                       (sign-in/sign-in sso-configuration)
@@ -156,4 +157,3 @@
 
 (defn lein-ring-stop []
   (alter-var-root #'app-state disconnect-db))
-

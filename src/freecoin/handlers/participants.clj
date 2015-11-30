@@ -84,4 +84,3 @@
                (-> {:wallets (::wallets ctx)}
                    participants-list/participants-list
                    fv/render-page)))
-

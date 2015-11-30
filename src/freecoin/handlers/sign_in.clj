@@ -52,6 +52,7 @@
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
              (if-let [uid (ch/context->signed-in-uid ctx)]
+
                (let [wallet (wallet/fetch wallet-store uid)]
                  {::wallet wallet})
                {}))
