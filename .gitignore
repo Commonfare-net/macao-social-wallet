@@ -17,3 +17,5 @@ deploy.tar.gz
 /ops/.vagrant
 /doc/dot/*png
 /doc/dot/*dot
+.vagrant
+

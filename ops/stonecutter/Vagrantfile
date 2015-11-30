@@ -1,0 +1,23 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.box = "ubuntu/trusty64"
+
+  config.vm.define "stonecutter", primary: true do |dev|
+    dev.vm.network :forwarded_port, guest: 3000, host: 3000, id: "sso", auto_correct: false
+
+    dev.vm.provider :virtualbox do |vbox|
+      vbox.customize ["modifyvm", :id, "--memory", 2048]
+    end
+
+    dev.vm.provision "ansible" do |ansible|
+      ansible.playbook = "stonecutter.yml"
+      ansible.sudo = true
+    end
+  end
+
+end

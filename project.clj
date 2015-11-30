@@ -51,8 +51,8 @@
                                          [peridot "0.3.1"]
                                          [kerodon "0.6.1"]]
                           :env [[:base-url "http://localhost:8000"]
-                                [:client-id "QI7UVfyl6kepommh"]
-                                [:client-secret "iEJGGyJwrB8bfIvC"]
+                                [:client-id "LOCALFREECOIN"]
+                                [:client-secret "FREECOINSECRET"]
                                 [:auth-url "http://localhost:3000"]
                                 [:secure "false"]]
                           :plugins [[lein-midje "3.1.3"]]}

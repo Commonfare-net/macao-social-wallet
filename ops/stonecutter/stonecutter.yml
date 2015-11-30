@@ -1,0 +1,60 @@
+---
+- name: Build a stonecutter SSO local machine
+  hosts: stonecutter
+
+  tasks:
+    
+    - name: Running update on pkg repositories
+      apt: update_cache=yes
+      run_once: true
+
+    - name: Installing git, mongodb, libversioneer-clojure
+      apt: name={{ item }} state=latest
+      with_items:
+        - libversioneer-clojure
+        - mongodb
+        - git
+        - zsh
+
+    - command: mkdir -p /home/vagrant/bin
+    - name: Downloading lein
+      get_url: dest="/home/vagrant/bin/lein" url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein mode=755
+
+    - name: Cloning Stonecutter source from local devel/ repository
+      synchronize: src=/home/jrml/devel/stonecutter/ dest=/home/vagrant/stonecutter/
+        archive=yes
+
+    - name: add nodesource apt-key
+      apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
+
+    - name: add nodesource deb repo
+      apt_repository: repo='deb https://deb.nodesource.com/node_0.12 trusty main' state=present
+
+    - name: add nodesource deb-src repo
+      apt_repository: repo='deb-src https://deb.nodesource.com/node_0.12 trusty main' state=present
+
+    - name: install node.js
+      apt: pkg=nodejs state=latest
+
+    - name: install latest openssl
+      apt: pkg=openssl state=latest
+
+    - name: Node.js | Update npm
+      command: npm install npm -g
+
+    - name: symlink node->nodejs
+      file: src=/usr/bin/nodejs dest=/usr/bin/node state=link
+
+    - name: Node.js | Install packages
+      npm: name={{item}} global=yes
+      with_items:
+        - npm
+        - gulp
+
+    - name: Node.js | Install dependencies
+      shell: npm install
+        chdir=/home/vagrant/stonecutter
+
+    - name: Gulp | Build templates and styles
+      shell: gulp build
+        chdir=/home/vagrant/stonecutter
