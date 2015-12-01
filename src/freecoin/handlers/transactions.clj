@@ -32,6 +32,7 @@
             [liberator.representation :as lr]
             [ring.util.response :as r]
             [formidable.parse :as fp]
+            [clojure.tools.logging :as log]
             [freecoin.db.wallet :as wallet]
             [freecoin.db.confirmation :as confirmation]
             [freecoin.blockchain :as blockchain]
@@ -93,7 +94,7 @@
 
   :handle-forbidden (lr/ring-response (r/redirect (routes/absolute-path (config/create-config) :get-transaction-form))))
 
-(lc/defresource get-confirm-transaction-form [confirmation-store]
+(lc/defresource get-confirm-transaction-form [wallet-store confirmation-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
@@ -103,23 +104,35 @@
                  (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
                    {::confirmation confirmation}))))
   :handle-ok (fn [ctx]
-               (-> {:confirmation-uid (:uid (::confirmation ctx))}
-                   confirm-transaction-form/build
-                   fv/render-page)))
+               (let [confirmation (::confirmation ctx)
+                     recipient (wallet/fetch wallet-store (get-in ctx [::confirmation :data :recipient-uid]))]
 
-(lc/defresource post-confirm-transaction-form [blockchain wallet-store confirmation-store]
+                 (-> {:confirmation confirmation
+                      :recipient recipient}
+                     confirm-transaction-form/build
+                     fv/render-page)))
+  )
+
+(lc/defresource post-confirm-transaction-form [wallet-store confirmation-store blockchain]
   :allowed-methods [:post]
   :authorized? (fn [ctx]
                  (let [signed-in-uid (ch/context->signed-in-uid ctx)
                        sender-wallet (wallet/fetch wallet-store signed-in-uid)
                        confirmation-uid (:confirmation-uid (ch/context->params ctx))
                        confirmation (confirmation/fetch confirmation-store confirmation-uid)]
+
                    (when (and sender-wallet
                               confirmation
                               (= signed-in-uid (-> confirmation :data :sender-uid)))
-                     {::confirmation confirmation})))
+                     {::confirmation confirmation
+                      ::sender-wallet sender-wallet})))
+
+  :allowed? (fn [ctx]
+              (when-let [secret (ch/context->cookie-data ctx)]
+                {::secret secret}))
+
   :post! (fn [ctx]
-           (let [{:keys [sender-uid recipient-uid amount]} (:data (::confirmation ctx))
+           (let [{:keys [sender-uid recipient-uid amount]} (-> ctx ::confirmation :data)
                  sender-wallet (wallet/fetch wallet-store sender-uid)
                  recipient-wallet (wallet/fetch wallet-store recipient-uid)
                  secret (ch/context->cookie-data ctx)]

@@ -1,6 +1,7 @@
 (ns freecoin.views.confirm-transaction-form
   (:require [formidable.core :as fc]
             [freecoin.views :as fv]
+            [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
             [freecoin.config :as config]))
 
@@ -12,7 +13,19 @@
    :method "post"})
 
 (defn build [context]
-  (let [confirmation-uid (:confirmation-uid context)]
-    {:title "Confirm transaction"
-     :heading "Please confirm to execute transaction"
-     :body (fc/render-form (confirm-transaction-form-spec confirmation-uid))}))
+  (if-let [confirmation-uid (-> context :confirmation :uid)]
+    (let [amount (-> context :confirmation :data :amount)
+          recipient-name (-> context :recipient :name)
+          recipient-email (-> context :recipient :email)]
+      {:title "Confirm transaction"
+       :heading "Please confirm to execute transaction"
+       :body [:div {}
+              [:div {:class "transaction-recipient-confirm"}
+               [:ul {:style "list-style-type: none;"}
+                     [:li {:style "margin: 1em"}
+                      [:span {:class "gravatar"}
+                       [:img {:src (clavatar/gravatar recipient-email :size 87 :default :mm)}]]
+                      [:br]
+                      [:span amount " -> " recipient-name]]]]
+               (fc/render-form (confirm-transaction-form-spec confirmation-uid))]
+       })))
