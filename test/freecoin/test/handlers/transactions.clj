@@ -84,7 +84,7 @@
                       form-post-handler (ft/post-transaction-form wallet-store confirmation-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
-                                    {:amount "5.00" :recipient "recipient-uid"}
+                                    {:amount "5.00" :recipient "recipient"}
                                     {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
                                    form-post-handler)
                       transaction-confirmation (first (fm/query confirmation-store {}))]

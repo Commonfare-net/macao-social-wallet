@@ -49,7 +49,7 @@
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
              
              (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
-             (kc/check-and-fill-in ks/transaction-form--recipient (kh/recall memory :recipient-uid))
+             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)
              

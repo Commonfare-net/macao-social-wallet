@@ -73,16 +73,18 @@
               (let [{:keys [status data problems]} (validate-form transaction-form/transaction-form-spec
                                                                   (ch/context->params ctx))]
                 (when (= :ok status)
-                  (when-let [recipient-wallet (wallet/fetch wallet-store (:recipient data))]
-                    {::form-data data}))))
+                  (when-let [recipient-wallet (wallet/fetch-by-name wallet-store (:recipient data))]
+                    {::form-data data
+                     ::recipient-wallet recipient-wallet}))))
 
   :post! (fn [ctx]
            (let [amount (get-in ctx [::form-data :amount])
-                 recipient-uid (get-in ctx [::form-data :recipient])
-                 sender-uid (ch/context->signed-in-uid ctx)]
+                 sender-uid (ch/context->signed-in-uid ctx)
+                 recipient (::recipient-wallet ctx)
+                 ]
              (when-let [confirmation (confirmation/new-transaction-confirmation!
                                       confirmation-store uuid/uuid
-                                      sender-uid recipient-uid amount)]
+                                      sender-uid (:uid recipient) amount)]
                {::confirmation confirmation})))
 
   :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config)
