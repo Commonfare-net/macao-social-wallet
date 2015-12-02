@@ -44,6 +44,18 @@ user=> (stop) ;; stops the server
 user=> (use 'freecoin.handlers.debug :reload) (stop) (start) ;; refresh specific namespaces
 ```
 
+## Live reloading of .clj modules in the repl
+
+Every time you change a file, the tracker will reload it in the
+running VM and show a message in the corner of your screen (using
+`notify-send`; Linux only for now):
+
+```
+lein repl
+user=> (use 'freecoin.dev)
+user=> (start-nstracker) ;; starts the file change tracker
+``
+
 ## Running the tests
 
 Freecoin comes complete with test units which are run by the CI but can also be run locally.
