@@ -58,7 +58,7 @@
         transaction-data-generator (create-transaction-generator random-selection random-selection random-amount)
         wallets-and-secrets (->> #(new-wallet! wallet-store blockchain
                                                uuid/uuid wallet-data-generator)
-                                 repeatedly 
+                                 repeatedly
                                  (take n-wallets)
                                  doall)]
     (doall (->> #(new-transaction! blockchain transaction-data-generator wallets-and-secrets)
@@ -71,5 +71,8 @@
           {db :db conn :conn} (mongo/get-mongo-db-and-conn (db-url db-name))
           _ (monger/drop-db conn db-name)
           [n-wallets n-transactions] (map #(Integer/parseInt %) (drop 1 args))]
-      (populate-db db n-wallets n-transactions))
-    (prn "Usage: lein test-transactions <n-wallets> <n-transactions>")))
+      (populate-db db n-wallets n-transactions)
+      (prn (str "Populated database " db " with "
+                n-wallets " wallets and " n-transactions " transactions."))
+      )
+    (prn "Usage: lein test-transactions <db-name> <n-wallets> <n-transactions>")))
