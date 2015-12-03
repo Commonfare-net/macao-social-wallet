@@ -62,7 +62,7 @@
       (let [updated-item (update-fn item)]
         (-> (mc/save-and-return mongo-db coll updated-item)
             (dissoc :_id)))))
-  
+
   (fetch [this k]
     (when k
       (-> (mc/find-map-by-id mongo-db coll k)

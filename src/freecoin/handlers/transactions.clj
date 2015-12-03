@@ -42,7 +42,8 @@
             [freecoin.config :as config]
             [freecoin.views :as fv]
             [freecoin.views.transaction-form :as transaction-form]
-            [freecoin.views.confirm-transaction-form :as confirm-transaction-form]))
+            [freecoin.views.confirm-transaction-form
+             :as confirm-transaction-form]))
 
 (lc/defresource get-transaction-form [wallet-store]
   :allowed-methods [:get]
@@ -70,13 +71,16 @@
                  (when-let [uid (ch/context->signed-in-uid ctx)]
                    (when (wallet/fetch wallet-store uid) true)))
 
-  :allowed? (fn [ctx]
-              (let [{:keys [status data problems]} (validate-form transaction-form/transaction-form-spec
-                                                                  (ch/context->params ctx))]
-                (when (= :ok status)
-                  (when-let [recipient-wallet (wallet/fetch-by-name wallet-store (:recipient data))]
-                    {::form-data data
-                     ::recipient-wallet recipient-wallet}))))
+  :allowed?
+  (fn [ctx]
+    (let [{:keys [status data problems]}
+          (validate-form transaction-form/transaction-form-spec
+                         (ch/context->params ctx))]
+      (when (= :ok status)
+        (when-let [recipient-wallet
+                   (wallet/fetch-by-name wallet-store (:recipient data))]
+          {::form-data data
+           ::recipient-wallet recipient-wallet}))))
 
   :post! (fn [ctx]
            (let [amount (get-in ctx [::form-data :amount])
@@ -88,58 +92,76 @@
                                       sender-uid (:uid recipient) amount)]
                {::confirmation confirmation})))
 
-  :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config)
-                                                             :get-confirm-transaction-form
-                                                             :confirmation-uid (:uid (::confirmation ctx)))})
+  :post-redirect?
+  (fn [ctx] {:location (routes/absolute-path
+                        (config/create-config)
+                        :get-confirm-transaction-form
+                        :confirmation-uid (:uid (::confirmation ctx)))})
 
-  :handle-forbidden (lr/ring-response (r/redirect (routes/absolute-path (config/create-config) :get-transaction-form))))
+  :handle-forbidden (lr/ring-response
+                     (r/redirect
+                      (routes/absolute-path
+                       (config/create-config)
+                       :get-transaction-form))))
 
 (lc/defresource get-confirm-transaction-form [wallet-store confirmation-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :exists? (fn [ctx]
-             (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
-                   signed-in-uid (ch/context->signed-in-uid ctx)]
-               (when-let [confirmation (confirmation/fetch confirmation-store confirmation-uid)]
-                 (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
-                   {::confirmation confirmation}))))
-  :handle-ok (fn [ctx]
-               (let [confirmation (::confirmation ctx)
-                     recipient (wallet/fetch wallet-store (get-in ctx [::confirmation :data :recipient-uid]))]
+  :exists?
+  (fn [ctx]
+    (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
+          signed-in-uid (ch/context->signed-in-uid ctx)]
+      (when-let [confirmation
+                 (confirmation/fetch confirmation-store confirmation-uid)]
+        (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
+          {::confirmation confirmation}))))
+  :handle-ok
+  (fn [ctx]
+    (let [confirmation (::confirmation ctx)
+          recipient (wallet/fetch wallet-store
+                      (get-in ctx [::confirmation :data :recipient-uid]))]
 
-                 (-> {:confirmation confirmation
-                      :recipient recipient}
-                     confirm-transaction-form/build
-                     fv/render-page)))
+      (-> {:confirmation confirmation
+           :recipient recipient}
+          confirm-transaction-form/build
+          fv/render-page)))
   )
 
-(lc/defresource post-confirm-transaction-form [wallet-store confirmation-store blockchain]
+(lc/defresource post-confirm-transaction-form
+  [wallet-store confirmation-store blockchain]
   :allowed-methods [:post]
-  :authorized? (fn [ctx]
-                 (let [signed-in-uid (ch/context->signed-in-uid ctx)
-                       sender-wallet (wallet/fetch wallet-store signed-in-uid)
-                       confirmation-uid (:confirmation-uid (ch/context->params ctx))
-                       confirmation (confirmation/fetch confirmation-store confirmation-uid)]
+  :authorized?
+  (fn [ctx]
+    (let [signed-in-uid (ch/context->signed-in-uid ctx)
+          sender-wallet (wallet/fetch wallet-store signed-in-uid)
+          confirmation-uid (:confirmation-uid (ch/context->params ctx))
+          confirmation (confirmation/fetch confirmation-store confirmation-uid)]
 
-                   (when (and sender-wallet
-                              confirmation
-                              (= signed-in-uid (-> confirmation :data :sender-uid)))
-                     {::confirmation confirmation
-                      ::sender-wallet sender-wallet})))
+      (when (and sender-wallet
+                 confirmation
+                 (= signed-in-uid (-> confirmation :data :sender-uid)))
+        {::confirmation confirmation
+         ::sender-wallet sender-wallet})))
 
   :allowed? (fn [ctx]
               (when-let [secret (ch/context->cookie-data ctx)]
                 {::secret secret}))
 
   :post! (fn [ctx]
-           (let [{:keys [sender-uid recipient-uid amount]} (-> ctx ::confirmation :data)
+           (let [{:keys [sender-uid recipient-uid amount]}
+                 (-> ctx ::confirmation :data)
                  sender-wallet (wallet/fetch wallet-store sender-uid)
                  recipient-wallet (wallet/fetch wallet-store recipient-uid)
                  secret (ch/context->cookie-data ctx)]
              (blockchain/make-transaction blockchain
                                           (:account-id sender-wallet) amount
                                           (:account-id recipient-wallet) secret)
-             (confirmation/delete! confirmation-store (-> ctx ::confirmation :uid))
+             (confirmation/delete!
+              confirmation-store
+              (-> ctx ::confirmation :uid))
+
              {::sender-uid (:uid sender-wallet)}))
-  :post-redirect? (fn [ctx] {:location (routes/absolute-path (config/create-config) :account
-                                                             :uid (::sender-uid ctx))}))
+  :post-redirect? (fn [ctx] {:location
+                             (routes/absolute-path
+                              (config/create-config) :account
+                              :uid (::sender-uid ctx))}))

@@ -40,22 +40,22 @@
 (facts "Participant can send freecoins to another account"
        (let [memory (atom {})]
          (-> (k/session test-app)
-             
+
              (sign-up "recipient")
              (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
              sign-out
-             
+
              (sign-up "sender")
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
-             
+
              (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)
-             
+
              (kc/check-and-follow-redirect "to confirm transaction")
              (kc/check-and-press ks/confirm-transaction-form--submit)
-             
+
              (kc/check-and-follow-redirect "to sender's account page")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
              (kc/selector-includes-content [ks/account-page--balance] "-10")

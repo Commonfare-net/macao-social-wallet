@@ -71,7 +71,7 @@
       (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
     {:version                       (debug/version sso-configuration)
      :echo                          (debug/echo    sso-configuration)
-     :qrcode                        qrcode/qr-participant-sendto
+     :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store blockchain)
      :sign-in                       (sign-in/sign-in sso-configuration)
