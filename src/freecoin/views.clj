@@ -50,11 +50,11 @@
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
      [:title title]
      (page/include-css "/static/css/bootstrap.min.css")
-     (page/include-css "/static/css/bootstrap-responsive.min.css")
+     (page/include-css "/static/css/bootstrap-theme.min.css")
      (page/include-css "/static/css/freecoin.css")
      (page/include-css "/static/css/json-html.css")]
     [:body {:class body-class}
-     [:div {:class "container-fluid"}
+     [:div {:class "container"}
       [:h1 (or heading title)]
       body]]))
 
