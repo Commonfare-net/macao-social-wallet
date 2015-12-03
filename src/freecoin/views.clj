@@ -34,32 +34,6 @@
             [autoclave.core :as autoclave]
             [json-html.core :as present]))
 
-(defn confirm-button [{:keys [action data] :as confirmation}]
-  (page/html5
-    [:head [:meta {:charset "utf-8"}]
-     [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
-     [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
-     [:title (str "Confirm " action)]
-     (page/include-css "/static/css/bootstrap.min.css")
-     (page/include-css "/static/css/bootstrap-responsive.min.css")
-     (page/include-css "/static/css/freecoin.css")
-     (page/include-css "/static/css/json-html.css")]
-    [:body
-     [:div {:class "container-fluid"}
-      [:h1 (str "Confirm " action)]
-      [:div {:class "form-shell form-horizontal bootstrap-form"}
-       (present/edn->html data)
-       [:form {:action "/confirmations" :method "post"}
-        [:input {:name "id" :type "hidden"
-                 :value (:_id confirmation)}]
-        [:fieldset {:class "fieldset-submit"}
-         [:div {:class "form-actions submit-group control-group submit-row" :id "row-field-submit"}
-          [:div {:class "empty-shell"}]
-          [:div {:class="input-shell"}
-           [:input {:class "btn btn-primary" :id "field-submit"
-                    :name "submit" :type "submit"
-                    :value "Confirm"}]]]]]]]]))
-
 (def response-representation
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})

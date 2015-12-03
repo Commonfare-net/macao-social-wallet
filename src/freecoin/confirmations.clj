@@ -65,37 +65,6 @@
       )
     ))
 
-(lc/defresource get-confirm-form [request code]
-  :service-available?
-  {::db (get-in request [:config :db-connection])
-   ::content-type (get-in request [:headers "content-type"])}
-
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-
-  :allowed? (fn [ctx]
-              (let [found (storage/find-by-id
-                           (:db (::db ctx)) "confirmations" code)]
-
-                (if (contains? found :error)
-                  [false {::error (:error found)}]
-
-                  (if (empty? found)
-                    [false {::error "confirmation not found"}]
-                    ;; here fill in the content of the confirmation
-                    ;; {:_id     code
-                    ;;  :action  name
-                    ;;  :data    collection}
-                    [true {::user-data found}]))
-                ))
-
-  :handle-forbidden (fn [ctx]
-                      (lr/ring-response {:status 404
-                                         :body (::error ctx)}))
-
-  :handle-ok (fn [ctx] (views/confirm-button (::user-data ctx)))
-  )
-
 (defn empty-wallet [name email]
 ;;     [_id
 ;;      name
