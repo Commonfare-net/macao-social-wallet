@@ -30,26 +30,31 @@
             [freecoin.routes :as routes]))
 
 (defn render-wallet [wallet]
-  [:li {:style "margin: 1em"}
-   [:div {:class "card pull-left"}
-    [:span (str "name: " (:name wallet))]
-    [:br]
-    [:span (str "email: " (:email wallet))]
-    [:br]
-    [:span {:class "qrcode pull-left"}
-     [:img {:src (routes/path :qrcode :uid (:uid wallet))}]]
-    [:span {:class "gravatar pull-right"}
-     [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]]])
+  (let [email (:email wallet)]
+    [:div {:class "wallet-details"}
+     [:div {:class "card"}
+      [:span (str "Name: " (:name wallet))]
+      [:br]
+      [:span (str "Email: ") [:a {:href (str "mailto:" email)} email]]
+      [:br]
+      [:span {:class "qrcode pull-left"}
+       [:img {:src (routes/path :qrcode :uid (:uid wallet))}]]
+      [:span {:class "gravatar pull-right"}
+       [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]
+      [:div {:class "clearfix"}]]]))
 
 (defn build [context]
   (let [wallet (:wallet context)
         balance (:balance context)]
     {:body-class "func--account-page--body"
+     :title "Welcome to Freecoin"
      :body [:div
-            [:ul {:style "list-style-type: none;"}
-             (render-wallet wallet)]
-            [:div {:class "balance pull-left"}
+            (render-wallet wallet) 
+            [:div {:class "balance"}
              (str "Balance: ")
              [:span {:class "func--account-page--balance"}
-              balance]]]
-     :title "Welcome to freecoin"}))
+              balance]]
+            [:div
+             [:a {:class "btn btn-primary" :href (routes/path :get-transaction-form)}
+              (str "Send currency")]]]
+     }))
