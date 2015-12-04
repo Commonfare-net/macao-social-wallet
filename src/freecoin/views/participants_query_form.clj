@@ -3,7 +3,8 @@
             [freecoin.routes :as routes]))
 
 (def participants-form-spec
-  {:fields [{:name :field
+  {:renderer :bootstrap3-stacked
+   :fields [{:name :field
              :type :select
              :options ["name" "email"]}
             {:name :value :type :text}]
