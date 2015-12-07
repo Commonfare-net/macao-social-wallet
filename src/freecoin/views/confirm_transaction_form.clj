@@ -6,7 +6,8 @@
             [freecoin.config :as config]))
 
 (defn confirm-transaction-form-spec [confirmation-uid]
-  {:fields [{:name :submit :type :submit :class "func--confirm-transaction-form--submit"}]
+  {:renderer :bootstrap3-stacked
+   :fields [{:name :submit :type :submit :class "func--confirm-transaction-form--submit"}]
    :action (routes/absolute-path (config/create-config)
                                  :post-confirm-transaction-form
                                  :confirmation-uid confirmation-uid)

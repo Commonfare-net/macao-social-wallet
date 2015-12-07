@@ -22,7 +22,7 @@
                  [http-kit "2.1.18"]
                  [enlive "1.1.5"]
                  [formative "0.8.8"]
-                 [formidable "0.1.9"]
+                 [formidable "0.1.10"]
                  [cheshire "5.4.0"]
                  [json-html "0.2.8"]
                  [autoclave "0.1.7"]

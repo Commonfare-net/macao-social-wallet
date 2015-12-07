@@ -4,7 +4,8 @@
             [freecoin.routes :as routes]))
 
 (def transaction-form-spec
-  {:fields [{:name :amount :type :decimal :class "func--transaction-form--amount"}
+  {:renderer :bootstrap3-stacked
+   :fields [{:name :amount :type :decimal :class "func--transaction-form--amount"}
             {:name :recipient :type :text :class "func--transaction-form--recipient"}
             {:name :submit :type :submit :class "func--transaction-form--submit"}]
    :validations [[:required [:amount :recipient] :required]
