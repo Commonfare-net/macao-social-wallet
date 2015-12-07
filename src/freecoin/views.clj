@@ -28,8 +28,8 @@
 
 (ns freecoin.views
   (:require [hiccup.page :as page]
-            [formidable.core :as fc]
             [formidable.parse :as fp]
+            [clojure.tools.logging :as log]
             [cheshire.core :as cheshire]
             [autoclave.core :as autoclave]
             [json-html.core :as present]))
@@ -38,25 +38,20 @@
   {"application/json" "application/json"
    "application/x-www-form-urlencoded" "text/html"})
 
-(defn simple-form-template [{:keys [heading form-spec] :as content}]
-  [:div
-   [:h1 heading]
-   (fc/render-form form-spec)])
-
 (defn render-page [{:keys [title heading body body-class] :as content}]
   (page/html5
-    [:head [:meta {:charset "utf-8"}]
-     [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
-     [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
-     [:title title]
-     (page/include-css "/static/css/bootstrap.min.css")
-     (page/include-css "/static/css/bootstrap-theme.min.css")
-     (page/include-css "/static/css/freecoin.css")
-     (page/include-css "/static/css/json-html.css")]
-    [:body {:class body-class}
-     [:div {:class "container"}
-      [:h1 (or heading title)]
-      body]]))
+   [:head [:meta {:charset "utf-8"}]
+    [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
+    [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
+    [:title title]
+    (page/include-css "/static/css/bootstrap.min.css")
+    (page/include-css "/static/css/bootstrap-theme.min.css")
+    (page/include-css "/static/css/freecoin.css")
+    (page/include-css "/static/css/json-html.css")]
+   [:body {:class body-class}
+    [:div {:class "container"}
+     [:h1 (or heading title)]
+     body]]))
 
 (defn render-template [template {:keys [title] :as content}]
   (render-page {:title (:title content)

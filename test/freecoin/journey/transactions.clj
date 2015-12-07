@@ -63,3 +63,36 @@
              (sign-in "recipient")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :recipient-uid))
              (kc/selector-includes-content [ks/account-page--balance] "10"))))
+
+(facts "Error messages show in form on invalid input"
+       (let [memory (atom {})]
+         (-> (k/session test-app)
+
+             (sign-up "recipient")
+             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             sign-out
+
+             (sign-up "sender")
+             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+
+             ;; required form fields
+             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (kc/check-and-fill-in ks/transaction-form--recipient "")
+             (kc/check-and-fill-in ks/transaction-form--amount "")
+             (kc/check-and-press ks/transaction-form--submit)
+
+             (kc/check-and-follow-redirect "back to form")
+             (kc/check-page-is :get-transaction-form [ks/transaction-form--submit])
+             (kc/selector-includes-content [ks/transaction-form--error-message] "Required field")
+
+             ;; invalid recipient
+             (kc/check-and-fill-in ks/transaction-form--recipient "non-existing-recipient")
+             (kc/check-and-fill-in ks/transaction-form--amount "33")
+             (kc/check-and-press ks/transaction-form--submit)
+
+             (kc/check-and-follow-redirect "back to form")
+             (kc/check-page-is :get-transaction-form [ks/transaction-form--submit])
+             (kc/selector-includes-content [ks/transaction-form--error-message] "Recipient: Not found")
+
+             )))
+             
