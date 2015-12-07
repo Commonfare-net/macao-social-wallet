@@ -41,7 +41,9 @@
 
 
   :source-paths ["src"]
-  :jvm-opts ["-Djava.security.egd=file:/dev/random"] ;use a proper random source (install haveged)
+  :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
+             "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
+             ] 
   :env [[:base-url "http://localhost:8000"]]
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]
