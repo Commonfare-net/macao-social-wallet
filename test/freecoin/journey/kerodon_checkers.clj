@@ -1,13 +1,21 @@
 (ns freecoin.journey.kerodon-checkers
   (:require [midje.sweet :refer :all]
+            [clojure.tools.logging :as log]
             [net.cgrand.enlive-html :as html]
             [kerodon.core :as k]
+            [ring.util.response :as rr]
             [clojure.string :as string]
             [freecoin.routes :as r]))
 
 (defn page-uri-is [state uri]
   (fact {:midje/name "Checking page uri:"}
         (-> state :request :uri) => uri)
+  state)
+
+(defn content-type-is [state content-type]
+  (fact {:midje/name "Checking content type:"}
+        (let [request-content-type (rr/get-header (:response state) "content-type")]
+          (first (string/split request-content-type #";")) => content-type))
   state)
 
 (defn page-route-is [state scenic-action & route-params]
@@ -22,6 +30,11 @@
   (fact {:midje/name (str "Check element exists with " selector)}
         (-> state :enlive (html/select selector)) =not=> empty?)
   state)
+
+(defn check-page-is-status [state route-action status body-selector & route-params]
+  (apply page-route-is state route-action route-params)
+  (response-status-is state status)
+  (selector-exists state body-selector))
 
 (defn check-page-is [state route-action body-selector & route-params]
   (apply page-route-is state route-action route-params)

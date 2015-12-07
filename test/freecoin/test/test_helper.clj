@@ -19,6 +19,11 @@
                              (#{302 303} (:status response))
                              (= (get-in response [:headers "Location"]) path))))
 
+(defn check-response-status [status]
+  (midje/chatty-checker [response] (and
+                             (= status (:status response))
+                             )))
+
 (defn check-signed-in-as [uid]
   (midje/chatty-checker [response] (= uid (get-in response [:session :signed-in-uid]))))
 
