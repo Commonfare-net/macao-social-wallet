@@ -8,6 +8,7 @@ GET  /sso-callback                      sso-callback
 GET  /sign-out                          sign-out
 
 GET  /account/:uid                      account
+GET  /transactions/:uid                 get-user-transactions
 
 GET  /participant-query                 get-participant-search-form
 GET  /participants                      participants
@@ -16,8 +17,6 @@ GET  /send                              get-transaction-form
 POST /send                              post-transaction-form
 GET  /send/confirm/:confirmation-uid    get-confirm-transaction-form
 POST /send/confirm/:confirmation-uid    post-confirm-transaction-form
-
-GET  /transactions                      transactions
 
 # DEBUG
 GET  /echo                              echo

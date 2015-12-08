@@ -55,6 +55,9 @@
              [:span {:class "func--account-page--balance"}
               balance]]
             [:div
-             [:a {:class "btn btn-primary" :href (routes/path :get-transaction-form)}
-              (str "Send currency")]]]
+             [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
+              (str "Send currency")]
+             [:a.btn.btn-default {:href (routes/path :get-user-transactions :uid (:account-id wallet))}
+              (str "View transactions")]
+             ]]
      }))

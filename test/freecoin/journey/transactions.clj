@@ -1,6 +1,7 @@
 (ns freecoin.journey.transactions
   (:require [midje.sweet :refer :all]
             [kerodon.core :as k]
+            [clojure.tools.logging :as log] 
             [ring.util.response :as r]
             [stonecutter-oauth.client :as soc]
             [freecoin.journey.kerodon-selectors :as ks]
@@ -48,6 +49,12 @@
              (sign-up "sender")
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
 
+             ;; visit the transactions page and show that there is no transaction
+             (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :sender-uid)))
+             (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :sender-uid))
+             (kc/selector-matches-count ks/transactions-page--table-rows 0)
+
+             ;; do a transaction
              (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
@@ -60,9 +67,22 @@
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
              (kc/selector-includes-content [ks/account-page--balance] "-10")
 
+             ;; visit the transactions page and show that there is now one transaction
+             (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :sender-uid)))
+             (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :sender-uid))
+             (log/info)
+             (kc/selector-matches-count ks/transactions-page--table-rows 1)
+             
              (sign-in "recipient")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :recipient-uid))
-             (kc/selector-includes-content [ks/account-page--balance] "10"))))
+             (kc/selector-includes-content [ks/account-page--balance] "10")
+
+             ;; visit the transactions page of the recipient and show that there is now one transaction as well
+             (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :recipient-uid)))
+             (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :recipient-uid))
+             (kc/selector-matches-count ks/transactions-page--table-rows 1)
+             
+             )))
 
 (facts "Error messages show in form on invalid input"
        (let [memory (atom {})]

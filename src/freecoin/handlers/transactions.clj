@@ -43,6 +43,7 @@
             [freecoin.views :as fv]
             [freecoin.form_helpers :as fh]
             [freecoin.views.transaction-form :as transaction-form]
+            [freecoin.views.transaction-list :as transaction-list]
             [freecoin.views.confirm-transaction-form
              :as confirm-transaction-form]))
 
@@ -173,3 +174,17 @@
                              (routes/absolute-path
                               (config/create-config) :account
                               :uid (::sender-uid ctx))}))
+
+(lc/defresource list-user-transactions [wallet-store confirmation-store]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :authorized? (fn [ctx]
+                 (when-let [uid (ch/context->signed-in-uid ctx)]
+                   (when-let [wallet (wallet/fetch wallet-store uid)]
+                     {::wallet wallet})))
+
+  :handle-ok (fn [ctx]
+               (-> confirmation-store
+                   (confirmation/get-confirmations-by-uid (-> ctx ::wallet :uid))
+                   transaction-list/build
+                   fv/render-page)))

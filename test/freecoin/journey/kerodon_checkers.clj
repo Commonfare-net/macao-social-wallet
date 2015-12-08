@@ -70,3 +70,8 @@
         (-> state :enlive (html/select selector) first html/text) => (contains content))
   state)
 
+(defn selector-matches-count [state selector times]
+  (fact {:midje/name (format "Check if selector %s occurs %d times" (str selector) times)}
+        (-> state :enlive (html/select selector) count) => times)
+  state)
+
