@@ -52,7 +52,8 @@
   (facts {:midje/name (format "can store records, then query with a query map for %s store" type)}
          (let [record-1 {:field-1 "r1f1" :field-2 "r1f2,r2f2" :field-3 "r1f3,r3f3"}
                record-2 {:field-1 "r2f1" :field-2 "r1f2,r2f2" :field-3 "r2f3"}
-               record-3 {:field-1 "r3f1" :field-2 "r3f2" :field-3 "r1f3,r3f3"}]
+               record-3 {:field-1 "r3f1" :field-2 "r3f2" :field-3 "r1f3,r3f3"}
+               record-4 {:field-1 "r4f1" :field-2 "r4f2" :nested {:field "r4"}}]
            (m/store! store :field-1 record-1)
            (m/store! store :field-1 record-2)
            (m/store! store :field-1 record-3)
@@ -63,7 +64,9 @@
             {:field-2 "r1f2,r2f2"}                       [record-1 record-2]
             {:field-1 "r1f1"}                            [record-1]
             {:field-2 "r1f2,r2f2" :field-3 "r1f3,r3f3"}  [record-1]
-            {:field-2 "haven't got one"}                 []))))
+            {:field-2 "haven't got one"}                 []
+            {:nested {:field "r4"}}                      [record-4]
+            ))))
 
 (facts "run store and query tests for both in-memory and mongo stores"
        (run-store-and-query-tests (m/create-memory-store) "in-memory")
