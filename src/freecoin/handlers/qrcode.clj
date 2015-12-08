@@ -3,7 +3,7 @@
             [freecoin.params :as param]
             [freecoin.views :as fv]
             [freecoin.utils :as utils]
-            [freecoin.auth :as auth]
+            ;; [freecoin.auth :as auth]
             [freecoin.db.wallet :as wallet]
             [freecoin.context-helpers :as ch]
             [clj.qrgen :as qr]))
