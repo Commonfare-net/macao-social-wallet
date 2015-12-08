@@ -26,8 +26,7 @@
 (ns freecoin.secretshare
   (:gen-class)
   (:import [com.tiemens.secretshare.engine SecretShare])
-  (:require [freecoin.utils :as util]
-            [hashids.core :as hash]))
+  (:require [freecoin.utils :as util]))
 
 (defn prime384 []
   (SecretShare/getPrimeUsedFor384bitSecretPayload))
@@ -124,57 +123,3 @@
         ))
     )
   )
-
-(defn hash-encode-num [conf num]
-  {:pre  [(integer? num)]
-   :post [(string? %)]}
-  (str (hash/encode conf num))
-  )
-
-(defn hash-decode-str [conf str]
-  {:pre  [(string? str)]
-   :post [(integer? %)]}
-  ;; (util/log! 'ACK 'decoding-type (type str))
-  ;; (util/log! 'ACK 'decoded-type (type (hash/decode conf str)))
-  (biginteger (first (hash/decode conf str)))
-  )
-
-(defn hash-encode-secret [conf secret]
-  {:pre [(contains? secret :header)
-         (contains? conf :alphabet)
-         (contains? conf :salt)
-         (contains? secret :shares)
-         (= (count (:shares secret)) (:total (:header secret)))]
-   :post (= (count (:shares secret)) (count %))}
-  (loop [c 1
-         s (first (:shares secret))
-         res [] ]
-
-    (if (< c (count (:shares secret)))
-      (recur (inc c) (biginteger (nth (:shares secret) c))
-             (merge res (hash-encode-num conf s)))
-      ;; return
-      (merge res (hash-encode-num conf s)))
-    )
-  )
-
-(defn hash-decode-hashes [conf hashes]
-  {:pre [(contains? conf :salt)
-         (coll? hashes)
-         (string? (first hashes))]
-   :post [(coll? %)
-          (integer? (first %))
-          (= (count hashes) (count %))]}
-
-  (loop [c 1
-         s (first hashes)
-         res [] ]
-
-    (if (< c (count hashes))
-      (recur (inc c) (str (nth hashes c))
-             (merge res (biginteger (hash-decode-str conf s))))
-      ;; return
-      (merge res (biginteger (hash-decode-str conf s))))
-    )
-  )
-

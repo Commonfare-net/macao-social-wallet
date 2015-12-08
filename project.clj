@@ -29,7 +29,6 @@
                  [com.novemberain/monger "2.0.0"]
                  [org.clojure/math.numeric-tower "0.0.2"]
                  [com.tiemens/secretshare "1.3.1"]
-                 [jstrutz/hashids "1.0.1"]
                  [buddy/buddy-hashers "0.7.0"]
                  [simple-time "0.2.0"]
                  [environ "1.0.0"]

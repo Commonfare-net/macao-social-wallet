@@ -59,17 +59,9 @@
    
    ;; versioning every secret
    :prefix "FXC1"
-   
-   ;; this alphabet excludes ambiguous chars:
-   ;; 1,0,I,O can be confused on some screens
-   :alphabet "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-   
-   ;; the salt should be a secret shared password
-   ;; known to all possessors of the key pieces
-   :salt "La gatta sul tetto che scotta"
-   
+
    ;; random number generator settings
-   :length 12
+   :length 8
    :entropy 3.1
    })
 
