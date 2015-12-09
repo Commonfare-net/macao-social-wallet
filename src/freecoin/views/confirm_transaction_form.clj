@@ -12,7 +12,9 @@
     {:renderer :bootstrap3-stacked
      :fields (if show-pin-entry
                [{:name :secret
-                 :label "Enter your secret PIN to confirm"}
+                 :label "Enter your secret PIN to confirm"
+                 :type :number
+                 :class "func--confirm-transaction-form--secret"}
                 submit]
                [submit])
      :action (routes/absolute-path (config/create-config)

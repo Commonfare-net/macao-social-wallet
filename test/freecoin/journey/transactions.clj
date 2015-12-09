@@ -130,3 +130,50 @@
 
              )))
              
+
+(facts "Participant can send freecoins to another account by entering PIN. First, PIN is removed from session by visiting 'forget PIN' URL"
+       (let [memory (atom {})]
+         (-> (k/session test-app)
+
+             (sign-up "recipient")
+             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             sign-out
+
+             (sign-up "sender")
+             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+
+             ;; visit /forget-secret to explicitly scrub the PIN from the session
+             (k/visit (routes/absolute-path (c/create-config) :forget-secret))
+             (kc/check-and-follow-redirect "back to account page")
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+
+             ;; now start a transaction
+             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-press ks/transaction-form--submit)
+
+             ;; we are on the confirm form; PIN entry is present
+             (kc/check-and-follow-redirect "to confirm transaction")
+             (kc/selector-matches-count [ks/confirm-transaction-form--secret] 1)
+             (kc/check-and-fill-in ks/confirm-transaction-form--secret "asdf")
+             (kc/check-and-press ks/confirm-transaction-form--submit)
+
+             (kc/check-and-follow-redirect "to sender's account page")
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+
+             ;; for next transactions, the PIN is again in the
+             ;; session. Verify this by starting a transaction and
+             ;; verifying that the PIN entry form on the confirmation
+             ;; page is not there.
+             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-press ks/transaction-form--submit)
+
+             ;; we are on the confirm form; PIN entry is present
+             (kc/check-and-follow-redirect "to confirm transaction")
+             (kc/selector-matches-count [ks/confirm-transaction-form--secret] 0)
+
+
+             )))

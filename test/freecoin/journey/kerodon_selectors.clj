@@ -13,6 +13,7 @@
 (def transaction-form--error-message :div.form-problems)
 
 (def confirm-transaction-form--submit :.func--confirm-transaction-form--submit)
+(def confirm-transaction-form--secret :.func--confirm-transaction-form--secret)
 
 (def transactions-page-body :.func--transactions-page--body)
 (def transactions-page--table-rows [:.func--transactions-page--table :tbody :tr])

@@ -79,6 +79,7 @@
      :sign-in                       (sign-in/sign-in sso-configuration)
      :sso-callback                  (sign-in/sso-callback wallet-store blockchain sso-configuration)
      :sign-out                      sign-in/sign-out
+     :forget-secret                 sign-in/forget-secret
      :account                       (participants/account      wallet-store blockchain)
      :get-participant-search-form   (participants/query-form   wallet-store)
      :participants                  (participants/participants wallet-store)

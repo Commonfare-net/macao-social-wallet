@@ -137,3 +137,21 @@
                    (preserve-session (:request ctx))
                    (update-in [:session] dissoc :signed-in-uid)
                    lr/ring-response)))
+
+
+(lc/defresource forget-secret
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+
+  :exists?
+  (fn [ctx]
+    (when-let [uid (ch/context->signed-in-uid ctx)]
+      {::uid uid}))
+  
+  :handle-ok
+  (fn [ctx]
+    (-> (routes/absolute-path (config/create-config) :account :uid (::uid ctx))
+        r/redirect
+        (preserve-session (:request ctx))
+        (update-in [:session] dissoc :cookie-data)
+        lr/ring-response)))

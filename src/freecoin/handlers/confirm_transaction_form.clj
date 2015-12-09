@@ -63,15 +63,15 @@
           recipient (wallet/fetch wallet-store
                       (get-in ctx [::confirmation :data :recipient-uid]))
           show-pin-entry (= nil (ch/context->cookie-data ctx))]
-
-      (log/info "show pin?" show-pin-entry)
-
       (-> {:confirmation confirmation
            :recipient recipient
            :request (:request ctx)}
           (confirm-transaction-form/build show-pin-entry)
           fv/render-page)))
   )
+
+(defn preserve-session [response request]
+  (assoc response :session (:session request)))
 
 (lc/defresource post-confirm-transaction-form
   [wallet-store confirmation-store blockchain]
@@ -100,7 +100,7 @@
       (let [confirmation (::confirmation ctx)
             {:keys [status data problems]}
             (fh/validate-form (confirm-transaction-form/confirm-transaction-form-spec (:uid confirmation) true)
-                           (ch/context->params ctx))]
+                              (ch/context->params ctx))]
 
         (if (= :ok status)
           {::secret (:secret data)}
@@ -115,28 +115,29 @@
           sender-wallet (wallet/fetch wallet-store sender-uid)
           recipient-wallet (wallet/fetch wallet-store recipient-uid)
           secret (::secret ctx)]
-
-      (log/info "jeuj")
-
       (blockchain/make-transaction blockchain
                                    (:account-id sender-wallet) amount
                                    (:account-id recipient-wallet) secret)
-      (log/info "secret:" secret)
-      
       (confirmation/delete!
        confirmation-store
        (-> ctx ::confirmation :uid))
-      {::sender-uid (:uid sender-wallet)}))
+
+      {::uid (:uid sender-wallet) ::secret secret}
+      ))
 
   :post-redirect?
   (fn [ctx]
-    (log/info "post redirect!!!")
+    {:location (routes/absolute-path (config/create-config) :account :uid (::uid ctx))})
 
-    {:location
-     (routes/absolute-path
-      (config/create-config) :account
-      :uid (::sender-uid ctx))})
-
+  :handle-see-other
+  (fn [ctx]
+    (->
+     (:location ctx)
+     r/redirect
+     (preserve-session (:request ctx))
+     (update-in [:session] assoc :cookie-data (::secret ctx))
+     lr/ring-response))
+  
   :handle-forbidden
   (fn [ctx]
     (-> (routes/absolute-path (config/create-config) :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))
