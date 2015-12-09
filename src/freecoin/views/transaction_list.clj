@@ -28,13 +28,10 @@
 (ns freecoin.views.transaction-list
   (:require [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
-            [clojure.tools.logging :as log]
             [freecoin.config :as config]))
 
 (defn build [list wallet-store & [owner-wallet]]
   (let [title (str "Transaction list" (when (not (nil? owner-wallet)) (str " for " (:name owner-wallet))))]
-    (log/info "owner-wallet" owner-wallet)
-
     {:title title
      :heading title
      :body-class "func--transactions-page--body"
