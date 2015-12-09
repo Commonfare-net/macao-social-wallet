@@ -34,9 +34,9 @@
     (let [from (from-selector wallets-and-secrets)
           to (to-selector wallets-and-secrets)
           amount (amount-generator)]
-      {:from-account-id (-> from :wallet :name)
+      {:from-account-id (-> from :wallet :account-id)
        :amount amount
-       :to-account-id (-> to :wallet :name)
+       :to-account-id (-> to :wallet :account-id)
        :secret (:apikey from)})))
 
 (defn random-selection [collection]

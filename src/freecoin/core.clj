@@ -61,7 +61,7 @@
                  (routes/absolute-path config-m :sso-callback)))
 
 (defn todo [_]
-  {:status 200 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})
+  {:status 503 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})
 
 (defn handlers [config-m stores-m blockchain]
   (let [wallet-store (storage/get-wallet-store stores-m)
@@ -85,7 +85,8 @@
      :post-transaction-form         (transactions/post-transaction-form         wallet-store confirmation-store)
      :get-confirm-transaction-form  (transactions/get-confirm-transaction-form  wallet-store confirmation-store)
      :post-confirm-transaction-form (transactions/post-confirm-transaction-form wallet-store confirmation-store blockchain)
-     :transactions                  todo
+     :get-user-transactions         (transactions/list-user-transactions        wallet-store blockchain)
+     :get-all-transactions          (transactions/list-all-transactions         wallet-store blockchain)
      :nxt                           todo}))
 
 (defn handle-anti-forgery-error [request]

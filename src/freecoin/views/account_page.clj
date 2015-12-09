@@ -11,6 +11,7 @@
 
 ;; With contributions by
 ;; Duncan Mortimer <dmortime@thoughtworks.com>
+;; Arjan Scherpenisse <arjan@scherpenisse.net>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -55,6 +56,9 @@
              [:span {:class "func--account-page--balance"}
               balance]]
             [:div
-             [:a {:class "btn btn-primary" :href (routes/path :get-transaction-form)}
-              (str "Send currency")]]]
+             [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
+              (str "Send currency")]
+             [:a.btn.btn-default {:href (routes/path :get-user-transactions :uid (:uid wallet))}
+              (str "View transactions")]
+             ]]
      }))

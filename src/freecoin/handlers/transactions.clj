@@ -43,6 +43,7 @@
             [freecoin.views :as fv]
             [freecoin.form_helpers :as fh]
             [freecoin.views.transaction-form :as transaction-form]
+            [freecoin.views.transaction-list :as transaction-list]
             [freecoin.views.confirm-transaction-form
              :as confirm-transaction-form]))
 
@@ -173,3 +174,29 @@
                              (routes/absolute-path
                               (config/create-config) :account
                               :uid (::sender-uid ctx))}))
+
+(lc/defresource list-user-transactions [wallet-store blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :exists?
+  (fn [ctx]
+    (when-let [uid (:uid (ch/context->params ctx))]
+      (when-let [wallet (wallet/fetch wallet-store uid)]
+        {::wallet wallet})))
+
+  :handle-ok
+  (fn [ctx]
+    (-> blockchain
+        (blockchain/list-transactions (-> ctx ::wallet :account-id))
+        (transaction-list/build wallet-store (::wallet ctx))
+        fv/render-page)))
+
+(lc/defresource list-all-transactions [wallet-store blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok
+  (fn [ctx]
+    (-> blockchain
+        (blockchain/list-transactions)
+        (transaction-list/build wallet-store)
+        fv/render-page)))
