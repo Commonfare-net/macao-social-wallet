@@ -77,6 +77,9 @@
 (defn fetch-by-name [wallet-store name]
   (first (mongo/query wallet-store {:name name})))
 
+(defn fetch-by-account-id [wallet-store name]
+  (first (mongo/query wallet-store {:account-id name})))
+
 (defn query
   ([wallet-store] (query wallet-store {}))
   ([wallet-store query-m] (mongo/query wallet-store query-m)))

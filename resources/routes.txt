@@ -9,6 +9,7 @@ GET  /sign-out                          sign-out
 
 GET  /account/:uid                      account
 GET  /transactions/:uid                 get-user-transactions
+GET  /transactions                      get-all-transactions
 
 GET  /participant-query                 get-participant-search-form
 GET  /participants                      participants

@@ -188,5 +188,15 @@
   (fn [ctx]
     (-> blockchain
         (blockchain/list-transactions (-> ctx ::wallet :account-id))
+        (transaction-list/build wallet-store (::wallet ctx))
+        fv/render-page)))
+
+(lc/defresource list-all-transactions [wallet-store blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok
+  (fn [ctx]
+    (-> blockchain
+        (blockchain/list-transactions)
         (transaction-list/build wallet-store)
         fv/render-page)))

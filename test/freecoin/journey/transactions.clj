@@ -49,9 +49,17 @@
              (sign-up "sender")
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
 
+             ;; visit the "all transactions page" should contain no transactions
+             (k/visit (routes/absolute-path (c/create-config) :get-all-transactions))
+             (kc/check-page-is :get-all-transactions ks/transactions-page-body)
+             (kc/selector-matches-count ks/transactions-page--table-rows 0)
+             (kc/selector-includes-content [:title] "Transaction list")
+
+             
              ;; visit the transactions page and show that there is no transaction
              (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :sender-uid)))
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :sender-uid))
+             (kc/selector-includes-content [:title] "Transaction list for sender") 
              (kc/selector-matches-count ks/transactions-page--table-rows 0)
 
              ;; do a transaction
@@ -71,6 +79,7 @@
              (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :sender-uid)))
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :sender-uid))
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
+             (kc/selector-includes-content [:title] "Transaction list for sender") 
 
              (sign-in "recipient")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :recipient-uid))
@@ -80,7 +89,13 @@
              (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :recipient-uid)))
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :recipient-uid))
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
-             
+             (kc/selector-includes-content [:title] "Transaction list for recipient") 
+
+             ;; visit the "all transactions page" should also contain a single transaction
+             (k/visit (routes/absolute-path (c/create-config) :get-all-transactions))
+             (kc/check-page-is :get-all-transactions ks/transactions-page-body)
+             (kc/selector-matches-count ks/transactions-page--table-rows 1)
+             (kc/selector-includes-content [:title] "Transaction list") 
              )))
 
 (facts "Error messages show in form on invalid input"

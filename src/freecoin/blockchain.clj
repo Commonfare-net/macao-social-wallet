@@ -45,7 +45,7 @@
   (get-balance [bk account-id])
 
   ;; transactions
-  (list-transactions [bk account-id])
+  (list-transactions [bk] [bk account-id])
   (get-transaction   [bk account-id txid])
   (make-transaction  [bk from-account-id amount to-account-id secret])
 
@@ -82,8 +82,13 @@
 ;; TODO
 (defrecord nxt [server port])
 
-(defn- normalize-transaction [transaction]
-  (assoc transaction :amount (util/long->bigdecimal (:amount transaction))))
+(defn- normalize-transactions [list]
+  (reverse
+     (sort-by :timestamp
+              (map (fn [transaction]
+                     (assoc transaction :amount (util/long->bigdecimal (:amount transaction))))
+                   list
+                   ))))
 
 ;; inherits from Blockchain and implements its methods
 (defrecord Stub [db]
@@ -114,13 +119,15 @@
           sent      (if (nil? sent-map) 0 (:total sent-map))]
       (util/long->bigdecimal (- received sent))))
 
+  (list-transactions [bk]
+    (normalize-transactions
+     (storage/find-by-key db "transactions" {:blockchain "STUB"})))
+
   (list-transactions [bk account-id]
-    (reverse
-     (sort-by :timestamp
-              (map normalize-transaction
-                   (concat
-                    (storage/find-by-key db "transactions" {:from-id account-id})
-                    (storage/find-by-key db "transactions" {:to-id account-id}))))))
+    (normalize-transactions
+     (concat
+      (storage/find-by-key db "transactions" {:from-id account-id})
+      (storage/find-by-key db "transactions" {:to-id account-id}))))
 
   (get-transaction   [bk account-id txid] nil)
 

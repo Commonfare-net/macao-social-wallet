@@ -31,30 +31,31 @@
             [clojure.tools.logging :as log]
             [freecoin.config :as config]))
 
-(defn build [list wallet-store]
-  {:title "Transaction list"
-   :heading "Transaction list"
-   :body-class "func--transactions-page--body"
-   :body
-   [:table.func--transactions-page--table.table.table-striped
-    [:thead
-     [:tr
-      [:th "From"]
-      [:th "To"]
-      [:th "Amount"]
-      [:th "Time"]]]
-    [:tbody
-     (map (fn [t]
-            (let [from (:from-id t)
-                  from-wallet (wallet/fetch wallet-store from)
-                  to (:to-id t)
-                  to-wallet (wallet/fetch wallet-store to)]
-              [:tr
-               [:td [:a {:href (routes/path :account :uid from)} (:name from-wallet)]]
-               [:td [:a {:href (routes/path :account :uid to)} (:name to-wallet)]]
-               [:td (:amount t)]
-               [:td (:timestamp t)]]))
-          list)
-     ]
-    ]
-   })
+(defn build [list wallet-store & [owner-wallet]]
+  (let [title (str "Transaction list" (when (not (nil? owner-wallet)) (str " for " (:name owner-wallet))))]
+    (log/info "owner-wallet" owner-wallet)
+
+    {:title title
+     :heading title
+     :body-class "func--transactions-page--body"
+     :body
+     [:table.func--transactions-page--table.table.table-striped
+      [:thead
+       [:tr
+        [:th "From"]
+        [:th "To"]
+        [:th "Amount"]
+        [:th "Time"]]]
+      [:tbody
+       (map (fn [t]
+              (let [from (wallet/fetch-by-account-id wallet-store (:from-id t))
+                    to (wallet/fetch-by-account-id wallet-store (:to-id t))]
+                [:tr
+                 [:td [:a {:href (routes/path :account :uid (:uid from))} (:name from)]]
+                 [:td [:a {:href (routes/path :account :uid (:uid to))} (:name to)]]
+                 [:td (:amount t)]
+                 [:td (:timestamp t)]]))
+            list)
+       ]
+      ]
+     }))
