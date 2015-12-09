@@ -47,12 +47,3 @@
 (defn delete! [confirmation-store uid]
   (mongo/delete! confirmation-store uid))
 
-(defn get-confirmations-by-uid
-  "Retrieve list of confirmations for the given uid; both as sender and recipient."
-  [confirmation-store uid]
-  (log/info "uid ---- " uid)
-
-  (concat
-   (mongo/query confirmation-store {:data {:sender-uid uid}})
-   (mongo/query confirmation-store {:data {:recipient-uid uid}}))
-  )

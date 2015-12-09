@@ -175,16 +175,18 @@
                               (config/create-config) :account
                               :uid (::sender-uid ctx))}))
 
-(lc/defresource list-user-transactions [wallet-store confirmation-store]
+(lc/defresource list-user-transactions [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :authorized? (fn [ctx]
-                 (when-let [uid (ch/context->signed-in-uid ctx)]
-                   (when-let [wallet (wallet/fetch wallet-store uid)]
-                     {::wallet wallet})))
+  :exists?
+  (fn [ctx]
+    (when-let [uid (:uid (ch/context->params ctx))]
+      (when-let [wallet (wallet/fetch wallet-store uid)]
+        {::wallet wallet})))
 
-  :handle-ok (fn [ctx]
-               (-> confirmation-store
-                   (confirmation/get-confirmations-by-uid (-> ctx ::wallet :uid))
-                   transaction-list/build
-                   fv/render-page)))
+  :handle-ok
+  (fn [ctx]
+    (-> blockchain
+        (blockchain/list-transactions (-> ctx ::wallet :uid))
+        transaction-list/build
+        fv/render-page)))

@@ -1,5 +1,6 @@
 (ns freecoin.views.transaction-list
   (:require [freecoin.routes :as routes]
+            [clojure.tools.logging :as log]
             [freecoin.config :as config]))
 
 (defn build [list]
@@ -10,11 +11,17 @@
    [:table.func--transactions-page--table
     [:thead
      [:tr
-      [:th "UID"]]]
+      [:th "From"]
+      [:th "To"]
+      [:th "Amount"]
+      [:th "Time"]]]
     [:tbody
      (map (fn [t]
             [:tr
-             [:td (:uid t)]])
+             [:td (:from-id t)]
+             [:td (:to-id t)]
+             [:td (:amount t)]
+             [:td (:timestamp t)]])
           list)
      ]
     ]
