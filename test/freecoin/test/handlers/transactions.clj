@@ -8,7 +8,8 @@
             [freecoin.blockchain :as fb]
             [freecoin.routes :as routes]
             [freecoin.config :as config]
-            [freecoin.handlers.transactions :as ft]
+            [freecoin.handlers.transaction-form :as tf]
+            [freecoin.handlers.confirm-transaction-form :as ctf]
             [freecoin.test-helpers.store :as test-store]))
 
 (defn setup-with-sender-and-recipient []
@@ -33,7 +34,7 @@
 
 (facts "about the create transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
-             transaction-form-handler (ft/get-transaction-form wallet-store)]
+             transaction-form-handler (tf/get-transaction-form wallet-store)]
          (fact "returns 401 when participant is not authenticated"
                (-> (th/create-request :get (absolute-path :get-transaction-form)
                                       {})
@@ -67,7 +68,7 @@
 (facts "about post requests from the transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
              confirmation-store ...confirmation-store...
-             form-post-handler (ft/post-transaction-form wallet-store confirmation-store)]
+             form-post-handler (tf/post-transaction-form wallet-store confirmation-store)]
          (fact "returns 401 when participant not authenticated"
                (-> (th/create-request :post "/post-transaction-form" {})
                    form-post-handler
@@ -81,7 +82,7 @@
 
          (facts "when participant is authenticated, has cookie-data, and posts a valid form"
                 (let [confirmation-store (fm/create-memory-store)
-                      form-post-handler (ft/post-transaction-form wallet-store confirmation-store)
+                      form-post-handler (tf/post-transaction-form wallet-store confirmation-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
                                     {:amount "5.00" :recipient "recipient"}
@@ -120,7 +121,7 @@
              confirmation (c/new-transaction-confirmation! confirmation-store
                                                            (constantly "confirmation-uid")
                                                            "sender-uid" "recipient-uid" 10M)
-             confirm-transaction-handler (ft/get-confirm-transaction-form wallet-store confirmation-store)]
+             confirm-transaction-handler (ctf/get-confirm-transaction-form wallet-store confirmation-store)]
 
          (fact "displays confirm transaction form"
                (let [response
@@ -152,7 +153,7 @@
 (facts "about post requests from the confirm transaction form"
        (let [{:keys [blockchain wallet-store sender-wallet sender-apikey recipient-wallet]} (setup-with-sender-and-recipient)
              confirmation-store (fm/create-memory-store)
-             form-post-handler (ft/post-confirm-transaction-form wallet-store confirmation-store blockchain)]
+             form-post-handler (ctf/post-confirm-transaction-form wallet-store confirmation-store blockchain)]
 
          (fact "returns 401 when participant not authenticated"
                (-> (th/create-request :post "/post-confirm-transaction-form" {})
@@ -170,7 +171,7 @@
                      confirmation-for-different-sender (c/new-transaction-confirmation!
                                                         confirmation-store (constantly "confirmation-for-different-sender-uid")
                                                         "different-sender-uid" "recipient-uid" 10M)
-                     form-post-handler (ft/post-confirm-transaction-form wallet-store confirmation-store blockchain)]
+                     form-post-handler (ctf/post-confirm-transaction-form wallet-store confirmation-store blockchain)]
                  (-> (th/create-request :post "/post-confirm-transaction-form"
                                         {:confirmation-uid "confirmation-for-different-sender-uid"}
                                         {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
@@ -182,7 +183,7 @@
                       confirmation (c/new-transaction-confirmation!
                                     confirmation-store (constantly "confirmation-uid")
                                     "sender-uid" "recipient-uid" 10M)
-                      form-post-handler (ft/post-confirm-transaction-form wallet-store confirmation-store blockchain)
+                      form-post-handler (ctf/post-confirm-transaction-form wallet-store confirmation-store blockchain)
                       response (-> (th/create-request :post "/post-confirm-transaction-form"
                                                       {:confirmation-uid "confirmation-uid"}
                                                       {:signed-in-uid "sender-uid" :cookie-data sender-apikey})

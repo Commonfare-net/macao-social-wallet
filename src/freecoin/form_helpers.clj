@@ -26,7 +26,10 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.form_helpers
-  (:require [formidable.core :as fc]))
+  (:require
+   [formidable.core :as fc]
+   [formidable.parse :as fp]
+   ))
 
 (defn render-form [form-spec request]
   [:div
@@ -40,3 +43,10 @@
 
 (defn flash-form-problem [response context]
   (assoc response :flash (::form-problems context)))
+
+(defn validate-form [form-spec data]
+  (fp/with-fallback
+    (fn [problems] {:status :error
+                    :problems problems})
+    {:status :ok
+     :data (fp/parse-params form-spec data)}))

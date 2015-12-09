@@ -27,7 +27,7 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.handlers.transactions
+(ns freecoin.handlers.transaction-form
   (:require [liberator.core :as lc]
             [liberator.representation :as lr]
             [ring.util.response :as r]
@@ -59,13 +59,6 @@
                    transaction-form/build
                    fv/render-page)))
 
-(defn validate-form [form-spec data]
-  (fp/with-fallback
-    (fn [problems] {:status :error
-                    :problems problems})
-    {:status :ok
-     :data (fp/parse-params form-spec data)}))
-
 (lc/defresource post-transaction-form [wallet-store confirmation-store]
   :allowed-methods [:post]
   :available-media-types ["text/html"]
@@ -76,8 +69,8 @@
   :allowed?
   (fn [ctx]
     (let [{:keys [status data problems]}
-          (validate-form transaction-form/transaction-form-spec
-                         (ch/context->params ctx))]
+          (fh/validate-form transaction-form/transaction-form-spec
+                            (ch/context->params ctx))]
       (if (= :ok status)
         (if-let [recipient-wallet
                  (wallet/fetch-by-name wallet-store (:recipient data))]
@@ -112,91 +105,3 @@
         lr/ring-response
         )
     ))
-
-(lc/defresource get-confirm-transaction-form [wallet-store confirmation-store]
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-  :exists?
-  (fn [ctx]
-    (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
-          signed-in-uid (ch/context->signed-in-uid ctx)]
-      (when-let [confirmation
-                 (confirmation/fetch confirmation-store confirmation-uid)]
-        (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
-          {::confirmation confirmation}))))
-  :handle-ok
-  (fn [ctx]
-    (let [confirmation (::confirmation ctx)
-          recipient (wallet/fetch wallet-store
-                      (get-in ctx [::confirmation :data :recipient-uid]))]
-
-      (-> {:confirmation confirmation
-           :recipient recipient}
-          confirm-transaction-form/build
-          fv/render-page)))
-  )
-
-(lc/defresource post-confirm-transaction-form
-  [wallet-store confirmation-store blockchain]
-  :allowed-methods [:post]
-  :authorized?
-  (fn [ctx]
-    (let [signed-in-uid (ch/context->signed-in-uid ctx)
-          sender-wallet (wallet/fetch wallet-store signed-in-uid)
-          confirmation-uid (:confirmation-uid (ch/context->params ctx))
-          confirmation (confirmation/fetch confirmation-store confirmation-uid)]
-
-      (when (and sender-wallet
-                 confirmation
-                 (= signed-in-uid (-> confirmation :data :sender-uid)))
-        {::confirmation confirmation
-         ::sender-wallet sender-wallet})))
-
-  :allowed? (fn [ctx]
-              (when-let [secret (ch/context->cookie-data ctx)]
-                {::secret secret}))
-
-  :post! (fn [ctx]
-           (let [{:keys [sender-uid recipient-uid amount]}
-                 (-> ctx ::confirmation :data)
-                 sender-wallet (wallet/fetch wallet-store sender-uid)
-                 recipient-wallet (wallet/fetch wallet-store recipient-uid)
-                 secret (ch/context->cookie-data ctx)]
-             (blockchain/make-transaction blockchain
-                                          (:account-id sender-wallet) amount
-                                          (:account-id recipient-wallet) secret)
-             (confirmation/delete!
-              confirmation-store
-              (-> ctx ::confirmation :uid))
-
-             {::sender-uid (:uid sender-wallet)}))
-  :post-redirect? (fn [ctx] {:location
-                             (routes/absolute-path
-                              (config/create-config) :account
-                              :uid (::sender-uid ctx))}))
-
-(lc/defresource list-user-transactions [wallet-store blockchain]
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-  :exists?
-  (fn [ctx]
-    (when-let [uid (:uid (ch/context->params ctx))]
-      (when-let [wallet (wallet/fetch wallet-store uid)]
-        {::wallet wallet})))
-
-  :handle-ok
-  (fn [ctx]
-    (-> blockchain
-        (blockchain/list-transactions (-> ctx ::wallet :account-id))
-        (transaction-list/build wallet-store (::wallet ctx))
-        fv/render-page)))
-
-(lc/defresource list-all-transactions [wallet-store blockchain]
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-  :handle-ok
-  (fn [ctx]
-    (-> blockchain
-        (blockchain/list-transactions)
-        (transaction-list/build wallet-store)
-        fv/render-page)))

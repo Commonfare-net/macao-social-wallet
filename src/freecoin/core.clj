@@ -45,7 +45,9 @@
             [freecoin.config :as config]
             [freecoin.handlers.sign-in :as sign-in]
             [freecoin.handlers.participants :as participants]
-            [freecoin.handlers.transactions :as transactions]
+            [freecoin.handlers.transaction-form :as transaction-form]
+            [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
+            [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
             [freecoin.handlers.qrcode :as qrcode]
             ))
@@ -81,12 +83,12 @@
      :get-participant-search-form   (participants/query-form   wallet-store)
      :participants                  (participants/participants wallet-store)
 
-     :get-transaction-form          (transactions/get-transaction-form          wallet-store)
-     :post-transaction-form         (transactions/post-transaction-form         wallet-store confirmation-store)
-     :get-confirm-transaction-form  (transactions/get-confirm-transaction-form  wallet-store confirmation-store)
-     :post-confirm-transaction-form (transactions/post-confirm-transaction-form wallet-store confirmation-store blockchain)
-     :get-user-transactions         (transactions/list-user-transactions        wallet-store blockchain)
-     :get-all-transactions          (transactions/list-all-transactions         wallet-store blockchain)
+     :get-transaction-form          (transaction-form/get-transaction-form          wallet-store)
+     :post-transaction-form         (transaction-form/post-transaction-form         wallet-store confirmation-store)
+     :get-confirm-transaction-form  (confirm-transaction-form/get-confirm-transaction-form  wallet-store confirmation-store)
+     :post-confirm-transaction-form (confirm-transaction-form/post-confirm-transaction-form wallet-store confirmation-store blockchain)
+     :get-user-transactions         (transactions-list/list-user-transactions        wallet-store blockchain)
+     :get-all-transactions          (transactions-list/list-all-transactions         wallet-store blockchain)
      :nxt                           todo}))
 
 (defn handle-anti-forgery-error [request]
