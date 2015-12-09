@@ -187,6 +187,6 @@
   :handle-ok
   (fn [ctx]
     (-> blockchain
-        (blockchain/list-transactions (-> ctx ::wallet :uid))
-        transaction-list/build
+        (blockchain/list-transactions (-> ctx ::wallet :account-id))
+        (transaction-list/build wallet-store)
         fv/render-page)))

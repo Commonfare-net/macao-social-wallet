@@ -9,6 +9,9 @@
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
 
+;; With contributions by
+;; Arjan Scherpenisse <arjan@scherpenisse.net>
+
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -79,6 +82,9 @@
 ;; TODO
 (defrecord nxt [server port])
 
+(defn- normalize-transaction [transaction]
+  (assoc transaction :amount (util/long->bigdecimal (:amount transaction))))
+
 ;; inherits from Blockchain and implements its methods
 (defrecord Stub [db]
   Blockchain
@@ -108,7 +114,13 @@
           sent      (if (nil? sent-map) 0 (:total sent-map))]
       (util/long->bigdecimal (- received sent))))
 
-  (list-transactions [bk account-id] (storage/find-by-key db "transactions" {:blockchain "STUB"}))
+  (list-transactions [bk account-id]
+    (reverse
+     (sort-by :timestamp
+              (map normalize-transaction
+                   (concat
+                    (storage/find-by-key db "transactions" {:from-id account-id})
+                    (storage/find-by-key db "transactions" {:to-id account-id}))))))
 
   (get-transaction   [bk account-id txid] nil)
 
