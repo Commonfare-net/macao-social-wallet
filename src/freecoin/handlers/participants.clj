@@ -41,16 +41,19 @@
 (lc/defresource account [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :exists? (fn [ctx]
-             (if-let [uid (ch/context->signed-in-uid ctx)]
-               (let [wallet (wallet/fetch wallet-store uid)]
-                 {::wallet wallet})))
-  :handle-ok (fn [ctx]
-               (if-let [wallet (::wallet ctx)]
-                 (-> {:wallet wallet :balance (blockchain/get-balance blockchain (:account-id wallet))}
-                     account-page/build
-                     fv/render-page)
-                 (lr/ring-response (r/redirect "/landing-page")))))
+  :exists?
+  (fn [ctx]
+    (if-let [uid (:uid (ch/context->params ctx))]
+      (let [wallet (wallet/fetch wallet-store uid)]
+        {::wallet wallet})))
+
+  :handle-ok
+  (fn [ctx]
+    (if-let [wallet (::wallet ctx)]
+      (-> {:wallet wallet :balance (blockchain/get-balance blockchain (:account-id wallet))}
+          account-page/build
+          fv/render-page)
+      (lr/ring-response (r/redirect "/landing-page")))))
 
 (lc/defresource query-form [wallet-store]
   :allowed-methods [:get]

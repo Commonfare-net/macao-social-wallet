@@ -9,6 +9,7 @@
             [freecoin.db.wallet :as w]
             [freecoin.blockchain :as fb]
             [freecoin.test.test-helper :as th]
+            [clojure.tools.logging :as log]
             [freecoin.handlers.participants :as fp]))
 
 (defn create-wallet [wallet-store blockchain wallet-data]
@@ -28,8 +29,8 @@
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
                                                         "stonecutter-user-id" "name" "test@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
-                   response (account-page-handler (-> (rmr/request :get "/account")
-                                                      (assoc :session {:signed-in-uid (:uid wallet)})))]
+                   response (account-page-handler (-> (rmr/request :get "/account/")
+                                                      (assoc :params {:uid (:uid wallet)})))]
                (:status response) => 200
                (:body response) => (contains #"Balance:")))
        
