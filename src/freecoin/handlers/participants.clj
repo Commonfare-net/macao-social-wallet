@@ -41,6 +41,7 @@
 (lc/defresource account [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
+  :authorized? (fn [ctx] (when (ch/context->signed-in-uid ctx) true))
   :exists? (fn [ctx]
              (if-let [uid (:uid (ch/context->params ctx))]
                (let [wallet (wallet/fetch wallet-store uid)]
