@@ -42,12 +42,14 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :exists? (fn [ctx]
-             (if-let [uid (ch/context->signed-in-uid ctx)]
+             (if-let [uid (:uid (ch/context->params ctx))]
                (let [wallet (wallet/fetch wallet-store uid)]
                  {::wallet wallet})))
   :handle-ok (fn [ctx]
                (if-let [wallet (::wallet ctx)]
-                 (-> {:wallet wallet :balance (blockchain/get-balance blockchain (:account-id wallet))}
+                 (-> {:wallet wallet
+                      :balance (blockchain/get-balance blockchain
+                                                       (:account-id wallet))}
                      account-page/build
                      fv/render-page)
                  (lr/ring-response (r/redirect "/landing-page")))))
