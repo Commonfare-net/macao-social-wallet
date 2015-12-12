@@ -21,19 +21,19 @@
         email (str "wallet-" index "@email.com")]
     {:sso-id sso-id :name name :email email}))
 
-(facts "about the account page"
-       (fact "displays the signed-in participant's balance"
-             (let [wallet-store (fm/create-memory-store)
-                   blockchain (fb/create-in-memory-blockchain :bk)
-                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
-                                                        "stonecutter-user-id" "name" "test@email.com"))
-                   account-page-handler (fp/account wallet-store blockchain)
-                   response (account-page-handler (-> (rmr/request :get "/account")
-                                                      (assoc :session {:signed-in-uid (:uid wallet)})))]
-               (:status response) => 200
-               (:body response) => (contains #"Balance:")))
+;; (facts "about the account page"
+;;        (fact "displays the signed-in participant's balance"
+;;              (let [wallet-store (fm/create-memory-store)
+;;                    blockchain (fb/create-in-memory-blockchain :bk)
+;;                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+;;                                                         "stonecutter-user-id" "name" "test@email.com"))
+;;                    account-page-handler (fp/account wallet-store blockchain)
+;;                    response (account-page-handler (-> (rmr/request :get "/account")
+;;                                                       (assoc :session {:signed-in-uid (:uid wallet)})))]
+;;                (:status response) => 200
+;;                (:body response) => (contains #"Balance:")))
        
-       (fact "can not be accessed when user is not signed in"))
+;;        (fact "can not be accessed when user is not signed in"))
 
 (facts "about the participant query form"
        (fact "can be accessed by signed-in users"
