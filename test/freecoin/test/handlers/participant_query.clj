@@ -30,11 +30,12 @@
                                                         "stonecutter-user-id" "name" "test@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
-                                                      (assoc :params {:uid (:uid wallet)})))]
+                                                      (assoc :params {:uid (:uid wallet)})
+                                                      (assoc :session {:signed-in-uid (:uid wallet)})))]
                (:status response) => 200
-               (:body response) => (contains #"Balance:")))
-       
-       (fact "can not be accessed when user is not signed in"))
+               (:body response) => (contains #"Balance:"))))
+
+;;        (fact "can not be accessed when user is not signed in"))
 
 (facts "about the participant query form"
        (fact "can be accessed by signed-in users"
