@@ -5,15 +5,13 @@
             [stonecutter-oauth.client :as sc]
             [freecoin.config :as config]
             [freecoin.routes :as routes]
-            [freecoin.storage :as storage]
             [freecoin.blockchain :as fb]
             [freecoin.db.mongo :as fm]
             [freecoin.db.uuid :as uuid]
             [freecoin.db.wallet :as w]
             [freecoin.handlers.sign-in :as fs]
             [freecoin.test.test-helper :as th]
-            [freecoin.test-helpers.store :as test-store])
-  (:import [freecoin.db.mongo MemoryStore]))
+            [freecoin.test-helpers.store :as test-store]))
 
 (def sso-url "http://SSO_URL")
 (def client-id "CLIENT_ID")

@@ -31,14 +31,8 @@
    [freecoin.random :as rand]
    [freecoin.params :as param]
    [freecoin.secretshare :as ssss]
-
    [freecoin.utils :as util]
-
-   [buddy.hashers :as hashers]
-   [clojure.pprint :as pp]
-
-   )
-  )
+   [clojure.pprint :as pp]))
 
 
 

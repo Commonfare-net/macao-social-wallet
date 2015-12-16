@@ -1,8 +1,6 @@
 (ns freecoin.journey.transactions
   (:require [midje.sweet :refer :all]
             [kerodon.core :as k]
-            [clojure.tools.logging :as log] 
-            [ring.util.response :as r]
             [stonecutter-oauth.client :as soc]
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.journey.kerodon-checkers :as kc]
@@ -11,8 +9,7 @@
             [freecoin.db.storage :as s]
             [freecoin.blockchain :as blockchain]
             [freecoin.routes :as routes]
-            [freecoin.config :as c]
-            [freecoin.core :as fc]))
+            [freecoin.config :as c]))
 
 (ih/setup-db)
 

@@ -29,10 +29,8 @@
 (ns freecoin.views
   (:require [hiccup.page :as page]
             [formidable.parse :as fp]
-            [clojure.tools.logging :as log]
             [cheshire.core :as cheshire]
-            [autoclave.core :as autoclave]
-            [json-html.core :as present]))
+            [autoclave.core :as autoclave]))
 
 (def response-representation
   {"application/json" "application/json"

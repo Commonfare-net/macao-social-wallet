@@ -10,8 +10,7 @@
             [freecoin.db.uuid :as uuid]
             [freecoin.blockchain :as blockchain]
             [freecoin.routes :as routes]
-            [freecoin.config :as c]
-            [freecoin.core :as fc]))
+            [freecoin.config :as c]))
 
 (ih/setup-db)
 

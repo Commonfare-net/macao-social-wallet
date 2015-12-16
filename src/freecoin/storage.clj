@@ -1,12 +1,5 @@
 (ns freecoin.storage
-  (:require [monger.core :as mg]
-            [monger.collection :as mc]))
-
-(defn connect [{:keys [url] :as db-config}]
-  (mg/connect-via-uri url))
-
-(defn disconnect [{:keys [conn] :as db-connection}]
-  (mg/disconnect conn))
+  (:require [monger.collection :as mc]))
 
 (defn insert [db coll doc]
   (mc/insert-and-return db coll doc))

@@ -25,8 +25,7 @@
 
 (ns freecoin.secretshare
   (:gen-class)
-  (:import [com.tiemens.secretshare.engine SecretShare])
-  (:require [freecoin.utils :as util]))
+  (:import [com.tiemens.secretshare.engine SecretShare]))
 
 (defn prime384 []
   (SecretShare/getPrimeUsedFor384bitSecretPayload))

@@ -2,14 +2,11 @@
   (:require [midje.sweet :refer :all]
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
-            [stonecutter-oauth.client :as sc]
             [freecoin.db.uuid :as uuid]
-            [freecoin.storage :as storage]
             [freecoin.db.mongo :as fm]
             [freecoin.db.wallet :as w]
             [freecoin.blockchain :as fb]
             [freecoin.test.test-helper :as th]
-            [clojure.tools.logging :as log]
             [freecoin.handlers.participants :as fp]))
 
 (defn create-wallet [wallet-store blockchain wallet-data]

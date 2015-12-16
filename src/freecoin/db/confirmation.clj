@@ -27,7 +27,6 @@
 
 (ns freecoin.db.confirmation
   (:require [freecoin.db.mongo :as mongo]
-            [clojure.tools.logging :as log]
             [freecoin.utils :as util]))
 
 (defn new-transaction-confirmation! [confirmation-store uuid-generator

@@ -1,6 +1,5 @@
 (ns freecoin.journey.kerodon-checkers
   (:require [midje.sweet :refer :all]
-            [clojure.tools.logging :as log]
             [net.cgrand.enlive-html :as html]
             [kerodon.core :as k]
             [ring.util.response :as rr]

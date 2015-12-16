@@ -1,9 +1,7 @@
 (ns freecoin.handlers.debug
   (:require [liberator.core :as lc]
             [freecoin.params :as param]
-            [freecoin.views :as fv]
-            [freecoin.utils :as utils]
-            ))
+            [freecoin.utils :as utils]))
 
 
 (lc/defresource echo [request]

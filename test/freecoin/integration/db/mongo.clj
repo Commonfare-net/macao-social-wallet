@@ -1,7 +1,6 @@
 (ns freecoin.integration.db.mongo
   (:require [midje.sweet :refer :all]
             [monger.core :as mongo]
-            [monger.collection :as mongoc]
             [freecoin.db.mongo :as m]))
 
 (def test-db "freecoin-test")

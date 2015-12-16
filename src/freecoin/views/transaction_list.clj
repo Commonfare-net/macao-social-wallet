@@ -27,8 +27,7 @@
 
 (ns freecoin.views.transaction-list
   (:require [freecoin.routes :as routes]
-            [freecoin.db.wallet :as wallet]
-            [freecoin.config :as config]))
+            [freecoin.db.wallet :as wallet]))
 
 (defn build-html [list wallet-store & [owner-wallet]]
   (let [title (str "Transaction list" (when (not (nil? owner-wallet)) (str " for " (:name owner-wallet))))]
