@@ -90,6 +90,8 @@
      :post-confirm-transaction-form (confirm-transaction-form/post-confirm-transaction-form wallet-store confirmation-store blockchain)
      :get-user-transactions         (transactions-list/list-user-transactions        wallet-store blockchain)
      :get-all-transactions          (transactions-list/list-all-transactions         wallet-store blockchain)
+
+     :get-activity-streams          (transactions-list/list-all-activity-streams  wallet-store blockchain)
      :nxt                           todo}))
 
 (defn handle-anti-forgery-error [request]

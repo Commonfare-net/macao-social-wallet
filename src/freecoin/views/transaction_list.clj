@@ -30,7 +30,7 @@
             [freecoin.db.wallet :as wallet]
             [freecoin.config :as config]))
 
-(defn build [list wallet-store & [owner-wallet]]
+(defn build-html [list wallet-store & [owner-wallet]]
   (let [title (str "Transaction list" (when (not (nil? owner-wallet)) (str " for " (:name owner-wallet))))]
     {:title title
      :heading title
@@ -56,3 +56,19 @@
        ]
       ]
      }))
+
+(defn transaction->activity-stream [tx]
+  {"@context"   "https://www.w3.org/ns/activitystreams"
+   "@type"      "Transaction"
+   "published" (:timestamp tx)
+   "actor"     {"@type"      "Person"
+                "displayName" (:from-id tx)}
+   "object"    {"@type" (:blockchain tx)
+                "displayName" (str (:amount tx) " -> " (:to-id tx))}
+   })
+
+;; TODO: use "target" for recipient
+;; this needs a change in mooncake
+(defn build-activity-stream [list wallet-store]
+  (map transaction->activity-stream list)
+  )

@@ -61,7 +61,7 @@
   (fn [ctx]
     (-> blockchain
         (blockchain/list-transactions (-> ctx ::wallet :account-id))
-        (transaction-list/build wallet-store (::wallet ctx))
+        (transaction-list/build-html wallet-store (::wallet ctx))
         fv/render-page)))
 
 (lc/defresource list-all-transactions [wallet-store blockchain]
@@ -71,5 +71,17 @@
   (fn [ctx]
     (-> blockchain
         (blockchain/list-transactions)
-        (transaction-list/build wallet-store)
+        (transaction-list/build-html wallet-store)
         fv/render-page)))
+
+(lc/defresource list-all-activity-streams [wallet-store blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["application/json"]
+  ;; TODO: register the mooncake authorised to pull
+  :handle-ok
+  (fn [ctx]
+      (-> blockchain
+          (blockchain/list-transactions)
+          (transaction-list/build-activity-stream wallet-store)
+          )
+      ))

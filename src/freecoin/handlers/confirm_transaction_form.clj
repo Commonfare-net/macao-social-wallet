@@ -137,7 +137,7 @@
      (preserve-session (:request ctx))
      (update-in [:session] assoc :cookie-data (::secret ctx))
      lr/ring-response))
-  
+
   :handle-forbidden
   (fn [ctx]
     (-> (routes/absolute-path (config/create-config) :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))

@@ -20,6 +20,10 @@ POST /send                              post-transaction-form
 GET  /send/confirm/:confirmation-uid    get-confirm-transaction-form
 POST /send/confirm/:confirmation-uid    post-confirm-transaction-form
 
+# mooncake integration
+GET /activities                         get-activity-streams
+
+
 # DEBUG
 GET  /echo                              echo
 GET  /version                           version
