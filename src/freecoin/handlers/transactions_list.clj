@@ -29,23 +29,11 @@
 
 (ns freecoin.handlers.transactions-list
   (:require [liberator.core :as lc]
-            [liberator.representation :as lr]
-            [ring.util.response :as r]
-            [formidable.parse :as fp]
-            [clojure.tools.logging :as log]
             [freecoin.db.wallet :as wallet]
-            [freecoin.db.confirmation :as confirmation]
             [freecoin.blockchain :as blockchain]
-            [freecoin.db.uuid :as uuid]
             [freecoin.context-helpers :as ch]
-            [freecoin.routes :as routes]
-            [freecoin.config :as config]
             [freecoin.views :as fv]
-            [freecoin.form_helpers :as fh]
-            [freecoin.views.transaction-form :as transaction-form]
-            [freecoin.views.transaction-list :as transaction-list]
-            [freecoin.views.confirm-transaction-form
-             :as confirm-transaction-form]))
+            [freecoin.views.transaction-list :as transaction-list]))
 
 
 (lc/defresource list-user-transactions [wallet-store blockchain]
@@ -76,6 +64,7 @@
 
 (lc/defresource list-all-activity-streams [wallet-store blockchain]
   :allowed-methods [:get]
+  ;; Activity Streams 2.0 specification says media type should be application/activity+json
   :available-media-types ["application/json"]
   ;; TODO: register the mooncake authorised to pull
   :handle-ok

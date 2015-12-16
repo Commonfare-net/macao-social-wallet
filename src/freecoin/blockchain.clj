@@ -11,6 +11,7 @@
 
 ;; With contributions by
 ;; Arjan Scherpenisse <arjan@scherpenisse.net>
+;; Amy Welch <awelch@thoughtworks.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -178,14 +179,18 @@
       (- total-deposited total-withdrawn)))
 
   ;; transactions
-  (list-transactions [bk account-id])
+  (list-transactions [bk account-id] (vals @transactions-atom))
+  (list-transactions [bk] (vals @transactions-atom))
   (get-transaction   [bk account-id txid] nil)
   (make-transaction  [bk from-account-id amount to-account-id secret]
-    (let [now (time/format (time/now))
+    ;; to make tests possible the timestamp here is generated starting from
+    ;; the 1 december 2015 plus a number of days that equals the amount
+    (let [now (time/format (time/add-days (time/datetime 2015 12 1) amount))
           transaction {:transaction-id (str now "-" from-account-id)
+                       :blockchain "INMEMORYBLOCKCHAIN"
                        :timestamp now
-                       :from-account-id from-account-id
-                       :to-account-id to-account-id
+                       :from-id from-account-id
+                       :to-id to-account-id
                        :amount amount}]
       (swap! transactions-atom assoc (:transaction-id transaction) transaction)
       transaction))
