@@ -1,6 +1,8 @@
 #!/usr/bin/env zsh
 
 dbname=freecoin
+# targets: gephi or graphviz
+target=${1:-gephi}
 
 txeval() {
     mongo $dbname -eval 'db.transactions.find().forEach(printjson)' \
@@ -22,26 +24,42 @@ for i in ${txarr}; do
     participants+=( ${i[(ws@:@)2]} )
 done
 
+print "exporting to $target format"
 print "${#txarr} transactions parsed"
 print "${#participants} unique participants"
 
-graphviz=`cat << EOF
+case $target in
+
+    gephi)
+        print "Source,Target,Weight" > $dbname.csv
+        for t in $txarr; do
+            sender=${t[(ws@:@)1]}
+            recipient=${t[(ws@:@)2]}
+            amount=${t[(ws@:@)3]}
+            print "$sender,$recipient,$amount" >> $dbname.csv
+        done
+    ;;
+    graphviz)
+
+        graphviz=`cat << EOF
 digraph $dbname {\n
 graph [ splines=compound, overlap=false, overlap_shrink=true, ranksep=3, pack=true, packmode=nodes, resolution=120 ];\n
 node [shape=ellipse, style=filled];\n
 EOF`
 
-for p in ${participants}; do
-graphviz+="$p\n"
-done
+        for p in ${participants}; do
+            graphviz+="$p\n"
+        done
 
-for t in $txarr; do
-    sender=${t[(ws@:@)1]}
-    recipient=${t[(ws@:@)2]}
-    amount=${t[(ws@:@)3]}
-    graphviz+="$sender -> $recipient [weight=$amount]\n"
-done
-graphviz+="}\n"
+        for t in $txarr; do
+            sender=${t[(ws@:@)1]}
+            recipient=${t[(ws@:@)2]}
+            amount=${t[(ws@:@)3]}
+            graphviz+="$sender -> $recipient [weight=$amount]\n"
+        done
+        graphviz+="}\n"
 
-print $graphviz > $dbname.dot
-cat $dbname.dot | twopi -Tpng -o $dbname.png
+        print $graphviz > $dbname.dot
+        cat $dbname.dot | twopi -Tpng -o $dbname.png
+        ;;
+esac
