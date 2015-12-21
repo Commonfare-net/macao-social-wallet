@@ -38,20 +38,25 @@
             [freecoin.routes :as routes]
             [freecoin.config :as config]
             [freecoin.views :as fv]
+            [freecoin.auth :as auth]
             [freecoin.form_helpers :as fh]
             [freecoin.views.confirm-transaction-form
              :as confirm-transaction-form]))
+
 (lc/defresource get-confirm-transaction-form [wallet-store confirmation-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
+  :authorized? #(auth/is-signed-in %)
+
   :exists?
   (fn [ctx]
     (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
-          signed-in-uid (ch/context->signed-in-uid ctx)]
+          signed-in-uid (:uid ctx)]
       (when-let [confirmation
                  (confirmation/fetch confirmation-store confirmation-uid)]
         (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
           {::confirmation confirmation}))))
+
   :handle-ok
   (fn [ctx]
     (let [confirmation (::confirmation ctx)
@@ -72,6 +77,10 @@
   [wallet-store confirmation-store blockchain]
   :allowed-methods [:post]
   :available-media-types ["text/html"]
+
+  ;; TODO: fix use  of authorized and exists here conforming to auth functions
+  ;; when we tried last moving below to exists? (and lower handlers to not-found)
+  ;; did trigger several errors in tests and even some compiling errors.
 
   :authorized?
   (fn [ctx]

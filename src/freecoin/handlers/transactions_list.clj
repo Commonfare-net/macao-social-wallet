@@ -33,28 +33,31 @@
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
             [freecoin.views :as fv]
+            [freecoin.auth :as auth]
             [freecoin.views.transaction-list :as transaction-list]))
 
 
 (lc/defresource list-user-transactions [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :exists?
-  (fn [ctx]
-    (when-let [uid (:uid (ch/context->params ctx))]
-      (when-let [wallet (wallet/fetch wallet-store uid)]
-        {::wallet wallet})))
+
+  :authorized? #(auth/is-signed-in %)
+
+  :exists? #(auth/has-wallet % wallet-store)
 
   :handle-ok
   (fn [ctx]
     (-> blockchain
-        (blockchain/list-transactions (-> ctx ::wallet :account-id))
-        (transaction-list/build-html wallet-store (::wallet ctx))
+        (blockchain/list-transactions (-> ctx :wallet :account-id))
+        (transaction-list/build-html wallet-store (:wallet ctx))
         fv/render-page)))
 
 (lc/defresource list-all-transactions [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
+
+  :authorized? #(auth/is-signed-in %)
+
   :handle-ok
   (fn [ctx]
     (-> blockchain

@@ -37,6 +37,7 @@
             [freecoin.db.wallet :as wallet]
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
+            [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
             [freecoin.views.index-page :as index-page]))
@@ -50,14 +51,15 @@
 (lc/defresource landing-page [wallet-store blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :exists? (fn [ctx]
-             (if-let [uid (ch/context->signed-in-uid ctx)]
 
+  :exists? (fn [ctx]
+             (if-let [uid (:uid (auth/is-signed-in ctx))]
                (let [wallet (wallet/fetch wallet-store uid)]
-                 {::wallet wallet})
+                 {:wallet wallet})
                {}))
+
   :handle-ok (fn [ctx]
-               (if-let [wallet (::wallet ctx)]
+               (if-let [wallet (:wallet ctx)]
                  (-> (routes/absolute-path (config/create-config) :account :uid (:uid wallet))
                      r/redirect
                      lr/ring-response)
@@ -131,6 +133,7 @@
 (lc/defresource sign-out
   :allowed-methods [:get]
   :available-media-types ["text/html"]
+
   :handle-ok (fn [ctx]
                (-> (routes/absolute-path (config/create-config) :index)
                    r/redirect
@@ -138,19 +141,15 @@
                    (update-in [:session] dissoc :signed-in-uid)
                    lr/ring-response)))
 
-
 (lc/defresource forget-secret
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 
-  :exists?
-  (fn [ctx]
-    (when-let [uid (ch/context->signed-in-uid ctx)]
-      {::uid uid}))
-  
+  :authorized? #(auth/is-signed-in %)
+
   :handle-ok
   (fn [ctx]
-    (-> (routes/absolute-path (config/create-config) :account :uid (::uid ctx))
+    (-> (routes/absolute-path (config/create-config) :account :uid (:uid ctx))
         r/redirect
         (preserve-session (:request ctx))
         (update-in [:session] dissoc :cookie-data)

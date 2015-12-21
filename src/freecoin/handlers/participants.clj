@@ -29,7 +29,9 @@
   (:require [liberator.core :as lc]
             [liberator.representation :as lr]
             [ring.util.response :as r]
+            [clojure.tools.logging :as log]
             [freecoin.utils :as utils]
+            [freecoin.auth :as auth]
             [freecoin.db.wallet :as wallet]
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
@@ -42,19 +44,14 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 
-  :authorized?
-  (fn [ctx] (when (ch/context->signed-in-uid ctx) true))
+  :authorized? #(auth/is-signed-in %)
 
-  :exists?
-  (fn [ctx]
-    (if-let [uid (:uid (ch/context->params ctx))]
-      (let [wallet (wallet/fetch wallet-store uid)]
-        {::wallet wallet})))
+  :exists? #(auth/has-wallet % wallet-store)
 
-  :handle-ok
-  (fn [ctx]
-    (if-let [wallet (::wallet ctx)]
-      (-> {:wallet wallet :balance (blockchain/get-balance blockchain (:account-id wallet))}
+  :handle-ok (fn [ctx]
+    (if-let [wallet (:wallet ctx)]
+      (-> {:wallet wallet
+           :balance (blockchain/get-balance blockchain (:account-id wallet))}
           account-page/build
           fv/render-page)
       (lr/ring-response (r/redirect "/landing-page")))))
@@ -62,9 +59,9 @@
 (lc/defresource query-form [wallet-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :authorized? (fn [ctx]
-                 (when-let [uid (ch/context->signed-in-uid ctx)]
-                   (when (wallet/fetch wallet-store uid) true)))
+
+  :authorized? #(auth/is-signed-in %)
+
   :handle-ok (fn [ctx]
                (-> {}
                    participants-query-form/build
@@ -80,14 +77,10 @@
 (lc/defresource participants [wallet-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :authorized? (fn [ctx]
-                 (when-let [uid (ch/context->signed-in-uid ctx)]
-                   (when (wallet/fetch wallet-store uid) true)))
-  :exists? (fn [ctx]
-             {::wallets (->> ctx :request
-                             request->wallet-query
-                             (wallet/query wallet-store))})
+
+  :authorized? #(auth/is-signed-in %)
+
   :handle-ok (fn [ctx]
-               (-> {:wallets (::wallets ctx)}
+               (-> {:wallets (wallet/query wallet-store (request->wallet-query (:request ctx)))}
                    participants-list/participants-list
                    fv/render-page)))

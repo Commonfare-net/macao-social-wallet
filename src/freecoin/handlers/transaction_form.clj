@@ -36,6 +36,7 @@
             [freecoin.db.uuid :as uuid]
             [freecoin.context-helpers :as ch]
             [freecoin.routes :as routes]
+            [freecoin.auth :as auth]
             [freecoin.config :as config]
             [freecoin.views :as fv]
             [freecoin.form_helpers :as fh]
@@ -44,9 +45,8 @@
 (lc/defresource get-transaction-form [wallet-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :authorized? (fn [ctx]
-                 (when-let [uid (ch/context->signed-in-uid ctx)]
-                   (when (wallet/fetch wallet-store uid) true)))
+
+  :authorized? #(auth/is-signed-in %)
 
   :handle-ok (fn [ctx]
                (-> (:request ctx)
@@ -56,9 +56,8 @@
 (lc/defresource post-transaction-form [wallet-store confirmation-store]
   :allowed-methods [:post]
   :available-media-types ["text/html"]
-  :authorized? (fn [ctx]
-                 (when-let [uid (ch/context->signed-in-uid ctx)]
-                   (when (wallet/fetch wallet-store uid) true)))
+
+  :authorized? #(auth/is-signed-in %)
 
   :allowed?
   (fn [ctx]
