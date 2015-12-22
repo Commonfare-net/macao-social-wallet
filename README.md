@@ -1,10 +1,19 @@
 # Freecoin - digital social currency toolkit
 
-[![Build Status](https://travis-ci.org/d-cent/freecoin.svg?branch=master)](https://travis-ci.org/d-cent/freecoin)
+[![software by Dyne.org](https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png)](http://www.dyne.org)
 
 Freecoin aims to be a framework for remuneration and authentication supporting multi-sig and off-line transactions on top of multiple blockchain backends. It is open source, written in Clojure and comprising of a REST API and a clean user interface.
 
-API design is work in progress on http://freecoin.ch/api
+[![Build Status](https://travis-ci.org/d-cent/freecoin.svg?branch=master)](https://travis-ci.org/d-cent/freecoin)
+
+## Design
+
+The design of Freecoin is informed by an extensive economic and user-centered research conducted by the D-CENT project and documented in deliverables that are available to the public:
+
+- [Design of Social Digital Currency (D4.4)](http://dcentproject.eu/wp-content/uploads/2015/10/design_of_social_digital_currency_publication.pdf)
+- [Implementation of digital social currency infrastructure (D5.5)](http://dcentproject.eu/wp-content/uploads/2015/10/D5.5-Implementation-of-digital-social-currency-infrastructure-.pdf).
+
+More resources can be found on the D-CENT webpage: http://dcentproject.eu/resource_category/publications/
 
 ## Configuration
 
@@ -54,7 +63,8 @@ running VM and show a message in the corner of your screen (using
 lein repl
 user=> (use 'freecoin.dev)
 user=> (start-nstracker) ;; starts the file change tracker
-``
+```
+
 
 ## Running the tests
 
@@ -68,25 +78,31 @@ lein midje
 
 See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced testing features.
 
+## REST API
+
+API design is work in progress on http://freecoin.ch/api
+
 ## License
 
 Part of Decentralized Citizen Engagement Technologies (D-CENT)
 
 R&D funded by the European Commission (FP7/CAPS 610349)
 
-```
 Copyright (C) 2015 Dyne.org foundation
+
 Copyright (C) 2015 Thoughtworks, Inc.
-```
 
-```
 Designed and maintained by Denis Roio <jaromil@dyne.org>
-With contributions by:
-Gareth Rogers <grogers@thoughtworks.com>
-Duncan Mortimer <dmortime@thoughtworks.com>
-Andrei Biasprozvanny <abiaspro@thoughtworks.com>
-```
 
+With contributions by:
+- Marco Sachy
+- Gareth Rogers
+- Duncan Mortimer
+- Andrei Biasprozvanny
+- Arjan Scherpenisse
+- Amy Welch
+
+```
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -99,3 +115,4 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+```
