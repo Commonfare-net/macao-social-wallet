@@ -13,20 +13,20 @@
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub (ih/get-test-db)))
 
-(def test-app 
+(def test-app
   (ih/build-app {:stores-m stores-m
                  :blockchain blockchain}))
 
 
 (defn sign-up [state auth-code]
   (-> state
-      (k/visit (str (routes/absolute-path (c/create-config) :sso-callback) "?code=" auth-code))
+      (k/visit (str (routes/absolute-path :sso-callback) "?code=" auth-code))
       (kc/check-and-follow-redirect "to account page")))
 
 (def sign-in sign-up)
 
 (defn sign-out [state]
-  (k/visit state (routes/absolute-path (c/create-config) :sign-out)))
+  (k/visit state (routes/absolute-path :sign-out)))
 
 
 (defmacro create-user [auth-code sub email]
@@ -46,5 +46,3 @@
       )
      )
    users))
-
-

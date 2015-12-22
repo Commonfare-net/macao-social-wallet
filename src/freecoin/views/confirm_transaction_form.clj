@@ -17,8 +17,7 @@
                  :class "func--confirm-transaction-form--secret"}
                 submit]
                [submit])
-     :action (routes/absolute-path (config/create-config)
-                                   :post-confirm-transaction-form
+     :action (routes/absolute-path :post-confirm-transaction-form
                                    :confirmation-uid confirmation-uid)
      :validations (if show-pin-entry
                     [ [:required [:secret] "Please enter your PIN"]]

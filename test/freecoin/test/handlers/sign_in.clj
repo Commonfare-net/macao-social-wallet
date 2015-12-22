@@ -19,7 +19,7 @@
 (def callback-uri "CALLBACK_URI")
 (def public-key "PUBLICK_KEY") ;; TODO: load this from jwk file
 
-(def absolute-path (partial routes/absolute-path (config/create-config)))
+(def absolute-path (partial routes/absolute-path))
 
 (def empty-wallet {})
 
@@ -35,7 +35,7 @@
                    response (landing-page-handler (rmr/request :get "/landing-page"))]
                (:status response) => 200
                (-> (:body response) (html/html-snippet [:body])) => (th/links-to? [:.clj--sign-in-link] "/sign-in-with-sso")))
-       
+
        (fact "When signed in, redirects to the account page"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
@@ -76,7 +76,7 @@
                       response => (th/check-signed-in-as "a-uuid")
                       response => th/check-has-wallet-key
                       (test-store/entry-count wallet-store) => 1))
-              
+
               (fact "if user exists, signs user in and redirects to index without creating a new wallet"
                     (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
@@ -90,7 +90,7 @@
                       response => (th/check-signed-in-as (:uid wallet))
                       response =not=> th/check-has-wallet-key
                       (test-store/entry-count wallet-store) => 1)))
-       
+
        (fact "When authorisation code is not provided, redirects to landing page"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
@@ -98,7 +98,7 @@
                    response (-> (rmr/request :get "/sso-callback")
                                 callback-handler)]
                response => (th/check-redirects-to (absolute-path :landing-page))))
-       
+
        (fact "When token response fails, redirects to landing page"
              (against-background
               (sc/request-access-token! ...sso-config... ...invalid-auth-code...) =throws=> (Exception. "Something went wrong"))

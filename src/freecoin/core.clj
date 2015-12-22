@@ -58,7 +58,7 @@
   (soc/configure (config/auth-url config-m)
                  (config/client-id config-m)
                  (config/client-secret config-m)
-                 (routes/absolute-path config-m :sso-callback)))
+                 (routes/absolute-path :sso-callback)))
 
 (defn todo [_]
   {:status 503 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})

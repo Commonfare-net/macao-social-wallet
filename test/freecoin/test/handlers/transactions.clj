@@ -61,7 +61,7 @@
      :recipient-wallet (:wallet recipient-details)
      :recipient-apikey (:apikey recipient-details)}))
 
-(def absolute-path (partial routes/absolute-path (config/create-config)))
+(def absolute-path (partial routes/absolute-path))
 
 (facts "about the create transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)

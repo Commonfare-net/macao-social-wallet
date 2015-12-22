@@ -60,7 +60,7 @@
 
   :handle-ok (fn [ctx]
                (if-let [wallet (:wallet ctx)]
-                 (-> (routes/absolute-path (config/create-config) :account :uid (:uid wallet))
+                 (-> (routes/absolute-path :account :uid (:uid wallet))
                      r/redirect
                      lr/ring-response)
                  (-> {:sign-in-url "/sign-in-with-sso"}
@@ -86,7 +86,7 @@
                   (when-let [token-response (soc/request-access-token! sso-config code)]
                     {::token-response token-response})
                   (catch Exception e nil))))
-  :handle-forbidden (-> (routes/absolute-path (config/create-config) :landing-page)
+  :handle-forbidden (-> (routes/absolute-path :landing-page)
                         r/redirect
                         lr/ring-response)
   :exists? (fn [ctx]
@@ -120,10 +120,10 @@
 
   :handle-ok (fn [ctx]
                (lr/ring-response
-                (cond-> (r/redirect (routes/absolute-path (config/create-config) :account :uid (::uid ctx)))
+                (cond-> (r/redirect (routes/absolute-path :account :uid (::uid ctx)))
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
                   true (assoc-in [:session :signed-in-uid] (::uid ctx)))))
-  :handle-not-found (-> (routes/absolute-path (config/create-config) :landing-page)
+  :handle-not-found (-> (routes/absolute-path :landing-page)
                         r/redirect
                         lr/ring-response))
 
@@ -135,7 +135,7 @@
   :available-media-types ["text/html"]
 
   :handle-ok (fn [ctx]
-               (-> (routes/absolute-path (config/create-config) :index)
+               (-> (routes/absolute-path :index)
                    r/redirect
                    (preserve-session (:request ctx))
                    (update-in [:session] dissoc :signed-in-uid)
@@ -149,7 +149,7 @@
 
   :handle-ok
   (fn [ctx]
-    (-> (routes/absolute-path (config/create-config) :account :uid (:uid ctx))
+    (-> (routes/absolute-path :account :uid (:uid ctx))
         r/redirect
         (preserve-session (:request ctx))
         (update-in [:session] dissoc :cookie-data)

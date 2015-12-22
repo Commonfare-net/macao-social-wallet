@@ -27,13 +27,13 @@
 
 (defn sign-up [state auth-code]
   (-> state
-      (k/visit (str (routes/absolute-path (c/create-config) :sso-callback) "?code=" auth-code))
+      (k/visit (str (routes/absolute-path :sso-callback) "?code=" auth-code))
       (kc/check-and-follow-redirect "to account page")))
 
 (def sign-in sign-up)
 
 (defn sign-out [state]
-  (k/visit state (routes/absolute-path (c/create-config) :sign-out)))
+  (k/visit state (routes/absolute-path :sign-out)))
 
 (facts "Participant can send freecoins to another account"
        (let [memory (atom {})]
@@ -47,20 +47,20 @@
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
 
              ;; visit the "all transactions page" should contain no transactions
-             (k/visit (routes/absolute-path (c/create-config) :get-all-transactions))
+             (k/visit (routes/absolute-path :get-all-transactions))
              (kc/check-page-is :get-all-transactions ks/transactions-page-body)
              (kc/selector-matches-count ks/transactions-page--table-rows 0)
              (kc/selector-includes-content [:title] "Transaction list")
 
-             
+
              ;; visit the transactions page and show that there is no transaction
-             (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :sender-uid)))
+             (k/visit (routes/absolute-path :get-user-transactions :uid (kh/recall memory :sender-uid)))
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :sender-uid))
-             (kc/selector-includes-content [:title] "Transaction list for sender") 
+             (kc/selector-includes-content [:title] "Transaction list for sender")
              (kc/selector-matches-count ks/transactions-page--table-rows 0)
 
              ;; do a transaction
-             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)
@@ -73,26 +73,26 @@
              (kc/selector-includes-content [ks/account-page--balance] "-10")
 
              ;; visit the transactions page and show that there is now one transaction
-             (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :sender-uid)))
+             (k/visit (routes/absolute-path :get-user-transactions :uid (kh/recall memory :sender-uid)))
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :sender-uid))
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
-             (kc/selector-includes-content [:title] "Transaction list for sender") 
+             (kc/selector-includes-content [:title] "Transaction list for sender")
 
              (sign-in "recipient")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :recipient-uid))
              (kc/selector-includes-content [ks/account-page--balance] "10")
 
              ;; visit the transactions page of the recipient and show that there is now one transaction as well
-             (k/visit (routes/absolute-path (c/create-config) :get-user-transactions :uid (kh/recall memory :recipient-uid)))
+             (k/visit (routes/absolute-path :get-user-transactions :uid (kh/recall memory :recipient-uid)))
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :recipient-uid))
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
-             (kc/selector-includes-content [:title] "Transaction list for recipient") 
+             (kc/selector-includes-content [:title] "Transaction list for recipient")
 
              ;; visit the "all transactions page" should also contain a single transaction
-             (k/visit (routes/absolute-path (c/create-config) :get-all-transactions))
+             (k/visit (routes/absolute-path :get-all-transactions))
              (kc/check-page-is :get-all-transactions ks/transactions-page-body)
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
-             (kc/selector-includes-content [:title] "Transaction list") 
+             (kc/selector-includes-content [:title] "Transaction list")
              )))
 
 (facts "Error messages show in form on invalid input"
@@ -107,7 +107,7 @@
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
 
              ;; required form fields
-             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "")
              (kc/check-and-fill-in ks/transaction-form--amount "")
              (kc/check-and-press ks/transaction-form--submit)
@@ -126,7 +126,7 @@
              (kc/selector-includes-content [ks/transaction-form--error-message] "Recipient: Not found")
 
              )))
-             
+
 
 (facts "Participant can send freecoins to another account by entering PIN. First, PIN is removed from session by visiting 'forget PIN' URL"
        (let [memory (atom {})]
@@ -140,12 +140,12 @@
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
 
              ;; visit /forget-secret to explicitly scrub the PIN from the session
-             (k/visit (routes/absolute-path (c/create-config) :forget-secret))
+             (k/visit (routes/absolute-path :forget-secret))
              (kc/check-and-follow-redirect "back to account page")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
 
              ;; now start a transaction
-             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)
@@ -163,7 +163,7 @@
              ;; session. Verify this by starting a transaction and
              ;; verifying that the PIN entry form on the confirmation
              ;; page is not there.
-             (k/visit (routes/absolute-path (c/create-config) :get-transaction-form))
+             (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)

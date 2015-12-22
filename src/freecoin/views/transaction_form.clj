@@ -25,7 +25,7 @@
                  [:string [:recipient]
                   "Invalid type for recipient"]]
    :validate-types false
-   :action (routes/absolute-path (config/create-config) :post-transaction-form)
+   :action (routes/absolute-path :post-transaction-form)
    :method "post"})
 
 (defn build [request]

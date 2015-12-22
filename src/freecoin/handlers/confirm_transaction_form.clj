@@ -131,7 +131,7 @@
 
   :post-redirect?
   (fn [ctx]
-    {:location (routes/absolute-path (config/create-config) :account :uid (::uid ctx))})
+    {:location (routes/absolute-path :account :uid (::uid ctx))})
 
   :handle-see-other
   (fn [ctx]
@@ -144,7 +144,7 @@
 
   :handle-forbidden
   (fn [ctx]
-    (-> (routes/absolute-path (config/create-config) :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))
+    (-> (routes/absolute-path :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))
         r/redirect
         (fh/flash-form-problem ctx)
         lr/ring-response

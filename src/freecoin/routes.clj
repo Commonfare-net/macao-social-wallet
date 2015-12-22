@@ -40,5 +40,5 @@
       (log/warn (format "Key: '%s' probably does not match a route.\n%s" action e))
       (throw (Exception. (format "Error constructing url for action '%s', with params '%s'" action params))))))
 
-(defn absolute-path [config-m action & params]
-  (str (config/base-url config-m) (apply path action params)))
+(defn absolute-path [action & params]
+  (str (-> config/create-config config/base-url) (apply path action params)))
