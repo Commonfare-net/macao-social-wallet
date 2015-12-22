@@ -40,7 +40,7 @@
             [midje.sweet :refer :all]
             [simple-time.core :as time]
             [stonecutter-oauth.client :as soc]))
-`
+
 (ih/setup-db)
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
