@@ -27,6 +27,7 @@
 
 (ns freecoin.views.transaction-list
   (:require [freecoin.routes :as routes]
+            [simple-time.core :as st]
             [freecoin.db.wallet :as wallet]))
 
 (defn build-html [list wallet-store & [owner-wallet]]
@@ -50,7 +51,7 @@
                  [:td [:a {:href (routes/path :account :uid (:uid from))} (:name from)]]
                  [:td [:a {:href (routes/path :account :uid (:uid to))} (:name to)]]
                  [:td (:amount t)]
-                 [:td (:timestamp t)]]))
+                 [:td (-> t :timestamp st/parse (st/format :medium-date-time))]]))
             list)
        ]
       ]
