@@ -38,9 +38,9 @@
   (if-let [wallet (wallet/fetch wallet-store (:uid ctx))]
     {:wallet wallet}
     [ false
-     {:status :fatal
-      ::reason "wallet not found" }
+     {:error {:status :fatal
+              :reason "wallet not found"}}
      ]
-  ))
+    ))
 
 (defn has-api-key [ctx] true)
