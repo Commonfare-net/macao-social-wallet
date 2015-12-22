@@ -28,10 +28,11 @@
 
 (ns freecoin.blockchain
   (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [freecoin.fxc :as fxc]
             [freecoin.params :as param]
-            [freecoin.utils :as util]
             [freecoin.storage :as storage]
+            [freecoin.utils :as util]
             [simple-time.core :as time]))
 
 (defprotocol Blockchain
@@ -46,7 +47,7 @@
   (get-balance [bk account-id])
 
   ;; transactions
-  (list-transactions [bk] [bk account-id])
+  (list-transactions [bk params])
   (get-transaction   [bk account-id txid])
   (make-transaction  [bk from-account-id amount to-account-id secret])
 
@@ -85,11 +86,26 @@
 
 (defn- normalize-transactions [list]
   (reverse
-     (sort-by :timestamp
-              (map (fn [transaction]
-                     (assoc transaction :amount (util/long->bigdecimal (:amount transaction))))
-                   list
-                   ))))
+   (sort-by :timestamp
+            (map (fn [transaction]
+                   (assoc transaction :amount (util/long->bigdecimal (:amount transaction))))
+                 list
+                 ))))
+
+;;(defn add-transaction-list-params [request-params] filter)
+
+(defn add-transaction-list-params [request-params]
+  (reduce-kv (fn [f name updater]
+            (if-let [request-value (get-in request-params [name])]
+              (merge f (updater request-value))
+              f))
+             {}
+          {:to
+           (fn [v] {:timestamp {"$lt" v}})
+           :from
+           (fn [v] {:timestamp {"$gt" v}})
+           :account-id
+           (fn [v] {"$or" [{:from-id v} {:to-id v}]})}))
 
 ;; inherits from Blockchain and implements its methods
 (defrecord Stub [db]
@@ -120,15 +136,9 @@
           sent      (if (nil? sent-map) 0 (:total sent-map))]
       (util/long->bigdecimal (- received sent))))
 
-  (list-transactions [bk]
+  (list-transactions [bk params]
     (normalize-transactions
-     (storage/find-by-key db "transactions" {:blockchain "STUB"})))
-
-  (list-transactions [bk account-id]
-    (normalize-transactions
-     (concat
-      (storage/find-by-key db "transactions" {:from-id account-id})
-      (storage/find-by-key db "transactions" {:to-id account-id}))))
+     (storage/find db "transactions" (add-transaction-list-params params))))
 
   (get-transaction   [bk account-id txid] nil)
 
@@ -151,6 +161,9 @@
 (defn new-stub [db]
   "Check that the blockchain is available, then return a record"
   (Stub. db))
+
+(defn in-memory-filter [entry params]
+  true)
 
 ;;; in-memory blockchain for testing
 (defrecord InMemoryBlockchain [blockchain-label transactions-atom accounts-atom]
@@ -179,8 +192,14 @@
       (- total-deposited total-withdrawn)))
 
   ;; transactions
-  (list-transactions [bk account-id] (vals @transactions-atom))
-  (list-transactions [bk] (vals @transactions-atom))
+  (list-transactions [bk params] (do
+                                   (log/info "In-memory params:" params)
+                                   (let [list (vals @transactions-atom)]
+                                     (if (empty? params)
+                                       list
+                                       [(second list)]))
+                                   ))
+
   (get-transaction   [bk account-id txid] nil)
   (make-transaction  [bk from-account-id amount to-account-id secret]
     ;; to make tests possible the timestamp here is generated starting from

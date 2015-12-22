@@ -14,6 +14,7 @@
                  [ring/ring-core "1.4.0"]
                  [ring/ring-anti-forgery "1.0.0"]
                  [ring/ring-defaults "0.1.5"]
+                 [ring.middleware.logger "0.5.0"]
                  [compojure "1.4.0"]
                  [org.slf4j/slf4j-simple "1.7.12"]
                  [org.clojars.d-cent/stonecutter-oauth "0.2.0-SNAPSHOT"]

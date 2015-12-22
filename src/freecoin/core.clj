@@ -33,9 +33,7 @@
             [ring.middleware.cookies :refer [wrap-cookies]]
             [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]
-            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-            [ring.middleware.params :refer [wrap-params]]
-            [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+            [ring.middleware.logger :as mw-logger]
             [scenic.routes :as scenic]
             [stonecutter-oauth.client :as soc]
             [freecoin.db.mongo :as mongo]
@@ -108,7 +106,8 @@
 (defn create-app [config-m stores-m blockchain]
   (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
       (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
-                                                   (config/secure? config-m)))))
+                                                   (config/secure? config-m)))
+      #_(mw-logger/wrap-with-logger)))
 
 ;; launching and halting the app
 (defonce app-state {})

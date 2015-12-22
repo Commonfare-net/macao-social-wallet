@@ -56,18 +56,20 @@
       ]
      }))
 
-(defn transaction->activity-stream [tx]
-  {"@context"   "https://www.w3.org/ns/activitystreams"
-   "@type"      "Transaction"
-   "published" (:timestamp tx)
-   "actor"     {"@type"      "Person"
-                "displayName" (:from-id tx)}
-   "object"    {"@type" (:blockchain tx)
-                "displayName" (str (:amount tx) " -> " (:to-id tx))}
-   })
+(defn transaction->activity-stream [tx wallet-store]
+  (let [from (wallet/fetch-by-account-id wallet-store (:from-id tx))
+        to (wallet/fetch-by-account-id wallet-store (:to-id tx))]
+    {"@context"   "https://www.w3.org/ns/activitystreams"
+     "@type"      "Transaction"
+     "published" (:timestamp tx)
+     "actor"     {"@type"      "Person"
+                  "displayName" (:name from)}
+     "object"    {"@type" (:blockchain tx)
+                  "displayName" (str (:amount tx) " -> " (:name to))}
+     }))
 
 ;; TODO: use "target" for recipient
 ;; this needs a change in mooncake
 (defn build-activity-stream [list wallet-store]
-  (map transaction->activity-stream list)
+  (map #(transaction->activity-stream % wallet-store) list)
   )

@@ -229,14 +229,14 @@
                   (fact "redirects to signed-in participant's account page"
                         response => (th/check-redirects-to (absolute-path :account :uid (:uid sender-wallet))))))))
 
-(defn test-activity [from-id amount to-id date]
+(defn test-activity [from-name amount to-name date]
   {"@context"  "https://www.w3.org/ns/activitystreams"
    "@type"     "Transaction"
    "published" (time/format date)
    "actor"     {"@type"       "Person"
-                "displayName" from-id}
+                "displayName" from-name}
    "object"    {"@type"       "INMEMORYBLOCKCHAIN"
-                "displayName" (str amount " -> " to-id)}})
+                "displayName" (str amount " -> " to-name)}})
 
 (facts "Can load json activitites"
        (let [wallet-store (fm/create-memory-store)

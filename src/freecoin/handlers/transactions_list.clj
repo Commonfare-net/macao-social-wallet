@@ -28,13 +28,14 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.handlers.transactions-list
-  (:require [liberator.core :as lc]
-            [freecoin.db.wallet :as wallet]
+  (:require [clojure.tools.logging :as log]
+            [freecoin.auth :as auth]
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
+            [freecoin.db.wallet :as wallet]
             [freecoin.views :as fv]
-            [freecoin.auth :as auth]
-            [freecoin.views.transaction-list :as transaction-list]))
+            [freecoin.views.transaction-list :as transaction-list]
+            [liberator.core :as lc]))
 
 
 (lc/defresource list-user-transactions [wallet-store blockchain]
@@ -48,7 +49,7 @@
   :handle-ok
   (fn [ctx]
     (-> blockchain
-        (blockchain/list-transactions (-> ctx :wallet :account-id))
+        (blockchain/list-transactions {:account-id (-> ctx :wallet :account-id)})
         (transaction-list/build-html wallet-store (:wallet ctx))
         fv/render-page)))
 
@@ -61,7 +62,7 @@
   :handle-ok
   (fn [ctx]
     (-> blockchain
-        (blockchain/list-transactions)
+        (blockchain/list-transactions (-> ctx :request :params))
         (transaction-list/build-html wallet-store)
         fv/render-page)))
 
@@ -72,8 +73,8 @@
   ;; TODO: register the mooncake authorised to pull
   :handle-ok
   (fn [ctx]
-      (-> blockchain
-          (blockchain/list-transactions)
-          (transaction-list/build-activity-stream wallet-store)
-          )
-      ))
+    (-> blockchain
+        (blockchain/list-transactions (-> ctx :request :params))
+        (transaction-list/build-activity-stream wallet-store)
+        )
+    ))

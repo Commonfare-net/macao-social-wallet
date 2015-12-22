@@ -1,10 +1,12 @@
 (ns freecoin.journey.kerodon-checkers
-  (:require [midje.sweet :refer :all]
-            [net.cgrand.enlive-html :as html]
-            [kerodon.core :as k]
-            [ring.util.response :as rr]
+  (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
-            [freecoin.routes :as r]))
+            [clojure.tools.logging :as log]
+            [freecoin.routes :as r]
+            [kerodon.core :as k]
+            [midje.sweet :refer :all]
+            [net.cgrand.enlive-html :as html]
+            [ring.util.response :as rr]))
 
 (defn page-uri-is [state uri]
   (fact {:midje/name "Checking page uri:"}
@@ -39,6 +41,12 @@
   (apply page-route-is state route-action route-params)
   (response-status-is state 200)
   (selector-exists state body-selector))
+
+(defn check-page-is-json [state route-action & route-params]
+  (apply page-route-is state route-action route-params)
+  (response-status-is state 200)
+  (content-type-is state "application/json")
+  )
 
 (defn check-and-follow-redirect
   ([state description]
