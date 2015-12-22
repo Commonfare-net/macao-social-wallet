@@ -28,6 +28,7 @@
 
 (ns freecoin.core
   (:require [org.httpkit.server :as server]
+            [liberator.dev :as ld]
             [clojure.tools.logging :as log]
             [ring.middleware.defaults :as ring-mw]
             [ring.middleware.cookies :refer [wrap-cookies]]
@@ -103,11 +104,18 @@
       (assoc-in [:session :store] session-store)
       (assoc-in [:security :anti-forgery] {:error-handler handle-anti-forgery-error})))
 
+(defn conditionally-wrap-with [handler wrapper wrap-when-true]
+  (if wrap-when-true
+    (wrapper handler)
+    handler))
+
 (defn create-app [config-m stores-m blockchain]
-  (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
-      (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
-                                                   (config/secure? config-m)))
-      #_(mw-logger/wrap-with-logger)))
+  (let [debug-mode true]
+    (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
+        (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
+        (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
+                                                     (config/secure? config-m)))
+        #_(mw-logger/wrap-with-logger))))
 
 ;; launching and halting the app
 (defonce app-state {})
