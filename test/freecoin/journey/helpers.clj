@@ -13,10 +13,10 @@
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub (ih/get-test-db)))
 
-(def test-app
+(defn test-app []
+  (ih/setup-db)
   (ih/build-app {:stores-m stores-m
                  :blockchain blockchain}))
-
 
 (defn sign-up [state auth-code]
   (-> state
@@ -46,3 +46,7 @@
       )
      )
    users))
+
+(defn log-inline [state & args]
+  (log/info (conj args state))
+  state)

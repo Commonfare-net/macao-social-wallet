@@ -49,7 +49,7 @@
   ;; transactions
   (list-transactions [bk params])
   (get-transaction   [bk account-id txid])
-  (make-transaction  [bk from-account-id amount to-account-id secret])
+  (make-transaction  [bk from-account-id amount to-account-id params])
 
   ;; vouchers
   (create-voucher [bk account-id amount expiration secret])
@@ -142,11 +142,11 @@
 
   (get-transaction   [bk account-id txid] nil)
 
-  (make-transaction  [bk from-account-id amount to-account-id secret]
-    (let [now (time/format (time/now))
-          transaction {:_id (str now "-" from-account-id)
+  (make-transaction  [bk from-account-id amount to-account-id params]
+    (let [timestamp (time/format (if (nil? (:timestamp params)) (time/now) (:timestamp params)))
+          transaction {:_id (str timestamp "-" from-account-id)
                        :blockchain "STUB"
-                       :timestamp now
+                       :timestamp timestamp
                        :from-id from-account-id
                        :to-id to-account-id
                        :amount (util/bigdecimal->long amount)}]
@@ -201,7 +201,7 @@
                                    ))
 
   (get-transaction   [bk account-id txid] nil)
-  (make-transaction  [bk from-account-id amount to-account-id secret]
+  (make-transaction  [bk from-account-id amount to-account-id params]
     ;; to make tests possible the timestamp here is generated starting from
     ;; the 1 december 2015 plus a number of days that equals the amount
     (let [now (time/format (time/add-days (time/datetime 2015 12 1) amount))
