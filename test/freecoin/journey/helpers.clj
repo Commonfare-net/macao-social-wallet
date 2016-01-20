@@ -13,11 +13,6 @@
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub (ih/get-test-db)))
 
-(defn test-app []
-  (ih/setup-db)
-  (ih/build-app {:stores-m stores-m
-                 :blockchain blockchain}))
-
 (defn sign-up [state auth-code]
   (-> state
       (k/visit (str (routes/absolute-path :sso-callback) "?code=" auth-code))

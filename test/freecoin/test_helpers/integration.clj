@@ -24,6 +24,9 @@
        drop-db
        (reset! db-and-conn)))
 
+(defn reset-db []
+  (drop-db @db-and-conn))
+
 (defn teardown-db []
   (drop-db @db-and-conn)
   (monger/disconnect (get-test-db-connection))

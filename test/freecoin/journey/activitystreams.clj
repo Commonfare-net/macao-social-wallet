@@ -43,10 +43,13 @@
             [simple-time.core :as time]
             [stonecutter-oauth.client :as soc]))
 
-
+(ih/setup-db)
+ 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub (ih/get-test-db)))
-
+ 
+(def test-app (ih/build-app {:stores-m stores-m
+                             :blockchain blockchain}))
 
 
 (background
@@ -86,7 +89,8 @@
 
 (facts "Activitystreams can be consumed and are filled once transactions are done"
        (let [memory (atom {})]
-         (-> (k/session (h/test-app))
+         (ih/reset-db)
+         (-> (k/session test-app)
              
              (h/sign-up "recipient")
              (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
@@ -122,7 +126,8 @@
 
 (facts "Activitystreams JSON is empty on initial load"
        (let [memory (atom {})]
-         (-> (k/session (h/test-app))
+         (ih/reset-db)
+         (-> (k/session test-app)
              
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
@@ -133,7 +138,8 @@
 
 (facts "Activitystreams JSON contains transaction log as soon as transactions are done on blockchain"
        (let [memory (atom {})]
-         (-> (k/session (h/test-app))
+         (ih/reset-db)
+         (-> (k/session test-app)
 
              (h/sign-up "recipient")
              (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
@@ -159,7 +165,8 @@
 
 (facts "Activitystreams JSON can be filtered on time with from/to parameters"
        (let [memory (atom {})]
-         (-> (k/session (h/test-app))
+         (ih/reset-db)
+         (-> (k/session test-app)
 
              (h/sign-up "recipient")
              (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
