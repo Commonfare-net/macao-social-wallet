@@ -65,12 +65,12 @@
      "published" (:timestamp tx)
      "actor"     {"@type"      "Person"
                   "displayName" (:name from)}
+     "target"    {"@type"      "Person"
+                  "displayName" (:name to)}
      "object"    {"@type" (:blockchain tx)
-                  "displayName" (str (:amount tx) " -> " (:name to))}
+                  "displayName" (str (:amount tx))}
      }))
 
-;; TODO: use "target" for recipient
-;; this needs a change in mooncake
 (defn build-activity-stream [list wallet-store]
   (map #(transaction->activity-stream % wallet-store) list)
   )

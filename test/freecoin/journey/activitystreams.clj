@@ -64,8 +64,10 @@
    "published" (time/format (time/datetime))
    "actor"     {"@type"       "Person"
                 "displayName" from-name}
+   "target"    {"@type"       "Person"
+                "displayName" to-name}
    "object"    {"@type"       "STUB"
-                "displayName" (str amount " -> " to-name)}})
+                "displayName" (str amount)}})
 
 (defn no-timestamps [activity] (dissoc activity "published"))
 
