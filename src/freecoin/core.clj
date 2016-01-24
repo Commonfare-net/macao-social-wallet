@@ -30,6 +30,7 @@
   (:require [org.httpkit.server :as server]
             [liberator.dev :as ld]
             [clojure.tools.logging :as log]
+            [clojure.data.json :as json]
             [ring.middleware.defaults :as ring-mw]
             [ring.middleware.cookies :refer [wrap-cookies]]
             [ring.middleware.session :refer [wrap-session]]
@@ -60,6 +61,12 @@
                  (config/client-id config-m)
                  (config/client-secret config-m)
                  (routes/absolute-path :sso-callback)))
+
+(defmethod liberator.representation/render-seq-generic "application/activity+json" [data _]
+  (json/write-str data))
+
+(defmethod liberator.representation/render-map-generic "application/activity+json" [data context]
+  (json/write-str data))
 
 (defn todo [_]
   {:status 503 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})

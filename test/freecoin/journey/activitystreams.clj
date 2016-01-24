@@ -87,6 +87,14 @@
     (blockchain/make-transaction blockchain (:account-id from) amount (:account-id to) params))
   state)
 
+
+(defn check-page-is-activity-stream [state route-action & route-params]
+  (apply kc/page-route-is state route-action route-params)
+  (kc/response-status-is state 200)
+  (kc/content-type-is state "application/activity+json")
+  )
+
+
 (facts "Activitystreams can be consumed and are filled once transactions are done"
        (let [memory (atom {})]
          (ih/reset-db)
@@ -112,12 +120,12 @@
 
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
-             (kc/check-page-is-json :get-activity-streams)
+             (check-page-is-activity-stream :get-activity-streams)
 
              (assert-timeless-activitystream [(test-activity "sender" 10 "recipient")])
 
              (k/visit (routes/absolute-path :get-activity-streams))
-             (kc/check-page-is-json :get-activity-streams)
+             (check-page-is-activity-stream :get-activity-streams)
 
              ;; TODO: fix the activitystreams content type
              #_(kc/content-type-is "application/activity+json;charset=utf-8")
@@ -131,7 +139,7 @@
              
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
-             (kc/check-page-is-json :get-activity-streams)
+             (check-page-is-activity-stream :get-activity-streams)
              (assert-timeless-activitystream [])
              )))
 
@@ -155,7 +163,7 @@
              
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
-             (kc/check-page-is-json :get-activity-streams)
+             (check-page-is-activity-stream :get-activity-streams)
 
              (assert-timeless-activitystream
               [(test-activity "sender" 101 "recipient")
