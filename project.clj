@@ -3,13 +3,14 @@
   :url "http://freecoin.ch"
   :license {:name "GNU GPL Affero v3 and "
             :url "http://www.d-centproject.eu"}
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [log4j/log4j "1.2.17" :exclusions [javax.mail/mail
                                                     javax.jms/jms
                                                     com.sun.jmdk/jmxtools
                                                     com.sun.jmx/jmxri]]
                  [liberator "0.14.0"]
+                 [clj-http "2.0.1"]
                  [scenic "0.2.5"]
                  [ring/ring-core "1.4.0"]
                  [ring/ring-anti-forgery "1.0.0"]
