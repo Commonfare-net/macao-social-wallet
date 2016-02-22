@@ -68,6 +68,12 @@
 (defmethod liberator.representation/render-map-generic "application/activity+json" [data context]
   (json/write-str data))
 
+(defmethod liberator.representation/render-seq-generic "application/json" [data _]
+  (json/write-str data))
+
+(defmethod liberator.representation/render-map-generic "application/json" [data context]
+  (json/write-str data))
+
 (defn todo [_]
   {:status 503 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})
 

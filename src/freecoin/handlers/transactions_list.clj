@@ -69,7 +69,7 @@
 (lc/defresource list-all-activity-streams [wallet-store blockchain]
   :allowed-methods [:get]
   ;; Activity Streams 2.0 specification says media type should be application/activity+json
-  :available-media-types ["application/activity+json"]
+  :available-media-types ["application/activity+json" "application/json"]
   ;; TODO: register the mooncake authorised to pull
   :handle-ok
   (fn [ctx]
