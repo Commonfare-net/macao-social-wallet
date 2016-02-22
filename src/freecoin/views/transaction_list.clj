@@ -51,7 +51,8 @@
                  [:td [:a {:href (routes/path :account :uid (:uid from))} (:name from)]]
                  [:td [:a {:href (routes/path :account :uid (:uid to))} (:name to)]]
                  [:td (:amount t)]
-                 [:td (-> t :timestamp st/parse (st/format :medium-date-time))]]))
+                 [:td (-> t :timestamp st/parse (st/format :medium-date-time))
+                  ]]))
             list)
        ]
       ]
@@ -62,7 +63,7 @@
         to (wallet/fetch-by-account-id wallet-store (:to-id tx))]
     {"@context"   "https://www.w3.org/ns/activitystreams"
      "@type"      "Transaction"
-     "published" (:timestamp tx)
+     "published" (str (:timestamp tx) "Z")
      "actor"     {"@type"      "Person"
                   "displayName" (:name from)}
      "target"    {"@type"      "Person"

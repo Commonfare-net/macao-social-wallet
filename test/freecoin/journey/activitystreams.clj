@@ -44,10 +44,10 @@
             [stonecutter-oauth.client :as soc]))
 
 (ih/setup-db)
- 
+
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub (ih/get-test-db)))
- 
+
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain}))
 
@@ -64,7 +64,7 @@
 (defn test-activity [from-name amount to-name]
   {"@context"  "https://www.w3.org/ns/activitystreams"
    "@type"     "Transaction"
-   "published" (time/format (time/datetime))
+   "published" (str (time/format (time/datetime)) "Z")
    "actor"     {"@type"       "Person"
                 "displayName" from-name}
    "target"    {"@type"       "Person"
@@ -99,7 +99,7 @@
        (let [memory (atom {})]
          (ih/reset-db)
          (-> (k/session test-app)
-             
+
              (h/sign-up "recipient")
              (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
              h/sign-out
@@ -136,7 +136,7 @@
        (let [memory (atom {})]
          (ih/reset-db)
          (-> (k/session test-app)
-             
+
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
              (check-page-is-activity-stream :get-activity-streams)
@@ -160,7 +160,7 @@
              ;; do a few transactions
              (make-transaction blockchain (kh/recall memory :sender-uid) 99 (kh/recall memory :recipient-uid) {})
              (make-transaction blockchain (kh/recall memory :sender-uid) 101 (kh/recall memory :recipient-uid) {})
-             
+
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
              (check-page-is-activity-stream :get-activity-streams)
@@ -191,14 +191,14 @@
                                {:timestamp (time/datetime 2015 12 2)})
              (make-transaction blockchain (kh/recall memory :sender-uid) 3 (kh/recall memory :recipient-uid)
                                {:timestamp (time/datetime 2015 12 3)})
-             
+
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
              (assert-timeless-activitystream
               [(test-activity "sender" 3 "recipient")
                (test-activity "sender" 2 "recipient")
                (test-activity "sender" 1 "recipient")])
-             
+
              ;; test 'from' parameter
              (k/visit (str (routes/absolute-path :get-activity-streams) "?from=2015-12-02"))
              (assert-timeless-activitystream
