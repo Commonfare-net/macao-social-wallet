@@ -41,6 +41,7 @@
             [freecoin.db.mongo :as mongo]
             [freecoin.db.storage :as storage]
             [freecoin.blockchain :as blockchain]
+            [freecoin.translation :as translation]
             [freecoin.routes :as routes]
             [freecoin.config :as config]
             [freecoin.handlers.sign-in :as sign-in]

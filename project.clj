@@ -35,13 +35,15 @@
                  [clj.qrgen "0.4.0"]
                  [clavatar "0.3.0"]
                  [cc.artifice/lein-gossip "0.2.1"]
+                 [circleci/clj-yaml "0.5.5"]
                  ]
 
 
   :source-paths ["src"]
+  :resource-paths ["resources" "test-resources"]
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
-             ] 
+             ]
   :env [[:base-url "http://localhost:8000"]]
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]

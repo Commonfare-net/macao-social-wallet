@@ -28,15 +28,17 @@
 
 (ns freecoin.views.account-page
   (:require [clavatar.core :as clavatar]
-            [freecoin.routes :as routes]))
+            [freecoin.routes :as routes]
+            [freecoin.translation :as t]
+))
 
 (defn render-wallet [wallet]
   (let [email (:email wallet)]
     [:div {:class "wallet-details"}
      [:div {:class "card"}
-      [:span (str "Name: " (:name wallet))]
+      [:span (str (t/locale [:wallet :name]) ": " (:name wallet))]
       [:br]
-      [:span (str "Email: ") [:a {:href (str "mailto:" email)} email]]
+      [:span (str (t/locale [:wallet :email]) ": ") [:a {:href (str "mailto:" email)} email]]
       [:br]
       [:span {:class "qrcode pull-left"}
        [:img {:src (routes/path :qrcode :uid (:uid wallet))}]]
@@ -48,17 +50,17 @@
   (let [wallet (:wallet context)
         balance (:balance context)]
     {:body-class "func--account-page--body"
-     :title "Welcome to Freecoin"
+     :title (t/locale [:wallet :welcome])
      :body [:div
-            (render-wallet wallet) 
+            (render-wallet wallet)
             [:div {:class "balance"}
-             (str "Balance: ")
+             (str (t/locale [:wallet :balance]) ": ")
              [:span {:class "func--account-page--balance"}
               balance]]
             [:div
              [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
-              (str "Send currency")]
+              (t/locale [:wallet :send])]
              [:a.btn.btn-default {:href (routes/path :get-user-transactions :uid (:uid wallet))}
-              (str "View transactions")]
+              (t/locale [:wallet :list])]
              ]]
      }))

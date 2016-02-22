@@ -47,16 +47,21 @@
                    :secure false ;restrict the cookie to HTTPS URLs if true
                    :http-only true}})
 
+;; translation
+(def locale
+  {:language "it"}
+  )
+
 ;; defaults
 (def encryption
   {:version 1
    :total 9
    :quorum 5
-   
+
    :prime 'prime4096
-   
+
    :description "Freecoin"
-   
+
    ;; versioning every secret
    :prefix "FXC1"
 
@@ -77,7 +82,7 @@
           ;; reject if body is more than 1MB
           :insecure? true
           ;; Need to contact a server with an untrust
-          
+
           :max-redirects 10 ; Max redirects to follow
           ;; whether follow 301/302 redirects automatically, default
           ;; to true

@@ -1,0 +1,9 @@
+---
+
+wallet:
+  welcome: "Welcome to Freecoin"
+  name: "Name"
+  email: "Email"
+  balance: "Balance"
+  send: "Send amount"
+  list: "List transactions"
