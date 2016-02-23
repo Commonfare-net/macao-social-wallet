@@ -27,6 +27,7 @@
 
 (ns freecoin.views.transaction-list
   (:require [freecoin.routes :as routes]
+            [environ.core :as env]
             [simple-time.core :as st]
             [freecoin.db.wallet :as wallet]))
 
@@ -65,11 +66,15 @@
      "@type"      "Transaction"
      "published" (str (:timestamp tx) "Z")
      "actor"     {"@type"      "Person"
-                  "displayName" (:name from)}
+                  "displayName" (:name from)
+                  }
      "target"    {"@type"      "Person"
-                  "displayName" (:name to)}
+                  "displayName" (:name to)
+                  }
      "object"    {"@type" (:blockchain tx)
-                  "displayName" (str (:amount tx))}
+                  "displayName" (str (:amount tx))
+                  "url" (str (env/env :base-url) "/transactions/" (:_id tx))
+                  }
      }))
 
 (defn build-activity-stream [list wallet-store]

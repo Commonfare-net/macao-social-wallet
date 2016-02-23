@@ -38,6 +38,7 @@
             [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
             [freecoin.test-helpers.integration :as ih]
+            [environ.core :as env]
             [kerodon.core :as k]
             [midje.sweet :refer :all]
             [simple-time.core :as time]
@@ -70,14 +71,20 @@
    "target"    {"@type"       "Person"
                 "displayName" to-name}
    "object"    {"@type"       "STUB"
-                "displayName" (str amount)}})
+                "displayName" (str amount)
+                "url" (str (env/env :base-url) "/transactions/UID")
+                }})
 
-(defn no-timestamps [activity] (dissoc activity "published"))
+(defn no-variables [activity]
+  (-> activity
+      (dissoc "published")
+      (update-in ["object"] dissoc "url"))
+  )
 
 (defn assert-timeless-activitystream [state contents]
   (fact {:midje/name "Checking JSON contents:"}
         (let [output (-> state :response :body cheshire/parse-string vec)]
-          (map no-timestamps output) => (map no-timestamps contents)))
+          (map no-variables output) => (map no-variables contents)))
   state)
 
 (defn make-transaction [state blockchain from-uid amount to-uid params]
@@ -127,8 +134,7 @@
              (k/visit (routes/absolute-path :get-activity-streams))
              (check-page-is-activity-stream :get-activity-streams)
 
-             ;; TODO: fix the activitystreams content type
-             #_(kc/content-type-is "application/activity+json;charset=utf-8")
+             (kc/content-type-is "application/activity+json")
 
              )))
 
