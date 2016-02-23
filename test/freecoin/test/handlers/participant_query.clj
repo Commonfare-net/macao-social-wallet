@@ -6,6 +6,7 @@
             [freecoin.db.mongo :as fm]
             [freecoin.db.wallet :as w]
             [freecoin.blockchain :as fb]
+            [freecoin.translation :as t]
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.participants :as fp]))
 
@@ -30,7 +31,8 @@
                                                       (assoc :params {:uid (:uid wallet)})
                                                       (assoc :session {:signed-in-uid (:uid wallet)})))]
                (:status response) => 200
-               (:body response) => (contains #"Balance:"))))
+               (:body response) => (contains (t/locale [:wallet :balance]))
+               )))
 
 ;;        (fact "can not be accessed when user is not signed in"))
 
@@ -61,7 +63,7 @@
                    response (-> (th/create-request :get "/participants" {})
                                 participants-handler)]
                (:status response) => 401))
-       
+
        (fact "without any query parameters, lists all participants"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
@@ -77,7 +79,7 @@
                (-> (:body response) html/html-snippet) => (th/element-count [:.clj--participant__item] 5)))
 
        (tabular
-        
+
         (fact "can query by name or email"
               (let [wallet-store (fm/create-memory-store)
                     blockchain (fb/create-in-memory-blockchain :bk)
@@ -93,7 +95,7 @@
                                  participants-handler)]
                 (-> (:body response) html/html-snippet)
                 => (th/element-count [:.clj--participant__item] ?expected-count)))
-        
+
         ?field   ?value                  ?expected-count
         "name"   "James Jones"           2
         "email"  "james@jones.com"       1
