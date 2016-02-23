@@ -30,7 +30,7 @@
                  [com.tiemens/secretshare "1.3.1"]
                  [buddy/buddy-hashers "0.9.0"]
                  [simple-time "0.2.0"]
-                 [environ "1.0.0"]
+                 [environ "1.0.2"]
                  [clojure-humanize "0.1.0"]
                  [clj.qrgen "0.4.0"]
                  [clavatar "0.3.0"]
@@ -44,20 +44,27 @@
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
              ]
-  :env [[:base-url "http://localhost:8000"]]
+  :env [[:base-url "http://localhost:8000"]
+
+        ;; trasnlation is configured here, strings are hard-coded at compile time
+        ;; the last one acts as fallback if translated strings are not found
+        [:translation-language "lang/it.yml"]
+        [:translation-fallback "lang/en.yml"]
+        ]
+
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]
             "test-transactions" ["with-profile" "transaction-graph" "run"]}
   :profiles {:dev [:dev-common :dev-local]
-             :dev-common {:dependencies [[midje "1.6.3"]
+             :dev-common {:dependencies [[midje "1.8.3"]
                                          [peridot "0.3.1"]
-                                         [kerodon "0.6.1"]
+                                         [kerodon "0.7.0"]
                                          [ns-tracker "0.3.0"]
                                          ]
                           :env [[:base-url "http://localhost:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
-                                [:auth-url "http://localhost:3000"]
+                                [:auth-url "http://localhost:5000"]
                                 [:secure "false"]]
                           :plugins [[lein-midje "3.1.3"]]}
 

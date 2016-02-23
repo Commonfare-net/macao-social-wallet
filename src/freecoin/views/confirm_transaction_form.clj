@@ -2,7 +2,9 @@
   (:require [freecoin.form_helpers :as fh]
             [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
-            [freecoin.config :as config]))
+            [freecoin.config :as config]
+            [freecoin.translation :as t]
+            ))
 
 (defn confirm-transaction-form-spec [confirmation-uid show-pin-entry]
   (let [submit {:name :submit
@@ -12,7 +14,7 @@
     {:renderer :bootstrap3-stacked
      :fields (if show-pin-entry
                [{:name :secret
-                 :label "Enter your secret PIN to confirm"
+                 :label (t/locale [:transaction :enter-pin])
                  :type :number
                  :class "func--confirm-transaction-form--secret"}
                 submit]
@@ -20,7 +22,7 @@
      :action (routes/absolute-path :post-confirm-transaction-form
                                    :confirmation-uid confirmation-uid)
      :validations (if show-pin-entry
-                    [ [:required [:secret] "Please enter your PIN"]]
+                    [ [:required [:secret] (t/locale [:transaction :enter-pin])]]
                     [])
      :method "post"}))
 
@@ -36,8 +38,8 @@
   (if-let [confirmation-uid (-> context :confirmation :uid)]
     (let [amount (-> context :confirmation :data :amount)
           recipient (-> context :recipient)]
-      {:title "Confirm transaction"
-       :heading "Please confirm to execute transaction"
+      {:title (t/locale [:transaction :confirm-title])
+       :heading (t/locale [:transaction :confirm-heading])
        :body [:div {}
               [:div {:class "transaction-recipient-confirm"}
                (render-recipient recipient amount)]

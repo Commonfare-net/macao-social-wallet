@@ -1,16 +1,18 @@
 (ns freecoin.views.transaction-form
   (:require [freecoin.config :as config]
             [freecoin.form_helpers :as fh]
-            [freecoin.routes :as routes]))
+            [freecoin.routes :as routes]
+            [freecoin.translation :as t]
+            ))
 
 (def transaction-form-spec
   {:renderer :bootstrap3-stacked
    :fields [{:name :amount
-             :label "Amount"
+             :label (t/locale [:transaction :amount])
              :type :decimal
              :class "func--transaction-form--amount"}
             {:name :recipient
-             :label "Recipient"
+             :label (t/locale [:transaction :recipient])
              :type :text
              :class "func--transaction-form--recipient"}
             {:name :submit

@@ -25,7 +25,9 @@
 
 (ns freecoin.params
   (:require [org.httpkit.client :refer [max-body-filter]]
-            [environ.core :as env]))
+            [environ.core :as env]
+            [freecoin.translation :as trans]
+            ))
 
 (def version "software release version" "0.2")
 
@@ -47,10 +49,6 @@
                    :secure false ;restrict the cookie to HTTPS URLs if true
                    :http-only true}})
 
-;; translation
-(def locale
-  {:language "it"}
-  )
 
 ;; defaults
 (def encryption

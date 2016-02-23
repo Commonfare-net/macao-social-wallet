@@ -27,14 +27,16 @@
 
 (ns freecoin.views.participants-list
   (:require [freecoin.routes :as routes]
-            [clavatar.core :as clavatar]))
+            [clavatar.core :as clavatar]
+            [freecoin.translation :as t]
+            ))
 
 (defn render-participant [wallet]
   [:li {:style "margin: 1em" :class "clj--participant__item"}
    [:div {:class "card pull-left" }
-    [:span (str "name: " (:name wallet))]
+    [:span (t/locale [:wallet :name])]
     [:br]
-    [:span (str "email: " (:email wallet))]
+    [:span (t/locale [:wallet :email])]
     [:br]
     [:span {:class "qrcode pull-left"}
      [:img {:src (routes/path :qrcode :uid (:uid wallet))} ]]
@@ -45,8 +47,8 @@
   (let [wallets (:wallets content)]
     {:body [:div
             (if (empty? wallets)
-              [:span (str "No participant found")]
+              [:span (t/locale [:participant :not-found])]
               [:ul {:style "list-style-type: none;"}
                (for [wallet wallets]
                  (render-participant wallet))])]
-     :title "Participants"}))
+     :title (t/locale [:participant :list-title])}))

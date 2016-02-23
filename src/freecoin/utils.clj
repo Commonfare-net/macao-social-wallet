@@ -30,6 +30,7 @@
 
 (declare log!)
 
+
 (defn pretty [edn]
   {:pre (coll? edn)}
 
@@ -85,4 +86,3 @@
 
 (defn long->bigdecimal [l]
   (/ (BigDecimal. l) 100000))
-

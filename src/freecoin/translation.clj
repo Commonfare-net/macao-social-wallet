@@ -1,9 +1,10 @@
 (ns freecoin.translation
   (:require
-   [freecoin.params :as param]
    [clojure.tools.logging :as log]
    [clj-yaml.core :as yaml]
    [clojure.java.io :as io]
+   [clojure.string :as str]
+   [environ.core :as env]
    ))
 
 (defn load-translations-from-string [s]
@@ -22,14 +23,10 @@
     (apply merge-with deep-merge vals)
     (last vals)))
 
-(defn translation-map [lang]
-  (deep-merge
-   (load-translations-from-file (str "lang/en.yml"))
-   (load-translations-from-file (str "lang/" lang ".yml"))
-    )
-  )
+(def translation
+    (deep-merge
+     (load-translations-from-file (env/env :translation-fallback))
+     (load-translations-from-file (env/env :translation-language))
+     ))
 
-
-(defn locale [items]
-  (get-in (translation-map (:language param/locale)) items)
-  )
+(defn locale [items] (get-in translation items) )

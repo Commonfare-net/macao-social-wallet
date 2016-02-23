@@ -7,3 +7,14 @@ wallet:
   balance: "Balance"
   send: "Send amount"
   list: "List transactions"
+
+transaction:
+  amount: "Amount"
+  recipient: "Recipient"
+  enter-pin: "Enter your secret PIN"
+  confirm-title: "Confirm transaction"
+  confirm-heading: "Please confirm to execute transaction"
+
+participant:
+  list-title: "Participants"
+  not-found: "No participant found"
