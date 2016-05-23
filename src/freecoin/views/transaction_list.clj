@@ -63,20 +63,27 @@
   (let [from (wallet/fetch-by-account-id wallet-store (:from-id tx))
         to (wallet/fetch-by-account-id wallet-store (:to-id tx))]
     {"@context"   "https://www.w3.org/ns/activitystreams"
-     "@type"      "Transaction"
+     "type"      "Transaction"
      "published" (str (:timestamp tx) "Z")
-     "actor"     {"@type"      "Person"
-                  "displayName" (:name from)
+
+     "actor"     {"type"      "Person"
+                  "name" (:name from)
                   }
-     "target"    {"@type"      "Person"
-                  "displayName" (:name to)
+     "target"    {"type"      "Person"
+                  "name" (:name to)
                   }
-     "object"    {"@type" (:blockchain tx)
-                  "displayName" (str (:amount tx))
+     "object"    {"type" (:blockchain tx)
+                  "name" (str (:amount tx))
                   "url" (str (env/env :base-url) "/transactions/" (:_id tx))
                   }
-     }))
+     }
+    ))
 
 (defn build-activity-stream [list wallet-store]
-  (map #(transaction->activity-stream % wallet-store) list)
+  {"@context"   "https://www.w3.org/ns/activitystreams"
+   "type"      "Container"
+   "name"      "Activity stream"
+   "totalItems" (count list)
+   "items"     (map #(transaction->activity-stream % wallet-store) list)
+   }
   )

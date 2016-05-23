@@ -73,8 +73,8 @@
   ;; TODO: register the mooncake authorised to pull
   :handle-ok
   (fn [ctx]
-    (-> blockchain
-        (blockchain/list-transactions (-> ctx :request :params))
-        (transaction-list/build-activity-stream wallet-store)
+    (let [transactions
+          (blockchain/list-transactions blockchain (-> ctx :request :params))]
+        (transaction-list/build-activity-stream transactions wallet-store)
         )
     ))
