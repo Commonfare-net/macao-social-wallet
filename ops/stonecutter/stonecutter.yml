@@ -17,14 +17,16 @@
         - zsh
 
     - name: Create local bin folder
-      file: path=/home/vagrant/bin state=directory
+      file: path=/home/vagrant/bin state=directory owner=vagrant group=vagrant
 
     - name: Downloading lein
-      get_url: dest="/home/vagrant/bin/lein" url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein mode=755
+      get_url: dest="/home/vagrant/bin/lein" url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein mode=755 owner=vagrant group=vagrant
 
     - name: Cloning Stonecutter source
       git: repo=https://github.com/d-cent/stonecutter.git
            dest=/home/vagrant/stonecutter
+      become: yes
+      become_user: vagrant
 
     - name: add nodesource apt-key
       apt_key: url=https://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x1655A0AB68576280 state=present
@@ -56,7 +58,11 @@
     - name: Node.js | Install dependencies
       shell: npm install
         chdir=/home/vagrant/stonecutter
+      become: yes
+      become_user: vagrant
 
     - name: Gulp | Build templates and styles
       shell: gulp build
         chdir=/home/vagrant/stonecutter
+      become: yes
+      become_user: vagrant
