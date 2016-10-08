@@ -112,10 +112,16 @@
 
 (defn handle-anti-forgery-error [request]
   (log/warn "ANTY_FORGERY_ERROR - headers: " (:headers request))
-  {:status 403 :body "CSRF token mismatch"})
+  {:status 403
+   :body "CSRF token mismatch"})
+
+(defn defaults [secure?]
+  (if secure?
+    (assoc ring-mw/secure-site-defaults :proxy true)
+    ring-mw/site-defaults))
 
 (defn wrap-defaults-config [session-store secure?]
-  (-> (if secure? (assoc ring-mw/secure-site-defaults :proxy true) ring-mw/site-defaults)
+  (-> (defaults secure?)
       (assoc-in [:session :cookie-name] "freecoin-session")
       (assoc-in [:session :flash] true)
       (assoc-in [:session :store] session-store)
