@@ -133,7 +133,7 @@
     handler))
 
 (defn create-app [config-m stores-m blockchain]
-  (let [debug-mode true]
+  (let [debug-mode (config/debug config-m)]
     (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
