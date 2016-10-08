@@ -51,8 +51,7 @@
             [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
-            [freecoin.handlers.qrcode :as qrcode]
-            ))
+            [freecoin.handlers.qrcode :as qrcode]))
 
 (defn not-found [request]
   {:status 404

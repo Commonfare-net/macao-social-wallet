@@ -35,8 +35,7 @@
                  [clj.qrgen "0.4.0"]
                  [clavatar "0.3.0"]
                  [cc.artifice/lein-gossip "0.2.1"]
-                 [circleci/clj-yaml "0.5.5"]
-                 ]
+                 [circleci/clj-yaml "0.5.5"]]
 
 
   :source-paths ["src"]
@@ -49,8 +48,7 @@
         ;; trasnlation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
         [:translation-language "lang/it.yml"]
-        [:translation-fallback "lang/en.yml"]
-        ]
+        [:translation-fallback "lang/en.yml"]]
 
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]
@@ -59,8 +57,7 @@
              :dev-common {:dependencies [[midje "1.8.3"]
                                          [peridot "0.4.4"]
                                          [kerodon "0.8.0"]
-                                         [ns-tracker "0.3.0"]
-                                         ]
+                                         [ns-tracker "0.3.0"]]
                           :env [[:base-url "http://localhost:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
