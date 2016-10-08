@@ -77,7 +77,9 @@
   (json/write-str data))
 
 (defn todo [_]
-  {:status 503 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})
+  {:status 503
+   :body "Work-in-progress"
+   :headers {"Content-Type" "text/html"}})
 
 (defn handlers [config-m stores-m blockchain]
   (let [wallet-store (storage/get-wallet-store stores-m)
