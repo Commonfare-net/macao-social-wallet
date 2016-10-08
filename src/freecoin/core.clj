@@ -67,13 +67,13 @@
 (defmethod lr/render-seq-generic "application/activity+json" [data _]
   (json/write-str data))
 
-(defmethod lr/render-map-generic "application/activity+json" [data context]
+(defmethod lr/render-map-generic "application/activity+json" [data _]
   (json/write-str data))
 
 (defmethod lr/render-seq-generic "application/json" [data _]
   (json/write-str data))
 
-(defmethod lr/render-map-generic "application/json" [data context]
+(defmethod lr/render-map-generic "application/json" [data _]
   (json/write-str data))
 
 (defn todo [_]
