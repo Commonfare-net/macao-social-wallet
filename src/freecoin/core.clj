@@ -29,6 +29,7 @@
 (ns freecoin.core
   (:require [org.httpkit.server :as server]
             [liberator.dev :as ld]
+            [liberator.representation :as lr]
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
             [ring.middleware.defaults :as ring-mw]
@@ -63,16 +64,16 @@
                  (config/client-secret config-m)
                  (routes/absolute-path :sso-callback)))
 
-(defmethod liberator.representation/render-seq-generic "application/activity+json" [data _]
+(defmethod lr/render-seq-generic "application/activity+json" [data _]
   (json/write-str data))
 
-(defmethod liberator.representation/render-map-generic "application/activity+json" [data context]
+(defmethod lr/render-map-generic "application/activity+json" [data context]
   (json/write-str data))
 
-(defmethod liberator.representation/render-seq-generic "application/json" [data _]
+(defmethod lr/render-seq-generic "application/json" [data _]
   (json/write-str data))
 
-(defmethod liberator.representation/render-map-generic "application/json" [data context]
+(defmethod lr/render-map-generic "application/json" [data context]
   (json/write-str data))
 
 (defn todo [_]
