@@ -3,7 +3,7 @@
   hosts: stonecutter
 
   tasks:
-    
+
     - name: Running update on pkg repositories
       apt: update_cache=yes
       run_once: true
@@ -16,16 +16,20 @@
         - git
         - zsh
 
-    - command: mkdir -p /home/vagrant/bin
-    - name: Downloading lein
-      get_url: dest="/home/vagrant/bin/lein" url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein mode=755
+    - name: Create local bin folder
+      file: path=/home/vagrant/bin state=directory owner=vagrant group=vagrant
 
-    - name: Cloning Stonecutter source from local devel/ repository
-      synchronize: src=/home/jrml/devel/stonecutter/ dest=/home/vagrant/stonecutter/
-        archive=yes
+    - name: Downloading lein
+      get_url: dest="/home/vagrant/bin/lein" url=https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein mode=755 owner=vagrant group=vagrant
+
+    - name: Cloning Stonecutter source
+      git: repo=https://github.com/d-cent/stonecutter.git
+           dest=/home/vagrant/stonecutter
+      become: yes
+      become_user: vagrant
 
     - name: add nodesource apt-key
-      apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
+      apt_key: url=https://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x1655A0AB68576280 state=present
 
     - name: add nodesource deb repo
       apt_repository: repo='deb https://deb.nodesource.com/node_0.12 trusty main' state=present
@@ -54,7 +58,11 @@
     - name: Node.js | Install dependencies
       shell: npm install
         chdir=/home/vagrant/stonecutter
+      become: yes
+      become_user: vagrant
 
     - name: Gulp | Build templates and styles
       shell: gulp build
         chdir=/home/vagrant/stonecutter
+      become: yes
+      become_user: vagrant
