@@ -40,20 +40,15 @@
   (ns-resolve *ns* (symbol (str "freecoin.secretshare/" sym))))
 
 
-(defn shamir-set-header [head]
+(defn shamir-set-header
   "Takes an header and sets it into Tiemen's structure"
-  (let [res
-        (SecretShare.
-         (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
-          (int (:total head))
-          (:quorum head)
-          ((get-prime (:prime head)))
-          (:description head)
-          )
-         )]
-    res
-    )
-  )
+  [head]
+  (SecretShare.
+   (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
+    (int (:total head))
+    (:quorum head)
+    ((get-prime (:prime head)))
+    (:description head))))
 
 (defn shamir-get-header [share]
   "Takes Tiemen's share and extracts a header"
@@ -107,7 +102,7 @@
            c 1]
 
       ;; TODO: check off-by-one on this one
-      
+
       (if (< c (count shares))
         (recur (nth shares c)
                (conj res (com.tiemens.secretshare.engine.SecretShare$ShareInfo.

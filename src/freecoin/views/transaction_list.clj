@@ -75,7 +75,7 @@
 
 (defn build-activity-stream [list wallet-store]
   {"@context"   "https://www.w3.org/ns/activitystreams"
-   "type"      "Container"
-   "name"      "Activity stream"
+   "type"       "Container"
+   "name"       "Activity stream"
    "totalItems" (count list)
-   "items"     (map #(transaction->activity-stream % wallet-store) list)})
+   "items"      (map #(transaction->activity-stream % wallet-store) list)})
