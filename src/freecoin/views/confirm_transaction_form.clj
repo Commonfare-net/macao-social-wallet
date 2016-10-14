@@ -3,14 +3,12 @@
             [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
             [freecoin.config :as config]
-            [freecoin.translation :as t]
-            ))
+            [freecoin.translation :as t]))
 
 (defn confirm-transaction-form-spec [confirmation-uid show-pin-entry]
   (let [submit {:name :submit
                 :type :submit
-                :class "func--confirm-transaction-form--submit"}
-        ]
+                :class "func--confirm-transaction-form--submit"}]
     {:renderer :bootstrap3-stacked
      :fields (if show-pin-entry
                [{:name :secret
@@ -43,5 +41,4 @@
        :body [:div {}
               [:div {:class "transaction-recipient-confirm"}
                (render-recipient recipient amount)]
-              (fh/render-form (confirm-transaction-form-spec confirmation-uid show-pin-entry) (:request context))]
-       })))
+              (fh/render-form (confirm-transaction-form-spec confirmation-uid show-pin-entry) (:request context))]})))

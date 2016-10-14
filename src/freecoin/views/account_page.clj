@@ -29,8 +29,7 @@
 (ns freecoin.views.account-page
   (:require [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
-            [freecoin.translation :as t]
-))
+            [freecoin.translation :as t]))
 
 (defn render-wallet [wallet]
   (let [email (:email wallet)]
@@ -61,6 +60,4 @@
              [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
               (t/locale [:wallet :send])]
              [:a.btn.btn-default {:href (routes/path :get-user-transactions :uid (:uid wallet))}
-              (t/locale [:wallet :list])]
-             ]]
-     }))
+              (t/locale [:wallet :list])]]]}))
