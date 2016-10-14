@@ -50,8 +50,9 @@
     ((get-prime (:prime head)))
     (:description head))))
 
-(defn shamir-get-header [share]
+(defn shamir-get-header
   "Takes Tiemen's share and extracts a header"
+  [share]
   (let [pi (.getPublicInfo share)]
     {:_id (.getUuid pi)
      :quorum (.getK pi)
@@ -62,12 +63,11 @@
               (prime4096) 'prime4096
               (str "UNKNOWN"))
 
-     :description (.getDescription pi)
-     })
-  )
+     :description (.getDescription pi)}))
 
-(defn shamir-get-shares [si]
+(defn shamir-get-shares
   "Takes Tiemen's share and extract a collection of shares"
+  [si]
   (map (fn [_] (.getShare _)) si))
 
 (defn shamir-split
@@ -79,20 +79,17 @@
         header (shamir-get-header (first si))
         shares (shamir-get-shares si)]
 
-    {
-     :header header
-     :shares (map biginteger shares)
-     }
-    )
-  )
+    {:header header
+     :shares (map biginteger shares)}))
 
-(defn shamir-combine [secret]
+(defn shamir-combine
+  "Takes a secret (header and collection of integers) and returns the
+  unlocked big integer"
+  [secret]
   {:pre [(contains? secret :header)
          (contains? secret :shares)
          (coll? (:shares secret))]
    :post [(integer? %)]}
-  "Takes a secret (header and collection of integers) and returns the
-  unlocked big integer"
 
   (let [header (:header secret)
         shares (:shares secret)]
@@ -109,11 +106,7 @@
                            c  s (com.tiemens.secretshare.engine.SecretShare$PublicInfo.
                                  (:total header) (:quorum header)
                                  ((get-prime (:prime header)))
-                                 (:description header))
-                           ))
+                                 (:description header))))
                (inc c))
         ;; return
-        (.getSecret (.combine (shamir-set-header header) res))
-        ))
-    )
-  )
+        (.getSecret (.combine (shamir-set-header header) res))))))
