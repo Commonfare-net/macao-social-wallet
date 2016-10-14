@@ -46,21 +46,4 @@
        (qr/from (format "http://%s:%d/send/to/%s"
                         (:address param/host)
                         (:port param/host)
-                        (:uid (:wallet ctx))))
-       ))
-    )
-  )
-
-
-      ;; else a name is specified
-      ;; (let [wallet (first (storage/find-by-key
-      ;;                      (:db (get-in request [:config :db-connection]))
-      ;;                      "wallets" {:name (rc/percent-decode id)}))]
-
-      ;;   (if (empty? wallet) ""
-      ;;       (qr/as-input-stream
-      ;;        (qr/from (format "http://%s:%d/send/to/%s"
-      ;;                         (:address param/host)
-      ;;                         (:port param/host)
-      ;;                         (:name wallet))))
-      ;;       ))
+                        (:uid (:wallet ctx))))))))
