@@ -26,8 +26,7 @@
   (:require [freecoin.secretshare :as ssss]
             [freecoin.random :as rand]
             [freecoin.utils :as util]
-            [clojure.string :as str]
-            ))
+            [clojure.string :as str]))
 
 (declare render-slice)
 (declare extract-quorum)
@@ -39,17 +38,14 @@
   (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type
           (:integer (rand/create (:length conf)))
           (:integer (rand/create (:length conf)))
-          0)
-  )
+          0))
 
 (defn create-secret
   "Takes a configuration, the blockchain type and optionally two integers, creates a wallet address, returned as a string"
-
   ([conf type]
    (let [ah (:integer (rand/create (:length conf)))
          al (:integer (rand/create (:length conf)))]
-     (create-secret conf type ah al)
-     ))
+     (create-secret conf type ah al)))
 
   ([conf type hi lo]
    {:pre  [(contains? conf :version)
@@ -57,8 +53,8 @@
            (contains? conf :entropy)]
     :post [(= (:total conf) (count (:slices %)))]}
 
-   (let [ah  (ssss/shamir-split conf hi)
-         al  (ssss/shamir-split conf lo)]
+   (let [ah (ssss/shamir-split conf hi)
+         al (ssss/shamir-split conf lo)]
 
      ;; secret wallet rendering
      ;; slices: collection of rendered string slices for ssss
@@ -83,32 +79,26 @@
       ;; to be deleted by http session
       :cookie (render-slice conf type
                             (first (:shares ah))
-                            (first (:shares al)) 1)
+                            (first (:shares al)) 1)})))
 
-      }
-     ))
-  )
-
-(defn unlock-secret [conf secret slice]
+(defn unlock-secret
   "Takes a secret and a cookie, returns a ready to use NXT passphrase"
+  [conf secret slice]
   {:pre [(contains? conf :quorum)
          (contains? secret :slices)]}
   (let [quorum (extract-quorum conf secret slice)
         ah (ssss/shamir-combine (:ah quorum))
         al (ssss/shamir-combine (:al quorum))]
-    (render-slice conf ah al 0))
-  )
+    (render-slice conf ah al 0)))
 
-
-
-(defn extract-quorum [conf secret slice]
+(defn extract-quorum
+  "Takes a config, a secret and a slice and tries to combine the secret and the slice in a collection of integers ready for shamir-combine. Returns a map {:ah :al} with the collections."
+  [conf secret slice]
   {:pre  [(contains? conf :quorum)
           (contains? secret :slices)
           (seq slice)]}
   ;; TODO: fix some off-by-one problem here (assert fails with +1)
   ;; :post [(= (count (get-in % (:ah :shares))) (:quorum conf))]}
-
-  "Takes a config, a secret and a slice and tries to combine the secret and the slice in a collection of integers ready for shamir-combine. Returns a map {:ah :al} with the collections."
 
   (let [ordered (sort-by last (:slices secret))]
   ;; reconstruct a collection of slices
@@ -138,18 +128,14 @@
                      :total (int (:total conf))
                      :prime (:prime conf)
                      :description (:description conf)}
-            :shares (map biginteger (conj cal (extract-int conf (nth (:slices secret) c) "al")))}
-       }
-
-      ))
-  ))
+            :shares (map biginteger (conj cal (extract-int conf (nth (:slices secret) c) "al")))}}))))
 
 (defn render-slice [conf type ah al idx]
-   (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type ah al idx)
-   )
+   (format "%s_%s_%s_FXC_%s_%d" (:prefix conf) type ah al idx))
 
-(defn extract-ahal [conf addr ah-or-al]
+(defn extract-ahal
   "extract the high or low part in an fxc address"
+  [conf addr ah-or-al]
   (try
     (let [toks (str/split (util/trunc addr 128) #"_")]
       (if-not (= (subs (first toks) 0 4) "FXC1")
@@ -161,13 +147,9 @@
 
     (catch Exception e
       (let [error (.getMessage e)]
-        (util/log! 'ERR 'fxc/extract-lo error)
-        ))
+        (util/log! 'ERR 'fxc/extract-lo error)))
 
-    (finally)
-    )
-  )
+    (finally)))
 
 (defn extract-int [conf addr ah-or-al]
-   (extract-ahal conf addr ah-or-al)
-  )
+   (extract-ahal conf addr ah-or-al))

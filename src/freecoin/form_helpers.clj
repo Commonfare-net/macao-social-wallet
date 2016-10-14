@@ -28,14 +28,12 @@
 (ns freecoin.form_helpers
   (:require
    [formidable.core :as fc]
-   [formidable.parse :as fp]
-   ))
+   [formidable.parse :as fp]))
 
 (defn render-form [form-spec request]
   [:div
    (let [problems (:flash request)]
-     (fc/render-form (assoc form-spec :problems problems))
-     )])
+     (fc/render-form (assoc form-spec :problems problems)))])
 
 (defn form-problem
   ([problems] {::form-problems problems})

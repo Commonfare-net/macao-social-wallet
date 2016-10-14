@@ -61,12 +61,11 @@
   (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
         wallet (-> (empty-wallet (uuid-generator) sso-id name email)
                    (assoc :account-id account-id))]
-    {:wallet (mongo/store! wallet-store :uid wallet)
+    {:wallet       (mongo/store! wallet-store :uid wallet)
      :apikey       (secret->apikey              account-secret)
      :participant  (secret->participant-shares  account-secret)
      :organization (secret->organization-shares account-secret)
-     :auditor      (secret->auditor-shares      account-secret)
-     }))
+     :auditor      (secret->auditor-shares      account-secret)}))
 
 (defn fetch [wallet-store uid]
   (mongo/fetch wallet-store uid))

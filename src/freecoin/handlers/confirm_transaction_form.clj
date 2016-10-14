@@ -67,11 +67,10 @@
            :recipient recipient
            :request (:request ctx)}
           (confirm-transaction-form/build show-pin-entry)
-          fv/render-page)))
-  )
+          fv/render-page))))
 
-(defn preserve-session [response request]
-  (assoc response :session (:session request)))
+(defn preserve-session [response {:keys [session]}]
+  (assoc response :session session))
 
 (lc/defresource post-confirm-transaction-form
   [wallet-store confirmation-store blockchain]
@@ -147,6 +146,4 @@
     (-> (routes/absolute-path :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))
         r/redirect
         (fh/flash-form-problem ctx)
-        lr/ring-response
-        )
-    ))
+        lr/ring-response)))
