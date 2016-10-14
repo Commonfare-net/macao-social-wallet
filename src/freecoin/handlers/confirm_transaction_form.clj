@@ -104,12 +104,9 @@
             {:keys [status data problems]}
             (fh/validate-form (confirm-transaction-form/confirm-transaction-form-spec (:uid confirmation) true)
                               (ch/context->params ctx))]
-
         (if (= :ok status)
           {::secret (:secret data)}
-          [false (fh/form-problem problems)])
-        )
-      ))
+          [false (fh/form-problem problems)]))))
 
   :post!
   (fn [ctx]
@@ -125,8 +122,7 @@
        confirmation-store
        (-> ctx ::confirmation :uid))
 
-      {::uid (:uid sender-wallet) ::secret secret}
-      ))
+      {::uid (:uid sender-wallet) ::secret secret}))
 
   :post-redirect?
   (fn [ctx]
