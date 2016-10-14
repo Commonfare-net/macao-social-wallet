@@ -93,15 +93,13 @@ Used to identify the class type."
 (defn- normalize-transactions [list]
   (reverse
    (sort-by :timestamp
-            (map (fn [{:keys [amount]}]
+            (map (fn [{:keys [amount] :as transaction}]
                    (assoc transaction :amount (util/long->bigdecimal amount)))
                  list))))
 
-;;(defn add-transaction-list-params [request-params] filter)
-
 (defn add-transaction-list-params [request-params]
   (reduce-kv (fn [f name updater]
-               (if-let [request-value (get-in request-params [name])]
+               (if-let [request-value (request-params name)]
                  (merge f (updater request-value))
                  f))
              {}
@@ -133,7 +131,7 @@ Used to identify the class type."
                                                  [{"$match" {:to-id account-id}}
                                                   {"$group" {:_id "$to-id"
                                                              :total {"$sum" "$amount"}}}]))
-          sent-map (first (storage/aggregate db "transactions"
+          sent-map  (first (storage/aggregate db "transactions"
                                               [{"$match" {:from-id account-id}}
                                                {"$group" {:_id "$from-id"
                                                           :total {"$sum" "$amount"}}}]))
@@ -148,7 +146,7 @@ Used to identify the class type."
   (get-transaction   [bk account-id txid] nil)
 
   (make-transaction  [bk from-account-id amount to-account-id params]
-    (let [timestamp (time/format (if (nil? (:timestamp params)) (time/now) (:timestamp params)))
+    (let [timestamp (time/format (if-let [time (:timestamp params)] time (time/now)))
           transaction {:_id (str timestamp "-" from-account-id)
                        :blockchain "STUB"
                        :timestamp timestamp
