@@ -76,8 +76,7 @@
   (fn [ctx]
     (let [amount (get-in ctx [::form-data :amount])
           sender-uid (ch/context->signed-in-uid ctx)
-          recipient (::recipient-wallet ctx)
-          ]
+          recipient (::recipient-wallet ctx)]
       (when-let [confirmation (confirmation/new-transaction-confirmation!
                                confirmation-store uuid/uuid
                                sender-uid (:uid recipient) amount)]
@@ -94,6 +93,4 @@
     (-> (routes/absolute-path :get-transaction-form)
         r/redirect
         (fh/flash-form-problem ctx)
-        lr/ring-response
-        )
-    ))
+        lr/ring-response)))

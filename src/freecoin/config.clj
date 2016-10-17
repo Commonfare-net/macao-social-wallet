@@ -1,7 +1,7 @@
 (ns freecoin.config
   (:require [environ.core :as env]))
 
-(def env-vars #{:port :host :base-url :secure
+(def env-vars #{:port :host :base-url :secure :debug
                 :client-id :client-secret :auth-url})
 
 (defn create-config []
@@ -34,6 +34,9 @@
 
 (defn cookie-secret [config-m]
   (get-env config-m :cookie-secret "encryptthecookie"))
+
+(defn debug [config-m]
+  (get-env config-m :debug false))
 
 (defn- get-docker-mongo-uri [config-m]
   (when-let [mongo-ip (get-env config-m :mongo-port-27017-tcp-addr)]

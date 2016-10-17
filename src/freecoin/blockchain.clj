@@ -74,12 +74,18 @@
      blockchain
      currency])
 
-;; this is here jut to explore how introspection works in clojure records
+;; this is here just to explore how introspection works in clojure records
 ;; basically one could just explicit the string "STUB" where this is used
-(defn recname [record]
-  "Return a string which is the name of the record class, uppercase. Used to identify the class type."
-  (str/upper-case (last (str/split (pr-str (class record)) #"\.")))
-  )
+(defn recname
+  "Return a string which is the name of the record class, uppercase.
+Used to identify the class type."
+  [record]
+  (-> record
+      class
+      pr-str
+      (str/split #"\.")
+      last
+      str/upper-case))
 
 ;; TODO
 (defrecord nxt [server port])
@@ -87,25 +93,22 @@
 (defn- normalize-transactions [list]
   (reverse
    (sort-by :timestamp
-            (map (fn [transaction]
-                   (assoc transaction :amount (util/long->bigdecimal (:amount transaction))))
-                 list
-                 ))))
-
-;;(defn add-transaction-list-params [request-params] filter)
+            (map (fn [{:keys [amount] :as transaction}]
+                   (assoc transaction :amount (util/long->bigdecimal amount)))
+                 list))))
 
 (defn add-transaction-list-params [request-params]
   (reduce-kv (fn [f name updater]
-            (if-let [request-value (get-in request-params [name])]
-              (merge f (updater request-value))
-              f))
+               (if-let [request-value (request-params name)]
+                 (merge f (updater request-value))
+                 f))
              {}
-          {:to
-           (fn [v] {:timestamp {"$lt" v}})
-           :from
-           (fn [v] {:timestamp {"$gt" v}})
-           :account-id
-           (fn [v] {"$or" [{:from-id v} {:to-id v}]})}))
+             {:to
+              (fn [v] {:timestamp {"$lt" v}})
+              :from
+              (fn [v] {:timestamp {"$gt" v}})
+              :account-id
+              (fn [v] {"$or" [{:from-id v} {:to-id v}]})}))
 
 ;; inherits from Blockchain and implements its methods
 (defrecord Stub [db]
@@ -132,8 +135,8 @@
                                               [{"$match" {:from-id account-id}}
                                                {"$group" {:_id "$from-id"
                                                           :total {"$sum" "$amount"}}}]))
-          received (if (nil? received-map) 0 (:total received-map))
-          sent      (if (nil? sent-map) 0 (:total sent-map))]
+          received (if received-map (:total received-map) 0)
+          sent     (if sent-map (:total sent-map) 0)]
       (util/long->bigdecimal (- received sent))))
 
   (list-transactions [bk params]
@@ -143,7 +146,7 @@
   (get-transaction   [bk account-id txid] nil)
 
   (make-transaction  [bk from-account-id amount to-account-id params]
-    (let [timestamp (time/format (if (nil? (:timestamp params)) (time/now) (:timestamp params)))
+    (let [timestamp (time/format (if-let [time (:timestamp params)] time (time/now)))
           transaction {:_id (str timestamp "-" from-account-id)
                        :blockchain "STUB"
                        :timestamp timestamp
@@ -158,8 +161,9 @@
 
   (redeem-voucher [bk account-id voucher] nil))
 
-(defn new-stub [db]
+(defn new-stub
   "Check that the blockchain is available, then return a record"
+  [db]
   (Stub. db))
 
 (defn in-memory-filter [entry params]
@@ -197,8 +201,7 @@
                                    (let [list (vals @transactions-atom)]
                                      (if (empty? params)
                                        list
-                                       [(second list)]))
-                                   ))
+                                       [(second list)]))))
 
   (get-transaction   [bk account-id txid] nil)
   (make-transaction  [bk from-account-id amount to-account-id params]

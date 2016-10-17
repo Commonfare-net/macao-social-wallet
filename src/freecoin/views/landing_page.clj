@@ -1,6 +1,5 @@
 (ns freecoin.views.landing-page
-  (:require [freecoin.translation :as t])
-  )
+  (:require [freecoin.translation :as t]))
 
 (defn landing-page [context]
   (let [sign-in-url (:sign-in-url context)]

@@ -39,8 +39,6 @@
     {:wallet wallet}
     [ false
      {:error {:status :fatal
-              :reason "wallet not found"}}
-     ]
-    ))
+              :reason "wallet not found"}}]))
 
 (defn has-api-key [ctx] true)

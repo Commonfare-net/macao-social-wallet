@@ -20,8 +20,7 @@
                     :os-name (.. System getProperties (get "os.name"))
                     :os-version (.. System getProperties (get "os.version"))
                     :os-arch (.. System getProperties (get "os.arch"))}}
-  :handle-ok (fn [ctx] (utils/pretty (::data ctx)))
-  )
+  :handle-ok (fn [ctx] (utils/pretty (::data ctx))))
 
 ;; :handle-ok #(util/pretty (::data %))
 ;; :handle-create #(::data %))

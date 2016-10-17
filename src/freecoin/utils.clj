@@ -30,28 +30,27 @@
 
 (declare log!)
 
-
 (defn pretty [edn]
   {:pre (coll? edn)}
 
   (page/html5
    [:head [:style (-> "json.human.css" clojure.java.io/resource slurp)]]
-   (present/edn->html edn))
-  )
+   (present/edn->html edn)))
 
 (defn trace []
   (format "<a href=\"%s\">Trace</a>"
-          (dev/current-trace-url))
-  )
+          (dev/current-trace-url)))
 
-(defn trunc [s n]
+(defn trunc
+  "Truncate string at length"
+  [s n]
   {:pre [(> n 0)
          (seq s)]} ;; not empty
-  "Truncate string at length"
   (subs s 0 (min (count s) n)))
 
-(defn compress [coll]
+(defn compress
   "Compress a collection removing empty elements"
+  [coll]
   (clojure.walk/postwalk #(if (coll? %) (into (empty %) (remove nil? %)) %) coll))
 
 (defmacro bench
@@ -71,18 +70,20 @@
 (defn dolog [name trace desc]
   (println (format "LOG: %s (%s) %s" name trace desc))
   (liberator.core/log! name trace desc))
+
 ;; tweak here to activate logs
 (defn log! [n t d]
   (condp = n
     'ACK   (dolog n t d)
     'FACT  nil ;; (dolog n t d)
-    (dolog n t d)
-    )
-  )
+    (dolog n t d)))
 
-;; Converting to and from BigDecimal for storage and retrieval from mongo
-(defn bigdecimal->long [bd]
+(defn bigdecimal->long
+  "Convert from BigDecimal to long for storage into mongo"
+  [bd]
   (.longValue (* bd 100000)))
 
-(defn long->bigdecimal [l]
+(defn long->bigdecimal
+  "Convert from long to BigDecimal for retrievals from mongo"
+  [l]
   (/ (BigDecimal. l) 100000))

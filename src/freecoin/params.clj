@@ -26,8 +26,7 @@
 (ns freecoin.params
   (:require [org.httpkit.client :refer [max-body-filter]]
             [environ.core :as env]
-            [freecoin.translation :as trans]
-            ))
+            [freecoin.translation :as trans]))
 
 (def version "software release version" "0.2")
 
@@ -65,8 +64,7 @@
 
    ;; random number generator settings
    :length 8
-   :entropy 3.1
-   })
+   :entropy 3.1})
 
 
 (def nxt {:url "https://nxt.dyne.org:7876/nxt"
@@ -86,10 +84,7 @@
           ;; to true
           ;; :trace-redirects will contain the chain of the
           ;; redirections followed.
-          :follow-redirects true
-          }
-  )
+          :follow-redirects true})
 
 (def currency {:code "FXCTA"
-               :_id "6010841431981818226"}
-  )
+               :_id "6010841431981818226"})

@@ -54,10 +54,7 @@
                  [:td (:amount t)]
                  [:td (-> t :timestamp st/parse (st/format :medium-date-time))
                   ]]))
-            list)
-       ]
-      ]
-     }))
+            list)]]}))
 
 (defn transaction->activity-stream [tx wallet-store]
   (let [from (wallet/fetch-by-account-id wallet-store (:from-id tx))
@@ -66,24 +63,19 @@
      "type"      "Transaction"
      "published" (str (:timestamp tx) "Z")
 
-     "actor"     {"type"      "Person"
-                  "name" (:name from)
-                  }
-     "target"    {"type"      "Person"
-                  "name" (:name to)
-                  }
+     "actor"     {"type" "Person"
+                  "name" (:name from)}
+
+     "target"    {"type" "Person"
+                  "name" (:name to)}
+
      "object"    {"type" (:blockchain tx)
                   "name" (str (:amount tx))
-                  "url" (str (env/env :base-url) "/transactions/" (:_id tx))
-                  }
-     }
-    ))
+                  "url" (str (env/env :base-url) "/transactions/" (:_id tx))}}))
 
 (defn build-activity-stream [list wallet-store]
   {"@context"   "https://www.w3.org/ns/activitystreams"
-   "type"      "Container"
-   "name"      "Activity stream"
+   "type"       "Container"
+   "name"       "Activity stream"
    "totalItems" (count list)
-   "items"     (map #(transaction->activity-stream % wallet-store) list)
-   }
-  )
+   "items"      (map #(transaction->activity-stream % wallet-store) list)})

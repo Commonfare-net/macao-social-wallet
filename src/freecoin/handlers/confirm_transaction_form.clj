@@ -67,11 +67,10 @@
            :recipient recipient
            :request (:request ctx)}
           (confirm-transaction-form/build show-pin-entry)
-          fv/render-page)))
-  )
+          fv/render-page))))
 
-(defn preserve-session [response request]
-  (assoc response :session (:session request)))
+(defn preserve-session [response {:keys [session]}]
+  (assoc response :session session))
 
 (lc/defresource post-confirm-transaction-form
   [wallet-store confirmation-store blockchain]
@@ -105,12 +104,9 @@
             {:keys [status data problems]}
             (fh/validate-form (confirm-transaction-form/confirm-transaction-form-spec (:uid confirmation) true)
                               (ch/context->params ctx))]
-
         (if (= :ok status)
           {::secret (:secret data)}
-          [false (fh/form-problem problems)])
-        )
-      ))
+          [false (fh/form-problem problems)]))))
 
   :post!
   (fn [ctx]
@@ -126,8 +122,7 @@
        confirmation-store
        (-> ctx ::confirmation :uid))
 
-      {::uid (:uid sender-wallet) ::secret secret}
-      ))
+      {::uid (:uid sender-wallet) ::secret secret}))
 
   :post-redirect?
   (fn [ctx]
@@ -147,6 +142,4 @@
     (-> (routes/absolute-path :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))
         r/redirect
         (fh/flash-form-problem ctx)
-        lr/ring-response
-        )
-    ))
+        lr/ring-response)))

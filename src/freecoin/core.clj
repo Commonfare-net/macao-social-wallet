@@ -29,6 +29,7 @@
 (ns freecoin.core
   (:require [org.httpkit.server :as server]
             [liberator.dev :as ld]
+            [liberator.representation :as lr]
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
             [ring.middleware.defaults :as ring-mw]
@@ -50,8 +51,7 @@
             [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
-            [freecoin.handlers.qrcode :as qrcode]
-            ))
+            [freecoin.handlers.qrcode :as qrcode]))
 
 (defn not-found [request]
   {:status 404
@@ -63,20 +63,22 @@
                  (config/client-secret config-m)
                  (routes/absolute-path :sso-callback)))
 
-(defmethod liberator.representation/render-seq-generic "application/activity+json" [data _]
+(defmethod lr/render-seq-generic "application/activity+json" [data _]
   (json/write-str data))
 
-(defmethod liberator.representation/render-map-generic "application/activity+json" [data context]
+(defmethod lr/render-map-generic "application/activity+json" [data _]
   (json/write-str data))
 
-(defmethod liberator.representation/render-seq-generic "application/json" [data _]
+(defmethod lr/render-seq-generic "application/json" [data _]
   (json/write-str data))
 
-(defmethod liberator.representation/render-map-generic "application/json" [data context]
+(defmethod lr/render-map-generic "application/json" [data _]
   (json/write-str data))
 
 (defn todo [_]
-  {:status 503 :body "Work-in-progress" :headers {"Content-Type" "text/html"}})
+  {:status 503
+   :body "Work-in-progress"
+   :headers {"Content-Type" "text/html"}})
 
 (defn handlers [config-m stores-m blockchain]
   (let [wallet-store (storage/get-wallet-store stores-m)
@@ -109,10 +111,16 @@
 
 (defn handle-anti-forgery-error [request]
   (log/warn "ANTY_FORGERY_ERROR - headers: " (:headers request))
-  {:status 403 :body "CSRF token mismatch"})
+  {:status 403
+   :body "CSRF token mismatch"})
+
+(defn defaults [secure?]
+  (if secure?
+    (assoc ring-mw/secure-site-defaults :proxy true)
+    ring-mw/site-defaults))
 
 (defn wrap-defaults-config [session-store secure?]
-  (-> (if secure? (assoc ring-mw/secure-site-defaults :proxy true) ring-mw/site-defaults)
+  (-> (defaults secure?)
       (assoc-in [:session :cookie-name] "freecoin-session")
       (assoc-in [:session :flash] true)
       (assoc-in [:session :store] session-store)
@@ -124,7 +132,7 @@
     handler))
 
 (defn create-app [config-m stores-m blockchain]
-  (let [debug-mode true]
+  (let [debug-mode (config/debug config-m)]
     (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
@@ -132,7 +140,7 @@
         #_(mw-logger/wrap-with-logger))))
 
 ;; launching and halting the app
-(defonce app-state {})
+(defonce app-state (atom {}))
 
 (defn connect-db [app-state]
   (if (:db app-state)
@@ -165,18 +173,18 @@
 
 ;; For running from the repl
 (defn start []
-  (alter-var-root #'app-state (comp launch connect-db)))
+  (swap! app-state (comp launch connect-db)))
 
 (defn stop []
-  (alter-var-root #'app-state (comp disconnect-db halt)))
+  (swap! app-state (comp disconnect-db halt)))
 
 ;; For running using lein-ring server
-(defonce lein-ring-handler nil)
+(defonce lein-ring-handler (atom nil))
 
 (defn lein-ring-init []
   (prn "lein-ring-init")
-  (alter-var-root #'app-state connect-db)
-  (alter-var-root #'lein-ring-handler
+  (swap! app-state connect-db)
+  (swap! lein-ring-handler
                   (fn [_] (let [config-m (config/create-config)
                                 db (:db app-state)
                                 stores-m (storage/create-mongo-stores db)
@@ -185,4 +193,4 @@
                             (create-app config-m stores-m blockchain)))))
 
 (defn lein-ring-stop []
-  (alter-var-root #'app-state disconnect-db))
+  (swap! app-state disconnect-db))

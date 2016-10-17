@@ -1,7 +1,7 @@
 ;; Freecoin - digital social currency toolkit
 
 ;; part of Decentralized Citizen Engagement Technologies (D-CENT)
-;; R&D funded by the European Commission (FP7/CAPS 610349) 
+;; R&D funded by the European Commission (FP7/CAPS 610349)
 
 ;; Copyright (C) 2015 Dyne.org foundation
 ;; Copyright (C) 2015 Thoughtworks, Inc.
@@ -27,24 +27,24 @@
   (:gen-class)
   (:import  [java.security.SecureRandom]))
 
-;; generate a single random digit in the range of 0-9
-(defn digit [max]
+(defn digit
+  "Generate a single random digit in the range of 0-9"
+  [max]
   (.nextInt (java.security.SecureRandom.) max))
 
-
-;; generate a string chaining digits up to length
-(defn intchain [length]
+(defn intchain
+  "Generate a string chaining digits up to length"
+  [length]
   (loop [x    length
          ; make sure the first digit is not a zero
          res (+ 1 (digit 9))]
     (if (> x 1)
       (recur (dec x) (str res (digit 10)))
-      res
-      ))
-  )
+      res)))
 
-;; measures (Shannon) the entropy of a string (returns a float)
-(defn entropy [s]
+(defn entropy
+  "Measure (Shannon) the entropy of a string (returns a float)"
+  [s]
   (let [len (count s), log-2 (Math/log 2)]
     (->> (frequencies s)
          (map (fn [[_ v]]
@@ -52,13 +52,10 @@
                   (-> (Math/log rf) (/ log-2) (* rf) Math/abs))))
          (reduce +))))
 
-;; creates a random biginteger of specified length and entropy above
-;; the specified minimum 
-(defn create [length]
-  "returns a random integer of length as map { :integer :string }"
+(defn create
+  "Create a random `BigInteger' of the given length,
+returning a map with keys [:integer :string]"
+  [length]
   (let [res (intchain length)]
     {:integer (biginteger res)
-     :string (str res)}
-    )
-  )
-
+     :string (str res)}))
