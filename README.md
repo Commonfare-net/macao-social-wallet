@@ -102,7 +102,7 @@ Part of Decentralized Citizen Engagement Technologies (D-CENT)
 
 R&D funded by the European Commission (FP7/CAPS 610349)
 
-Copyright (C) 2015 Dyne.org foundation
+Copyright (C) 2015-2016 Dyne.org foundation
 
 Copyright (C) 2015 Thoughtworks, Inc.
 
@@ -115,6 +115,8 @@ With contributions by:
 - Andrei Biasprozvanny
 - Arjan Scherpenisse
 - Amy Welch
+- Joonas Pekkanen
+- Carlo Sciolla
 
 ```
 This program is free software: you can redistribute it and/or modify

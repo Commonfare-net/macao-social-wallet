@@ -33,15 +33,16 @@
 
 (defn render-participant [wallet]
   [:li {:style "margin: 1em" :class "clj--participant__item"}
-   [:div {:class "card pull-left" }
-    [:span (t/locale [:wallet :name])]
-    [:br]
-    [:span (t/locale [:wallet :email])]
-    [:br]
-    [:span {:class "qrcode pull-left"}
-     [:img {:src (routes/path :qrcode :uid (:uid wallet))} ]]
-    [:span {:class "gravatar pull-right"}
-     [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]]])
+   [:a {:href (str "/participant/" (:uid wallet))}
+    [:div {:class "card pull-left" }
+     [:span (t/locale [:wallet :name]) ": " (:name wallet)]
+     [:br]
+     [:span (t/locale [:wallet :email]) ": " (:email wallet)]
+     [:br]
+     [:span {:class "qrcode pull-left"}
+      [:img {:src (routes/path :qrcode :uid (:uid wallet))} ]]
+     [:span {:class "gravatar pull-right"}
+      [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]]]])
 
 (defn participants-list [content]
   (let [wallets (:wallets content)]
