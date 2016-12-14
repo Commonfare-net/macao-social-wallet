@@ -78,7 +78,9 @@
                                   :main transaction-graph.main}]
              :production {:source-paths ["src" "prod"]
                           :main freecoin.main}
-             :uberjar {:aot :all
+             :uberjar {:dependencies [[ns-tracker "0.3.0"]]
+                       :source-paths ["src" "prod"]
+                       :aot :all
                        :main freecoin.main}}
   :plugins [[lein-ring "0.9.3"]
             [lein-environ "1.0.0"]]
