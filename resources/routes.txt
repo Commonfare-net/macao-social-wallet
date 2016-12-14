@@ -1,4 +1,4 @@
-GET  /                                  landing-page
+GET  /                                  index
 GET  /landing-page                      landing-page
 
 ## SSO (stonecutter)
