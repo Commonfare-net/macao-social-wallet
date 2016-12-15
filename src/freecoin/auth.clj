@@ -31,14 +31,12 @@
 
 (defn is-signed-in [ctx]
   (when-let [uid (ch/context->signed-in-uid ctx)]
-    {:uid uid})
-  )
+    {:uid uid}))
 
 (defn has-wallet [ctx wallet-store]
   (if-let [wallet (wallet/fetch wallet-store (:uid ctx))]
     {:wallet wallet}
-    [ false
-     {:error {:status :fatal
-              :reason "wallet not found"}}]))
+    [false {:error {:status :fatal
+                    :reason "wallet not found"}}]))
 
 (defn has-api-key [ctx] true)

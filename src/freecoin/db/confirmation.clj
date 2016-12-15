@@ -45,4 +45,3 @@
 
 (defn delete! [confirmation-store uid]
   (mongo/delete! confirmation-store uid))
-
