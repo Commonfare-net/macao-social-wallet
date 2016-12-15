@@ -181,6 +181,10 @@
 ;; For running using lein-ring server
 (defonce lein-ring-handler (atom nil))
 
+(defn lein-ring-server [req]
+  (if-let [handler @lein-ring-handler]
+    (handler req)))
+
 (defn lein-ring-init []
   (prn "lein-ring-init")
   (swap! app-state connect-db)

@@ -86,6 +86,6 @@
             [lein-environ "1.0.0"]]
   :ring {:reload-paths ["src"]
          :init freecoin.core/lein-ring-init
-         :handler freecoin.core/lein-ring-handler
+         :handler freecoin.core/lein-ring-server
          :destroy freecoin.core/lein-ring-stop
          :port 8000})
