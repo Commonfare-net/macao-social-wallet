@@ -2,8 +2,7 @@
   (:require [freecoin.config :as config]
             [freecoin.form_helpers :as fh]
             [freecoin.routes :as routes]
-            [freecoin.translation :as t]
-            ))
+            [freecoin.translation :as t]))
 
 (def transaction-form-spec
   {:renderer :bootstrap3-stacked
