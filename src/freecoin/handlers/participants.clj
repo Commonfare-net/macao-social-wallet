@@ -49,12 +49,13 @@
   :exists? #(auth/has-wallet % wallet-store)
 
   :handle-ok (fn [ctx]
-    (if-let [wallet (:wallet ctx)]
-      (-> {:wallet wallet
-           :balance (blockchain/get-balance blockchain (:account-id wallet))}
-          account-page/build
-          fv/render-page)
-      (lr/ring-response (r/redirect "/landing-page")))))
+               (if-let [wallet (or (wallet/fetch wallet-store (get-in ctx [:request :params :uid]))
+                                   (:wallet ctx))]
+                 (-> {:wallet wallet
+                      :balance (blockchain/get-balance blockchain (:account-id wallet))}
+                     account-page/build
+                     fv/render-page)
+                 (lr/ring-response (r/redirect "/landing-page")))))
 
 (lc/defresource query-form [wallet-store]
   :allowed-methods [:get]
