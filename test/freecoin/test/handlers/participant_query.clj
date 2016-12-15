@@ -31,8 +31,20 @@
                                                       (assoc :params {:uid (:uid wallet)})
                                                       (assoc :session {:signed-in-uid (:uid wallet)})))]
                (:status response) => 200
-               (:body response) => (contains (t/locale [:wallet :balance]))
-               )))
+               (:body response) => (contains (t/locale [:wallet :balance]))))
+       (fact "displays the balance of the participant wallet with the given uid"
+             (let [wallet-store (fm/create-memory-store)
+                   blockchain (fb/create-in-memory-blockchain :bk)
+                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                                                           "stonecutter-user-id" "name" "test@email.com"))
+                   her-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                                                            "stonecutter-user-id" "alice" "alice@email.com"))
+                   account-page-handler (fp/account wallet-store blockchain)
+                   response (account-page-handler (-> (rmr/request :get "/account/")
+                                                      (assoc :params {:uid (:uid her-wallet)})
+                                                      (assoc :session {:signed-in-uid (:uid my-wallet)})))]
+               (:status response) => 200
+               (:body response) => (contains (t/locale [:wallet :balance])))))
 
 ;;        (fact "can not be accessed when user is not signed in"))
 
