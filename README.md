@@ -60,11 +60,10 @@ This command will open a browser on localhost port 8000
 The server can be started and stopped from the repl by doing the following
 
 ```
-lein repl
-user=> (use 'freecoin.core)
-user=> (start) ;; starts the server
-user=> (stop) ;; stops the server
-user=> (use 'freecoin.handlers.debug :reload) (stop) (start) ;; refresh specific namespaces
+$ lein repl
+freecoin.core=> (start) ;; starts the server
+freecoin.core=> (stop) ;; stops the server
+freecoin.core=> (use 'freecoin.handlers.debug :reload) (stop) (start) ;; refresh specific namespaces
 ```
 
 ## Live reloading of .clj modules in the repl
