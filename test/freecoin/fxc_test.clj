@@ -40,8 +40,8 @@
 
   ;; manual creation of an nxt address to intercept it in clear
   (def fake {:ah (:integer (rand/create (:length param/encryption)))
-             :al (:integer (rand/create (:length param/encryption)))
-             })
+             :al (:integer (rand/create (:length param/encryption)))})
+
   (def nxtpass (fxc/render-slice param/encryption "STUB" (:ah fake) (:al fake) 0))
 
   (def secret (fxc/create-secret param/encryption "STUB" (:ah fake) (:al fake)))
@@ -49,20 +49,18 @@
 
   (pp/pprint nxtpass)
   (pp/pprint secret)
-  
+
   (fact "cookie is first slice" (first (:slices secret)) => (:cookie secret))
 
   (fact "reversable extraction / hash / conversion for AH"
     (fxc/extract-ahal param/encryption (:cookie secret) "ah")
     =>
-    (fxc/extract-int param/encryption (first (:slices secret)) "ah")
-    )
+    (fxc/extract-int param/encryption (first (:slices secret)) "ah"))
 
   (fact "reversable extraction / hash / conversion for AL"
     (fxc/extract-ahal param/encryption (:cookie secret) "al")
     =>
-    (fxc/extract-int param/encryption (first (:slices secret)) "al")
-    )
+    (fxc/extract-int param/encryption (first (:slices secret)) "al"))
 
   (fact "unlocking secret"
     (let [quorum (fxc/extract-quorum param/encryption secret (:cookie secret))
@@ -73,8 +71,4 @@
       (fxc/render-slice param/encryption "STUB" ah al 0) => nxtpass
       (util/log! 'ACK 'unlocking-secret-test
                  ["Quorum size: " (count (get-in quorum [:ah :shares]))
-                  "expected: " (get-in quorum [:ah :header :quorum])]
-                 )
-      )
-    )
-  )
+                  "expected: " (get-in quorum [:ah :header :quorum])]))))
