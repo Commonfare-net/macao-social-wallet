@@ -58,6 +58,7 @@
                                          [peridot "0.4.4"]
                                          [kerodon "0.8.0"]
                                          [ns-tracker "0.3.0"]]
+                          :repl-options {:init-ns freecoin.core}
                           :env [[:base-url "http://localhost:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
