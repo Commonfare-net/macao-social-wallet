@@ -49,8 +49,7 @@
   :exists? #(auth/has-wallet % wallet-store)
 
   :handle-ok (fn [ctx]
-               (if-let [wallet (or (wallet/fetch wallet-store (get-in ctx [:request :params :uid]))
-                                   (:wallet ctx))]
+               (if-let [wallet (:wallet ctx)]
                  (-> {:wallet wallet
                       :balance (blockchain/get-balance blockchain (:account-id wallet))}
                      account-page/build

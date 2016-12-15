@@ -34,7 +34,8 @@
     {:uid uid}))
 
 (defn has-wallet [ctx wallet-store]
-  (if-let [wallet (wallet/fetch wallet-store (:uid ctx))]
+  (if-let [wallet (wallet/fetch wallet-store (or (get-in ctx [:request :params :uid])
+                                                 (:uid ctx)))]
     {:wallet wallet}
     [false {:error {:status :fatal
                     :reason "wallet not found"}}]))
