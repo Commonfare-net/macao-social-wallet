@@ -29,7 +29,11 @@ Install the **latest** version of Vagrant and VirtualboxISO (be warned, most dis
 
 Then go into the `ops/` directory in Freecoin and run `vagrant up`, this will create and provision a new virtual machine running Freecoin.
 
-Inside `ops/stonecutter` there is another setup to create and run a local Stonecutter SSO with the same command `vagrant up` given inside it.
+Inside `ops/stonecutter` there is another setup to create and run a local Stonecutter SSO with the same command `vagrant up` given inside it. Once the Stonecutter SSO box is up and running, you should `vagrant ssh` into it and:
+
+- edit the `/home/vagrant/stonecutter/resources/client-credentials.yml` to add the Freecoin client ID and secret in your `project.clj`
+- run the application with `/home/vagrant/stonecutter/start_app_vm.sh`
+- verify that Stonecutter is up and running at `http://localhost:5000`
 
 ## Running the app locally
 
