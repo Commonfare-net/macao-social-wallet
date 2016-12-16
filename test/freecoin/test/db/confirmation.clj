@@ -41,7 +41,8 @@
                                         :type :transaction
                                         :data {:sender-uid "sender-uid"
                                                :recipient-uid "recipient-uid"
-                                               :amount 10M}})))
+                                               :amount 10M
+                                               :tags #{}}})))
 
          (fact "can fetch a transaction confirmation by its uid"
                (confirmation/fetch confirmation-store "a-uuid")
@@ -49,7 +50,22 @@
                          :type :transaction
                          :data {:sender-uid "sender-uid"
                                 :recipient-uid "recipient-uid"
-                                :amount 10M}}))))
+                                :amount 10M
+                                :tags #{}}}))
+
+         (fact "transaction confirmations can have tags"
+               (let [confirmation (confirmation/new-transaction-confirmation! confirmation-store
+                                                                              uuid-generator
+                                                                              "sender-uid"
+                                                                              "recipient-uid"
+                                                                              10M
+                                                                              #{:air-drop})]
+                 confirmation => (just {:uid "a-uuid"
+                                        :type :transaction
+                                        :data {:sender-uid "sender-uid"
+                                               :recipient-uid "recipient-uid"
+                                               :amount 10M
+                                               :tags #{:air-drop}}})))))
 
 (fact "Can delete a confirmation"
       (let [confirmation-store (fm/create-memory-store)

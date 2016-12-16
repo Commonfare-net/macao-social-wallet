@@ -29,15 +29,18 @@
   (:require [freecoin.db.mongo :as mongo]
             [freecoin.utils :as util]))
 
-(defn new-transaction-confirmation! [confirmation-store uuid-generator
-                                     sender-uid recipient-uid amount]
-  (let [confirmation {:uid (uuid-generator)
-                      :type :transaction
-                      :data {:sender-uid sender-uid
-                             :recipient-uid recipient-uid
-                             :amount (util/bigdecimal->long amount)}}]
-    (some-> (mongo/store! confirmation-store :uid confirmation)
-            (update-in [:data :amount] util/long->bigdecimal))))
+(defn new-transaction-confirmation!
+  ([confirmation-store uuid-generator sender-uid recipient-uid amount]
+   (new-transaction-confirmation! confirmation-store uuid-generator sender-uid recipient-uid amount #{}))
+  ([confirmation-store uuid-generator sender-uid recipient-uid amount tags]
+   (let [confirmation {:uid (uuid-generator)
+                       :type :transaction
+                       :data {:sender-uid sender-uid
+                              :recipient-uid recipient-uid
+                              :amount (util/bigdecimal->long amount)
+                              :tags tags}}]
+     (some-> (mongo/store! confirmation-store :uid confirmation)
+             (update-in [:data :amount] util/long->bigdecimal)))))
 
 (defn fetch [confirmation-store uid]
   (some-> (mongo/fetch confirmation-store uid)
