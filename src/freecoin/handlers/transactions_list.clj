@@ -75,6 +75,4 @@
   (fn [ctx]
     (let [transactions
           (blockchain/list-transactions blockchain (-> ctx :request :params))]
-        (transaction-list/build-activity-stream transactions wallet-store)
-        )
-    ))
+        (transaction-list/build-activity-stream transactions wallet-store))))

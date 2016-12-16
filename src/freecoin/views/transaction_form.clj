@@ -14,6 +14,10 @@
              :label (t/locale [:transaction :recipient])
              :type :text
              :class "func--transaction-form--recipient"}
+            {:name :tags
+             :label (t/locale [:transaction :tags])
+             :type :text
+             :class "func--transaction-form--tags"}
             {:name :submit
              :type :submit
              :class "func--transaction-form--submit"}]

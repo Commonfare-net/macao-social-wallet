@@ -147,14 +147,17 @@ Used to identify the class type."
 
   (make-transaction  [bk from-account-id amount to-account-id params]
     (let [timestamp (time/format (if-let [time (:timestamp params)] time (time/now)))
+          tags (or (:tags params) #{})
           transaction {:_id (str timestamp "-" from-account-id)
                        :blockchain "STUB"
                        :timestamp timestamp
                        :from-id from-account-id
                        :to-id to-account-id
+                       :tags tags
                        :amount (util/bigdecimal->long amount)}]
       ;; TODO: Keep track of accounts to verify validity of from- and
       ;; to- accounts
+      (println "transaction is" transaction)
       (storage/insert db "transactions" transaction)))
 
   (create-voucher [bk account-id amount expiration secret] nil)
@@ -208,11 +211,13 @@ Used to identify the class type."
     ;; to make tests possible the timestamp here is generated starting from
     ;; the 1 december 2015 plus a number of days that equals the amount
     (let [now (time/format (time/add-days (time/datetime 2015 12 1) amount))
+          tags (or (:tags params) #{})
           transaction {:transaction-id (str now "-" from-account-id)
                        :blockchain "INMEMORYBLOCKCHAIN"
                        :timestamp now
                        :from-id from-account-id
                        :to-id to-account-id
+                       :tags tags
                        :amount amount}]
       (swap! transactions-atom assoc (:transaction-id transaction) transaction)
       transaction))

@@ -27,6 +27,7 @@
 
 (ns freecoin.form_helpers
   (:require
+   [clojure.string :as s]
    [formidable.core :as fc]
    [formidable.parse :as fp]))
 
@@ -48,3 +49,10 @@
                     :problems problems})
     {:status :ok
      :data (fp/parse-params form-spec data)}))
+
+(defmethod fp/parse-input :tags [spec tags]
+  (when (string? tags)
+    (-> tags
+        (s/split #"[;, ]+")
+        (->> (map keyword)
+             (into #{})))))

@@ -110,7 +110,7 @@
 
   :post!
   (fn [ctx]
-    (let [{:keys [sender-uid recipient-uid amount]}
+    (let [{:keys [sender-uid recipient-uid amount tags]}
           (-> ctx ::confirmation :data)
           sender-wallet (wallet/fetch wallet-store sender-uid)
           recipient-wallet (wallet/fetch wallet-store recipient-uid)

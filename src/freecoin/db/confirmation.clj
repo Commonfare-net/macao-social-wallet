@@ -38,9 +38,10 @@
                        :data {:sender-uid sender-uid
                               :recipient-uid recipient-uid
                               :amount (util/bigdecimal->long amount)
-                              :tags tags}}]
-     (some-> (mongo/store! confirmation-store :uid confirmation)
-             (update-in [:data :amount] util/long->bigdecimal)))))
+                              :tags tags}}
+         stored (some-> (mongo/store! confirmation-store :uid confirmation)
+                        (update-in [:data :amount] util/long->bigdecimal))]
+     stored)))
 
 (defn fetch [confirmation-store uid]
   (some-> (mongo/fetch confirmation-store uid)

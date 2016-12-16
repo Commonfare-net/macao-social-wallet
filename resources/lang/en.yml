@@ -11,6 +11,7 @@ wallet:
 transaction:
   amount: "Amount"
   recipient: "Recipient"
+  tags: "Tags"
   enter-pin: "Enter your secret PIN"
   confirm-title: "Confirm transaction"
   confirm-heading: "Please confirm to execute transaction"
