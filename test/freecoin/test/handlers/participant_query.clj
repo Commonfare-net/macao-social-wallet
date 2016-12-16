@@ -21,6 +21,7 @@
     {:sso-id sso-id :name name :email email}))
 
 (facts "about the account page"
+
        (fact "displays the signed-in participant's balance"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
@@ -32,6 +33,7 @@
                                                       (assoc :session {:signed-in-uid (:uid wallet)})))]
                (:status response) => 200
                (:body response) => (contains (t/locale [:wallet :balance]))))
+
        (fact "displays the balance of the participant wallet with the given uid"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
@@ -44,7 +46,18 @@
                                                       (assoc :params {:uid (:uid her-wallet)})
                                                       (assoc :session {:signed-in-uid (:uid my-wallet)})))]
                (:status response) => 200
-               (:body response) => (contains (t/locale [:wallet :balance])))))
+               (:body response) => (contains (t/locale [:wallet :balance]))))
+
+       (fact "gives a 404 when the requested uid doesn't map to an existing wallet"
+             (let [wallet-store (fm/create-memory-store)
+                   blockchain (fb/create-in-memory-blockchain :bk)
+                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                                                           "stonecutter-user-id" "name" "test@email.com"))
+                   account-page-handler (fp/account wallet-store blockchain)
+                   response (account-page-handler (-> (rmr/request :get "/account/")
+                                                      (assoc :params {:uid uuid/uuid})
+                                                      (assoc :session {:signed-in-uid (:uid my-wallet)})))]
+               (:status response) => 404)))
 
 ;;        (fact "can not be accessed when user is not signed in"))
 
@@ -66,6 +79,7 @@
                    query-form-handler (fp/query-form wallet-store)
                    response (-> (th/create-request :get "/participants-query" {})
                                 query-form-handler)]
+
                (:status response) => 401)))
 
 (facts "about the participants query handler"

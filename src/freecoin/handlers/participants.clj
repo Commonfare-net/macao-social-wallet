@@ -35,10 +35,31 @@
             [freecoin.db.wallet :as wallet]
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
+            [freecoin.translation :as t]
             [freecoin.views :as fv]
             [freecoin.views.participants-query-form :as participants-query-form]
             [freecoin.views.participants-list :as participants-list]
             [freecoin.views.account-page :as account-page]))
+
+(defn render-wallet [wallet blockchain]
+  (-> {:wallet wallet
+       :balance (blockchain/get-balance blockchain (:account-id wallet))}
+      account-page/build
+      fv/render-page))
+
+(defn other-participant-wallet
+  "Renders the wallet when the uid of another participant was provided"
+  [participant wallet-store blockchain]
+  (if-let [wallet (wallet/fetch wallet-store participant)]
+    (render-wallet wallet blockchain)
+    (lr/ring-response (r/not-found (t/locale [:participant :not-found])))))
+
+(defn my-wallet
+  "Renders the wallet of the currently authenticated user"
+  [ctx blockchain]
+  (if-let [wallet (:wallet ctx)]
+    (render-wallet wallet blockchain)
+    (lr/ring-response (r/redirect "/landing-page"))))
 
 (lc/defresource account [wallet-store blockchain]
   :allowed-methods [:get]
@@ -49,13 +70,9 @@
   :exists? #(auth/has-wallet % wallet-store)
 
   :handle-ok (fn [ctx]
-               (if-let [wallet (or (wallet/fetch wallet-store (get-in ctx [:request :params :uid]))
-                                   (:wallet ctx))]
-                 (-> {:wallet wallet
-                      :balance (blockchain/get-balance blockchain (:account-id wallet))}
-                     account-page/build
-                     fv/render-page)
-                 (lr/ring-response (r/redirect "/landing-page")))))
+               (if-let [other-participant (get-in ctx [:request :params :uid])]
+                 (other-participant-wallet other-participant wallet-store blockchain)
+                 (my-wallet ctx blockchain))))
 
 (lc/defresource query-form [wallet-store]
   :allowed-methods [:get]
