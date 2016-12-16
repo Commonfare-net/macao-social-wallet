@@ -48,13 +48,14 @@
       [:tbody
        (map (fn [t]
               (let [from (wallet/fetch-by-account-id wallet-store (:from-id t))
-                    to (wallet/fetch-by-account-id wallet-store (:to-id t))]
+                    to (wallet/fetch-by-account-id wallet-store (:to-id t))
+                    tag (fn [t] [:span.tag [:a {:href "#"} t]])]
                 [:tr
                  [:td [:a {:href (routes/path :account :uid (:uid from))} (:name from)]]
                  [:td [:a {:href (routes/path :account :uid (:uid to))} (:name to)]]
                  [:td (:amount t)]
                  [:td (-> t :timestamp st/parse (st/format :medium-date-time))]
-                 [:td (map str (:tags t))]]))
+                 [:td (interpose ", " (map tag (:tags t)))]]))
             list)]]}))
 
 (defn transaction->activity-stream [tx wallet-store]
