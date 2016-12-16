@@ -92,8 +92,7 @@
              (k/visit (routes/absolute-path :get-all-transactions))
              (kc/check-page-is :get-all-transactions ks/transactions-page-body)
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
-             (kc/selector-includes-content [:title] "Transaction list")
-             )))
+             (kc/selector-includes-content [:title] "Transaction list"))))
 
 (facts "Error messages show in form on invalid input"
        (let [memory (atom {})]
@@ -123,9 +122,7 @@
 
              (kc/check-and-follow-redirect "back to form")
              (kc/check-page-is :get-transaction-form [ks/transaction-form--submit])
-             (kc/selector-includes-content [ks/transaction-form--error-message] "Recipient: Not found")
-
-             )))
+             (kc/selector-includes-content [ks/transaction-form--error-message] "Recipient: Not found"))))
 
 
 (facts "Participant can send freecoins to another account by entering PIN. First, PIN is removed from session by visiting 'forget PIN' URL"
@@ -170,7 +167,4 @@
 
              ;; we are on the confirm form; PIN entry is present
              (kc/check-and-follow-redirect "to confirm transaction")
-             (kc/selector-matches-count [ks/confirm-transaction-form--secret] 0)
-
-
-             )))
+             (kc/selector-matches-count [ks/confirm-transaction-form--secret] 0))))
