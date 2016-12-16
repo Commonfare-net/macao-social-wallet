@@ -117,7 +117,8 @@
           secret (::secret ctx)]
       (blockchain/make-transaction blockchain
                                    (:account-id sender-wallet) amount
-                                   (:account-id recipient-wallet) {:secret secret})
+                                   (:account-id recipient-wallet) {:secret secret
+                                                                   :tags tags})
       (confirmation/delete!
        confirmation-store
        (-> ctx ::confirmation :uid))
