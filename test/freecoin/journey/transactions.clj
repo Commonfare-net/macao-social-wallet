@@ -63,6 +63,7 @@
              (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-fill-in ks/transaction-form--tags "dupe, dupe space-separated!")
              (kc/check-and-press ks/transaction-form--submit)
 
              (kc/check-and-follow-redirect "to confirm transaction")
@@ -77,6 +78,7 @@
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :sender-uid))
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
              (kc/selector-includes-content [:title] "Transaction list for sender")
+             (kc/selector-matches-count [:span.tag :a] 2)
 
              (sign-in "recipient")
              (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :recipient-uid))

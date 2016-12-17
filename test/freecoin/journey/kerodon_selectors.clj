@@ -10,6 +10,7 @@
 (def transaction-form--amount :.func--transaction-form--amount)
 (def transaction-form--recipient :.func--transaction-form--recipient)
 (def transaction-form--submit :.func--transaction-form--submit)
+(def transaction-form--tags :.func--transaction-form--tags)
 (def transaction-form--error-message :div.form-problems)
 
 (def confirm-transaction-form--submit :.func--confirm-transaction-form--submit)
