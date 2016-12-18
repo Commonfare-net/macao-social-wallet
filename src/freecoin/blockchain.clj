@@ -108,7 +108,9 @@ Used to identify the class type."
               :from
               (fn [v] {:timestamp {"$gt" v}})
               :account-id
-              (fn [v] {"$or" [{:from-id v} {:to-id v}]})}))
+              (fn [v] {"$or" [{:from-id v} {:to-id v}]})
+              :tags
+              (fn [v] {:tags {"$in" v}})}))
 
 ;; inherits from Blockchain and implements its methods
 (defrecord Stub [db]
@@ -140,6 +142,7 @@ Used to identify the class type."
       (util/long->bigdecimal (- received sent))))
 
   (list-transactions [bk params]
+    (log/debug "getting transactions" params)
     (normalize-transactions
      (storage/find db "transactions" (add-transaction-list-params params))))
 
@@ -157,7 +160,6 @@ Used to identify the class type."
                        :amount (util/bigdecimal->long amount)}]
       ;; TODO: Keep track of accounts to verify validity of from- and
       ;; to- accounts
-      (println "transaction is" transaction)
       (storage/insert db "transactions" transaction)))
 
   (create-voucher [bk account-id amount expiration secret] nil)

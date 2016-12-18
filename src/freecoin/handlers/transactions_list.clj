@@ -37,6 +37,20 @@
             [freecoin.views.transaction-list :as transaction-list]
             [liberator.core :as lc]))
 
+(defn parse-tags [tags]
+  (log/debug "[parse-tags] Tags to parse:" (string? tags))
+  (cond
+    (string? tags) #{tags}
+    (set? tags)   tags
+    :else         #{}))
+
+(defn maybe-merge
+  ([m key val]
+   (maybe-merge m key val identity))
+  ([m key val pred]
+   (if (pred val)
+     (assoc m key val)
+     m)))
 
 (lc/defresource list-user-transactions [wallet-store blockchain]
   :allowed-methods [:get]
@@ -48,10 +62,12 @@
 
   :handle-ok
   (fn [ctx]
-    (-> blockchain
-        (blockchain/list-transactions {:account-id (-> ctx :wallet :account-id)})
-        (transaction-list/build-html wallet-store (:wallet ctx))
-        fv/render-page)))
+    (let [tags (-> ctx :request :params :tags parse-tags)]
+      (-> blockchain
+          (blockchain/list-transactions (-> {:account-id (-> ctx :wallet :account-id)}
+                                            (maybe-merge :tags tags seq)))
+          (transaction-list/build-html tags wallet-store (:wallet ctx))
+          fv/render-page))))
 
 (lc/defresource list-all-transactions [wallet-store blockchain]
   :allowed-methods [:get]
@@ -61,10 +77,12 @@
 
   :handle-ok
   (fn [ctx]
-    (-> blockchain
-        (blockchain/list-transactions (-> ctx :request :params))
-        (transaction-list/build-html wallet-store)
-        fv/render-page)))
+    (let [tags (-> ctx :request :params :tags parse-tags)]
+      (-> blockchain
+          (blockchain/list-transactions (-> ctx :request :params
+                                            (maybe-merge :tags tags seq)))
+          (transaction-list/build-html tags wallet-store)
+          fv/render-page))))
 
 (lc/defresource list-all-activity-streams [wallet-store blockchain]
   :allowed-methods [:get]

@@ -31,32 +31,44 @@
             [simple-time.core :as st]
             [freecoin.db.wallet :as wallet]))
 
-(defn build-html [list wallet-store & [owner-wallet]]
-  (let [title (str "Transaction list" (when (not (nil? owner-wallet)) (str " for " (:name owner-wallet))))]
+(defn build-html [list tags wallet-store & [owner-wallet]]
+  (let [title (str "Transaction list" (when (not (nil? owner-wallet)) (str " for " (:name owner-wallet))))
+        all-tags (reduce into #{} (map :tags list))
+        tag-filter (fn [t]
+                     [:option {:value t
+                               :selected (some #(= t %) tags)} t])]
     {:title title
      :heading title
      :body-class "func--transactions-page--body"
      :body
-     [:table.func--transactions-page--table.table.table-striped
-      [:thead
-       [:tr
-        [:th "From"]
-        [:th "To"]
-        [:th "Amount"]
-        [:th "Time"]
-        [:th "Tags"]]]
-      [:tbody
-       (map (fn [t]
-              (let [from (wallet/fetch-by-account-id wallet-store (:from-id t))
-                    to (wallet/fetch-by-account-id wallet-store (:to-id t))
-                    tag (fn [t] [:span.tag [:a {:href "#"} t]])]
-                [:tr
-                 [:td [:a {:href (routes/path :account :uid (:uid from))} (:name from)]]
-                 [:td [:a {:href (routes/path :account :uid (:uid to))} (:name to)]]
-                 [:td (:amount t)]
-                 [:td (-> t :timestamp st/parse (st/format :medium-date-time))]
-                 [:td (interpose ", " (map tag (:tags t)))]]))
-            list)]]}))
+     [:div
+      [:p "Filter by tags:"
+       [:form {:method "get"}
+        [:select {:multiple true
+                  :name "tags"
+                  :size (min (count all-tags) 5)}
+         (map tag-filter all-tags)]
+        [:p [:button {:type "submit"} "Filter"]]]]
+      [:table.func--transactions-page--table.table.table-striped
+       [:thead
+        [:tr
+         [:th "From"]
+         [:th "To"]
+         [:th "Amount"]
+         [:th "Time"]
+         [:th "Tags"]]]
+       [:tbody
+        (map (fn [t]
+               (let [from (wallet/fetch-by-account-id wallet-store (:from-id t))
+                     to (wallet/fetch-by-account-id wallet-store (:to-id t))
+                     tag (fn [t] [:span.tag [:a {:href "#"} t]])]
+                 [:tr
+                  [:td [:a {:href (routes/path :account :uid (:uid from))} (:name from)]]
+                  [:td [:a {:href (routes/path :account :uid (:uid to))} (:name to)]]
+                  [:td (:amount t)]
+                  [:td (-> t :timestamp st/parse (st/format :medium-date-time))]
+                  [:td (interpose ", " (map tag (:tags t)))]]))
+             list)]]]}))
 
 (defn transaction->activity-stream [tx wallet-store]
   (let [from (wallet/fetch-by-account-id wallet-store (:from-id tx))
