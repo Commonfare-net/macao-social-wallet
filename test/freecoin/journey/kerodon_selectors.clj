@@ -13,6 +13,7 @@
 (def transaction-form--tags :.func--transaction-form--tags)
 (def transaction-form--error-message :div.form-problems)
 
+(def confirm-page-body :.func--confirmation-page--body)
 (def confirm-transaction-form--submit :.func--confirm-transaction-form--submit)
 (def confirm-transaction-form--secret :.func--confirm-transaction-form--secret)
 

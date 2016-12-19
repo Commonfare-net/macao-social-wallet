@@ -1,5 +1,6 @@
 (ns freecoin.journey.kerodon-helpers
   (:require [clojure.string :as string]
+            [net.cgrand.enlive-html :as html]
             [freecoin.db.mongo :as mongo]))
 
 (defn debug
@@ -28,3 +29,8 @@
         (get-in [:request :uri])
         (string/split #"/")
         last)))
+
+(defn body-selector-count [selector]
+  (fn [state]
+    (let [matches (-> state :enlive (html/select selector))]
+      (count matches))))

@@ -46,6 +46,9 @@
              (sign-up "sender")
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
 
+             (k/visit (routes/absolute-path :get-all-transactions))
+             (kh/remember memory :existing-tags (kh/body-selector-count [:select :option]))
+
              ;; visit the "all transactions page" should contain no transactions
              (k/visit (routes/absolute-path :get-all-transactions))
              (kc/check-page-is :get-all-transactions ks/transactions-page-body)
@@ -89,12 +92,14 @@
              (kc/check-page-is :get-user-transactions ks/transactions-page-body :uid (kh/recall memory :recipient-uid))
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
              (kc/selector-includes-content [:title] "Transaction list for recipient")
+             (kc/selector-matches-count [:select :option] 2)
 
              ;; visit the "all transactions page" should also contain a single transaction
              (k/visit (routes/absolute-path :get-all-transactions))
              (kc/check-page-is :get-all-transactions ks/transactions-page-body)
              (kc/selector-matches-count ks/transactions-page--table-rows 1)
-             (kc/selector-includes-content [:title] "Transaction list"))))
+             (kc/selector-includes-content [:title] "Transaction list")
+             (kc/selector-matches-count [:select :option] (+ 2 (kh/recall memory :existing-tags))))))
 
 (facts "Error messages show in form on invalid input"
        (let [memory (atom {})]
@@ -138,6 +143,9 @@
              (sign-up "sender")
              (kh/remember memory :sender-uid kh/state-on-account-page->uid)
 
+             (k/visit (routes/absolute-path :get-all-transactions))
+             (kh/remember memory :existing-tags (kh/body-selector-count [:select :option]))
+
              ;; visit /forget-secret to explicitly scrub the PIN from the session
              (k/visit (routes/absolute-path :forget-secret))
              (kc/check-and-follow-redirect "back to account page")
@@ -169,4 +177,66 @@
 
              ;; we are on the confirm form; PIN entry is present
              (kc/check-and-follow-redirect "to confirm transaction")
-             (kc/selector-matches-count [ks/confirm-transaction-form--secret] 0))))
+             (kc/selector-matches-count [ks/confirm-transaction-form--secret] 0)
+
+             (k/visit (routes/absolute-path :get-all-transactions))
+             (kc/selector-matches-count [:select :option] (kh/recall memory :existing-tags)))))
+
+(facts "Participants can filter transactions by tag"
+       (let [memory (atom {})]
+         (-> (k/session test-app)
+
+             (sign-up "recipient")
+             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             sign-out
+
+             (sign-up "sender")
+             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+
+             ;; remember the current transaction tags count
+             (k/visit (routes/absolute-path :get-all-transactions))
+                                        ;(kh/remember memory )
+             (kh/remember memory :existing-tags (kh/body-selector-count [:select :option]))
+
+             ;; do two transactions with overlapping tags:
+             ;; tx one:
+             (k/visit (routes/absolute-path :get-transaction-form))
+             (kc/check-page-is :get-transaction-form ks/transactions-page-body)
+             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-fill-in ks/transaction-form--tags "tx-one tx-shared")
+             (kc/check-and-press ks/transaction-form--submit)
+             (kc/check-and-follow-redirect "to confirm first transaction")
+             (kh/remember memory :confirmation-uid kh/state-on-account-page->uid)
+             (kc/check-page-is :get-confirm-transaction-form ks/confirm-page-body :confirmation-uid (kh/recall memory :confirmation-uid ))
+             (kc/check-and-fill-in ks/confirm-transaction-form--secret "asdf")
+             (kc/check-and-press ks/confirm-transaction-form--submit)
+             (kc/check-and-follow-redirect "to sender's account page")
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+
+             ;; tx two:
+             (k/visit (routes/absolute-path :get-transaction-form))
+             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-fill-in ks/transaction-form--tags "tx-two tx-shared")
+             (kc/check-and-press ks/transaction-form--submit)
+             (kc/check-and-follow-redirect "to confirm second transaction")
+             (kc/check-and-press ks/confirm-transaction-form--submit)
+             (kc/check-and-follow-redirect "to sender's account page")
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+
+             ;; do a third transaction with a completely new tag
+             (k/visit (routes/absolute-path :get-transaction-form))
+             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-fill-in ks/transaction-form--tags "tx-three")
+             (kc/check-and-press ks/transaction-form--submit)
+             (kc/check-and-follow-redirect "to confirm third transaction")
+             (kc/check-and-press ks/confirm-transaction-form--submit)
+             (kc/check-and-follow-redirect "to sender's account page")
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+
+             ;; visit the transactions page and verify that one transaction is found
+             (k/visit (routes/absolute-path :get-all-transactions))
+
+             (kc/selector-matches-count [:select :option] (+ 4 (kh/recall memory :existing-tags))))))

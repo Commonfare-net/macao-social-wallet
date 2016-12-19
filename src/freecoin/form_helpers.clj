@@ -54,5 +54,6 @@
   (when (string? tags)
     (-> tags
         (s/split #"[;, ]+")
-        (->> (map keyword)
+        (->> (filter (comp not empty?))
+             (map keyword)
              (into #{})))))

@@ -38,6 +38,7 @@
           recipient (-> context :recipient)]
       {:title (t/locale [:transaction :confirm-title])
        :heading (t/locale [:transaction :confirm-heading])
+       :body-class "func--confirmation-page--body"
        :body [:div {}
               [:div {:class "transaction-recipient-confirm"}
                (render-recipient recipient amount)]

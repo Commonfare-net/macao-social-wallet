@@ -45,8 +45,7 @@
 (defn check-page-is-json [state route-action & route-params]
   (apply page-route-is state route-action route-params)
   (response-status-is state 200)
-  (content-type-is state "application/json")
-  )
+  (content-type-is state "application/json"))
 
 (defn check-and-follow-redirect
   ([state description]
@@ -81,4 +80,3 @@
   (fact {:midje/name (format "Check if selector %s occurs %d times" (str selector) times)}
         (-> state :enlive (html/select selector) count) => times)
   state)
-
