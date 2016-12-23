@@ -29,16 +29,6 @@
             [freecoin.blockchain :as blockchain]
             [freecoin.views.tags :as tv]))
 
-(defn get-tags-and-counts
-  "Retrieves all the tags in the system, together with the count of transactions
-that were tagged with each of them."
-  [blockchain]
-  (let [tags (blockchain/list-tags blockchain {})]
-    (reduce-kv (fn [acc tag txs]
-                 (assoc acc (count txs)))
-               {}
-               tags)))
-
 (lc/defresource get-tags [blockchain]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
