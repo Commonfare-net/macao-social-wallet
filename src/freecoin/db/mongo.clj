@@ -69,7 +69,7 @@
           (dissoc :_id))))
 
   (query [this query]
-    (->> (mc/find-maps mongo-db coll query)
+     (->> (mc/find-maps mongo-db coll query)
          (map #(dissoc % :_id))))
 
   (delete! [this k]

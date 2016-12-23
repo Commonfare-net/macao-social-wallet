@@ -50,6 +50,7 @@
   (list-transactions [bk params])
   (get-transaction   [bk account-id txid])
   (make-transaction  [bk from-account-id amount to-account-id params])
+  (list-tags         [bk params])
 
   ;; vouchers
   (create-voucher [bk account-id amount expiration secret])
@@ -97,11 +98,13 @@ Used to identify the class type."
                    (assoc transaction :amount (util/long->bigdecimal amount)))
                  list))))
 
+(defn merge-params [params f name updater]
+  (if-let [request-value (params name)]
+    (merge f (updater request-value))
+    f))
+
 (defn add-transaction-list-params [request-params]
-  (reduce-kv (fn [f name updater]
-               (if-let [request-value (request-params name)]
-                 (merge f (updater request-value))
-                 f))
+  (reduce-kv (partial merge-params request-params)
              {}
              {:to
               (fn [v] {:timestamp {"$lt" v}})
@@ -111,6 +114,12 @@ Used to identify the class type."
               (fn [v] {"$or" [{:from-id v} {:to-id v}]})
               :tags
               (fn [v] {:tags {"$in" v}})}))
+
+(defn add-tags-list-params [request-params]
+  (reduce-kv (partial merge-params request-params)
+             {}
+             {:account-id
+              (fn [v] {"$or" [{:from-id v} {:to-id v}]})}))
 
 ;; inherits from Blockchain and implements its methods
 (defrecord Stub [db]
@@ -161,6 +170,18 @@ Used to identify the class type."
       ;; TODO: Keep track of accounts to verify validity of from- and
       ;; to- accounts
       (storage/insert db "transactions" transaction)))
+
+  (list-tags [bk params]
+    (let [by-tag [{:$unwind :$tags}]
+          tags-params (apply conj by-tag (if (coll? params)
+                                             params
+                                             [params]))
+          params (into tags-params [{:$group {:_id "$tags"
+                                              :count {"$sum" 1}}}])
+          tags (storage/aggregate db "transactions" params)]
+      (mapv (fn [{:keys [_id count]}]
+              {:tag   _id
+               :count count}) tags)))
 
   (create-voucher [bk account-id amount expiration secret] nil)
 

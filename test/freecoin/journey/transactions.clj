@@ -5,6 +5,7 @@
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.journey.kerodon-helpers :as kh]
+            [freecoin.journey.helpers :as jh]
             [freecoin.test-helpers.integration :as ih]
             [freecoin.db.storage :as s]
             [freecoin.blockchain :as blockchain]
@@ -25,10 +26,7 @@
   (soc/request-access-token! anything "recipient") => {:user-info {:sub "recipient"
                                                                    :email "recipient@email.com"}})
 
-(defn sign-up [state auth-code]
-  (-> state
-      (k/visit (str (routes/absolute-path :sso-callback) "?code=" auth-code))
-      (kc/check-and-follow-redirect "to account page")))
+(def sign-up jh/sign-up)
 
 (def sign-in sign-up)
 

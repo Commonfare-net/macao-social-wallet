@@ -37,9 +37,7 @@
    (fn [[code sub email]]
      (background
       (soc/request-access-token! anything code) => {:user-info {:sub sub
-                                                                :email email}}
-      )
-     )
+                                                                :email email}}))
    users))
 
 (defn log-inline [state & args]

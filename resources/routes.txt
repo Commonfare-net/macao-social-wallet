@@ -13,6 +13,8 @@ GET  /qrcode/:uid                       qrcode
 GET  /transactions/:uid                 get-user-transactions
 GET  /transactions                      get-all-transactions
 
+GET  /tags                              get-all-tags
+
 GET  /participant-query                 get-participant-search-form
 GET  /participants                      participants
 

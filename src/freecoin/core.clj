@@ -48,6 +48,7 @@
             [freecoin.handlers.sign-in :as sign-in]
             [freecoin.handlers.participants :as participants]
             [freecoin.handlers.transaction-form :as transaction-form]
+            [freecoin.handlers.tags :as tags]
             [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
@@ -101,6 +102,9 @@
 
      :get-transaction-form          (transaction-form/get-transaction-form          wallet-store)
      :post-transaction-form         (transaction-form/post-transaction-form         wallet-store confirmation-store)
+
+     :get-all-tags                  (tags/get-tags blockchain)
+
      :get-confirm-transaction-form  (confirm-transaction-form/get-confirm-transaction-form  wallet-store confirmation-store)
      :post-confirm-transaction-form (confirm-transaction-form/post-confirm-transaction-form wallet-store confirmation-store blockchain)
      :get-user-transactions         (transactions-list/list-user-transactions        wallet-store blockchain)
