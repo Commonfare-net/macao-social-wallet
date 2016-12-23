@@ -1,7 +1,6 @@
 (ns freecoin.views.tags)
 
 (defn build-html [tags]
-  (println "XXXX" tags)
   {:title "Tags"
    :heading "Tags"
    :body-class "func--tags-page--body"

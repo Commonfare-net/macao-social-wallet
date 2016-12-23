@@ -39,7 +39,6 @@
 
              ;; visit the tags page and show that there is no tag
              (k/visit (routes/absolute-path :get-all-tags))
-             kh/debug
              (kc/check-page-is :get-all-tags ks/tags-page-body)
              (kc/selector-includes-content [:title] "Tags")
              (kc/selector-matches-count ks/tags-page--table-rows 0)
@@ -50,10 +49,14 @@
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-fill-in ks/transaction-form--tags "dupe, dupe space-separated! 日本語")
              (kc/check-and-press ks/transaction-form--submit)
+             (kc/check-and-follow-redirect "to confirm transaction")
+             (kc/check-and-press ks/confirm-transaction-form--submit)
+             (kc/check-and-follow-redirect "to sender's account page")
+             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+             (kc/selector-includes-content [ks/account-page--balance] "-10")
 
              ;; visit the tags page and show that there are three tags
              (k/visit (routes/absolute-path :get-all-tags))
-             kh/debug
              (kc/check-page-is :get-all-tags ks/tags-page-body)
              (kc/selector-includes-content [:title] "Tags")
              (kc/selector-matches-count ks/tags-page--table-rows 3))))
