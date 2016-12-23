@@ -10,9 +10,11 @@
      [:thead
       [:tr
        [:th "Tag"]
-       [:th "# tagged transactions"]]]
+       [:th "# tagged transactions"]
+       [:th "Moved value"]]]
      [:tbody
-      (for [{:keys [tag count]} tags]
+      (for [{:keys [tag count amount]} tags]
         [:tr
          [:td tag]
-         [:td count]])]]]})
+         [:td count]
+         [:td amount]])]]]})

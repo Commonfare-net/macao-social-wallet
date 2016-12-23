@@ -177,11 +177,13 @@ Used to identify the class type."
                                              params
                                              [params]))
           params (into tags-params [{:$group {:_id "$tags"
-                                              :count {"$sum" 1}}}])
+                                              :count {"$sum" 1}
+                                              :amount {"$sum" "$amount"}}}])
           tags (storage/aggregate db "transactions" params)]
-      (mapv (fn [{:keys [_id count]}]
+      (mapv (fn [{:keys [_id count amount]}]
               {:tag   _id
-               :count count}) tags)))
+               :count count
+               :amount (util/long->bigdecimal amount)}) tags)))
 
   (create-voucher [bk account-id amount expiration secret] nil)
 
