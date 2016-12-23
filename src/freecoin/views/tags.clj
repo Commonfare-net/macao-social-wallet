@@ -22,20 +22,21 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.views.tags)
+(ns freecoin.views.tags
+  (:require [freecoin.translation :as t]))
 
 (defn build-html [tags]
-  {:title "Tags"
-   :heading "Tags"
+  {:title (t/locale [:tags :page :title])
+   :heading (t/locale [:tags :page :title])
    :body-class "func--tags-page--body"
    :body
    [:div
     [:table.func--tags-page--table.table.table-striped
      [:thead
       [:tr
-       [:th "Tag"]
-       [:th "# tagged transactions"]
-       [:th "Moved value"]]]
+       [:th (t/locale [:tags :page :table :tag])]
+       [:th (t/locale [:tags :page :table :count])]
+       [:th (t/locale [:tags :page :table :value])]]]
      [:tbody
       (for [{:keys [tag count amount]} tags]
         [:tr

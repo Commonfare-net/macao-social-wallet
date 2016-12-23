@@ -19,3 +19,11 @@ transaction:
 participant:
   list-title: "Participants"
   not-found: "No participant found"
+
+tags:
+  page:
+    title: "Tags"
+    table:
+      tag: "Tag"
+      count: "# tagged transactions"
+      value: "Total moved value"
