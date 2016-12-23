@@ -22,3 +22,4 @@
 
 (def tags-page-body :.func--tags-page--body)
 (def tags-page--table-rows [:.func--tags-page--table :tbody :tr])
+(def tags-page--table-rows--amount [:.func--tags-page--table :tbody :*:last-child])
