@@ -45,9 +45,9 @@
              ]
   :env [[:base-url "http://localhost:8000"]
 
-        ;; trasnlation is configured here, strings are hard-coded at compile time
+        ;; translation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
-        [:translation-language "lang/it.yml"]
+        [:translation-language "lang/en.yml"]
         [:translation-fallback "lang/en.yml"]]
 
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
