@@ -9,13 +9,19 @@ wallet:
   list: "List transactions"
 
 transaction:
+  make: "Make a transaction"
+  send: "Send an amount"
   amount: "Amount"
   recipient: "Recipient"
   tags: "Tags"
   enter-pin: "Enter your secret PIN"
   confirm-title: "Confirm transaction"
   confirm-heading: "Please confirm to execute transaction"
-
+  required-field: "Required field"
+  too-small-amount: "Amount too small"
+  invalid-amount: "Invalid amount"
+  invalid-recipient: "Invalid recipient"
+  
 participant:
   list-title: "Participants"
   not-found: "No participant found"

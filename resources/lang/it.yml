@@ -3,6 +3,24 @@
 wallet:
   welcome: "Benvenuti su Freecoin"
   name: "Nome"
+  email: "Email"
   balance: "Bilancio"
   send: "Invia somma"
   list: "Elenco transazioni"
+
+transaction:
+  make: "Fai una transazione"
+  send: "Invia somma"
+  amount: "Quantita'"
+  recipient: "Destinatario"
+  enter-pin: "Inserisci il tuo PIN segreto"
+  confirm-title: "Conferma la transazione"
+  confirm-headeing: "Conferma l'esecuzione delle transazioni"
+  required-field: "Informazione necessaria"
+  too-small-amount: "Quantita' troppo piccola"
+  invalid-amount: "Quantita' invalida"
+  invalid-recipient: "Destinatario invalido"
+
+participant:
+  list-title: "Participanti"
+  not-found: "Nessun partecipante trovato"

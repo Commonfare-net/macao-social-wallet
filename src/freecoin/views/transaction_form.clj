@@ -22,18 +22,18 @@
              :type :submit
              :class "func--transaction-form--submit"}]
    :validations [[:required [:amount :recipient]
-                  "Required field"]
-                 [:min-val 0.01 [:amount]
-                  "Amount too small"]
+                  (t/locale [:transaction :required-field])]
                  [:decimal [:amount]
-                  "Invalid type for amount"]
+                  (t/locale [:transaction :invalid-amount])]
+                 [:min-val 0.01 [:amount]
+                  (t/locale [:transaction :too-small-amount])]
                  [:string [:recipient]
-                  "Invalid type for recipient"]]
+                  (t/locale [:transaction :invalid-recipient])]]
    :validate-types false
    :action (routes/absolute-path :post-transaction-form)
    :method "post"})
 
 (defn build [request]
-  {:title "Make a transaction"
-   :heading (str "Send freecoins")
+  {:title (t/locale [:transaction :make])
+   :heading (t/locale [:transaction :send])
    :body (fh/render-form transaction-form-spec request)})
