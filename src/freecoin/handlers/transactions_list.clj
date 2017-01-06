@@ -42,6 +42,7 @@
   (cond
     (string? tags) #{tags}
     (set? tags)   tags
+    (coll? tags)  (into #{} tags)
     :else         #{}))
 
 (defn maybe-merge
