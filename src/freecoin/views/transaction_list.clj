@@ -44,11 +44,12 @@
      [:div
       [:p "Filter by tags:"
        [:form {:method "get"}
-        [:select {:multiple true
-                  :name "tags"
-                  :size (min (count all-tags) 5)}
+        [:select.form-control
+         {:multiple true
+          :name "tags"
+          :size (min (count all-tags) 5)}
          (map tag-filter all-tags)]
-        [:p [:button {:type "submit"} "Filter"]]]]
+        [:p [:button.form-control {:type "submit"} "Filter"]]]]
       [:table.func--transactions-page--table.table.table-striped
        [:thead
         [:tr
