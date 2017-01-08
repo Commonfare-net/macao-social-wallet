@@ -37,7 +37,9 @@
             [freecoin.views.transaction-list :as transaction-list]
             [liberator.core :as lc]))
 
-(defn parse-tags [tags]
+(defn parse-tags
+  "Transform tags coming as input parameters to a REST endpoint into a set of strings"
+  [tags]
   (cond
     (string? tags) (if (seq tags) #{tags} #{})
     (set? tags)   tags
@@ -45,6 +47,7 @@
     :else         #{}))
 
 (defn maybe-merge
+  "Merges a key val pair into map if val is truthy or satisfies pred."
   ([m key val]
    (maybe-merge m key val identity))
   ([m key val pred]
