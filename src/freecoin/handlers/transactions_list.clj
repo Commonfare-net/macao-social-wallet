@@ -38,9 +38,8 @@
             [liberator.core :as lc]))
 
 (defn parse-tags [tags]
-  (log/debug "[parse-tags] Tags to parse:" (string? tags))
   (cond
-    (string? tags) #{tags}
+    (string? tags) (if (seq tags) #{tags} #{})
     (set? tags)   tags
     (coll? tags)  (into #{} tags)
     :else         #{}))

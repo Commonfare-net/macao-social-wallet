@@ -11,6 +11,7 @@
 
 ;; With contributions by
 ;; Amy Welch <awelch@thoughtworks.com>
+;; Carlo Sciolla <carlo.sciolla@gmail.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -228,3 +229,14 @@
 
                   (fact "redirects to signed-in participant's account page"
                         response => (th/check-redirects-to (absolute-path :account :uid (:uid sender-wallet))))))))
+
+(facts "about parsing the tags parameter"
+       (tabular (fact "Tags are optional, and can be provided as one or multiple entries"
+                      (tl/parse-tags ?tags) => ?expected)
+                ?tags          ?expected
+                nil            #{}
+                ""             #{}
+                "one"          #{"one"}
+                ["one" "two"]  #{"one" "two"}
+                ["one" "one"]  #{"one"}
+                #{"one" "two"} #{"one" "two"}))
