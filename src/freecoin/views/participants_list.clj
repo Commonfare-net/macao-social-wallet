@@ -33,7 +33,7 @@
 
 (defn render-participant [wallet]
   [:li {:style "margin: 1em" :class "clj--participant__item"}
-   [:a {:href (str "/participant/" (:uid wallet))}
+   [:a {:href (str "/account/" (:uid wallet))}
     [:div {:class "card pull-left" }
      [:span (t/locale [:wallet :name]) ": " (:name wallet)]
      [:br]
