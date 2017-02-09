@@ -27,7 +27,7 @@
 
 (ns freecoin.journey.activitystreams
   (:require [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [freecoin.blockchain :as blockchain]
             [freecoin.config :as c]
             [freecoin.db.storage :as s]

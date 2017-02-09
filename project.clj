@@ -4,11 +4,7 @@
   :license {:name "GNU GPL Affero v3 and "
             :url "http://www.d-centproject.eu"}
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/tools.logging "0.3.1"]
-                 [log4j/log4j "1.2.17" :exclusions [javax.mail/mail
-                                                    javax.jms/jms
-                                                    com.sun.jmdk/jmxtools
-                                                    com.sun.jmx/jmxri]]
+                 [com.taoensso/timbre "4.8.0"]
                  [liberator "0.14.1"]
                  [clj-http "3.1.0"]
                  [scenic "0.2.5"]

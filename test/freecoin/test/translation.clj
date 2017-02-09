@@ -1,7 +1,7 @@
 (ns freecoin.test.translation
   (:require [midje.sweet :refer :all]
             [freecoin.translation :as trans]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
   ))
 
 (facts "Can load translations from a file"

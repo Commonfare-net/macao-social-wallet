@@ -1,7 +1,7 @@
 (ns freecoin.journey.kerodon-checkers
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [freecoin.routes :as r]
             [kerodon.core :as k]
             [midje.sweet :refer :all]

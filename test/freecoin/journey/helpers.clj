@@ -1,5 +1,5 @@
 (ns freecoin.journey.helpers
-  (:require [clojure.tools.logging :as log]
+  (:require [taoensso.timbre :as log]
             [freecoin.blockchain :as blockchain]
             [freecoin.config :as c]
             [freecoin.db.storage :as s]
