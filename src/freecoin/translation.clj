@@ -23,7 +23,7 @@
 
 (ns freecoin.translation
   (:require
-   [clojure.tools.logging :as log]
+   [taoensso.timbre :as log]
    [clj-yaml.core :as yaml]
    [clojure.java.io :as io]
    [clojure.string :as str]

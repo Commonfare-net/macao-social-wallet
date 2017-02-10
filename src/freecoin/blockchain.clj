@@ -28,7 +28,7 @@
 
 (ns freecoin.blockchain
   (:require [clojure.string :as str]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [freecoin.fxc :as fxc]
             [freecoin.params :as param]
             [freecoin.storage :as storage]

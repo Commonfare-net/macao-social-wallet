@@ -26,7 +26,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.routes
-  (:require [clojure.tools.logging :as log]
+  (:require [taoensso.timbre :as log]
             [scenic.routes :as scenic]
             [bidi.bidi :as bidi]
             [freecoin.config :as config]))

@@ -29,7 +29,7 @@
   (:require [liberator.core :as lc]
             [liberator.representation :as lr]
             [ring.util.response :as r]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [freecoin.utils :as utils]
             [freecoin.auth :as auth]
             [freecoin.db.wallet :as wallet]

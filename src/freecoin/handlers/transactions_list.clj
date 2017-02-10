@@ -28,7 +28,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.handlers.transactions-list
-  (:require [clojure.tools.logging :as log]
+  (:require [taoensso.timbre :as log]
             [freecoin.auth :as auth]
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]

@@ -30,7 +30,7 @@
   (:require [org.httpkit.server :as server]
             [liberator.dev :as ld]
             [liberator.representation :as lr]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [clojure.data.json :as json]
             [ring.middleware.defaults :as ring-mw]
             [ring.middleware.cookies :refer [wrap-cookies]]
