@@ -40,7 +40,7 @@
       [:span (str (t/locale [:wallet :email]) ": ") [:a {:href (str "mailto:" email)} email]]
       [:br]
       [:span {:class "qrcode pull-left"}
-       [:img {:src (routes/path :qrcode :uid (:uid wallet))}]]
+       [:img {:src (routes/path :qrcode :email (:email wallet))}]]
       [:span {:class "gravatar pull-right"}
        [:img {:src (clavatar/gravatar (:email wallet) :size 87 :default :mm)}]]
       [:div {:class "clearfix"}]]]))
@@ -59,5 +59,5 @@
             [:div
              [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
               (t/locale [:wallet :send])]
-             [:a.btn.btn-default {:href (routes/path :get-user-transactions :uid (:uid wallet))}
+             [:a.btn.btn-default {:href (routes/path :get-user-transactions :email (:email wallet))}
               (t/locale [:wallet :list])]]]}))

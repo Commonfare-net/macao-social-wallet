@@ -28,7 +28,8 @@
             [freecoin.auth :as auth]
             [freecoin.db.wallet :as wallet]
             [freecoin.context-helpers :as ch]
-            [clj.qrgen :as qr]))
+            [clj.qrgen :as qr]
+            [taoensso.timbre :as log]))
 
 
 (lc/defresource qr-participant-sendto [wallet-store]
@@ -41,9 +42,9 @@
 
   :handle-ok
   (fn [ctx]
-    (if-let [uid (:uid (:wallet ctx))]
+    (if-let [email (log/warn (:email (:wallet ctx)))]
       (qr/as-input-stream
        (qr/from (format "http://%s:%d/send/to/%s"
                         (:address param/host)
                         (:port param/host)
-                        (:uid (:wallet ctx))))))))
+                        (:email (:wallet ctx))))))))

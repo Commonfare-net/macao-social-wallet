@@ -33,14 +33,14 @@
             [stonecutter-oauth.client :as soc]
             [freecoin.config :as config]
             [freecoin.routes :as routes]
-            [freecoin.db.uuid :as uuid]
             [freecoin.db.wallet :as wallet]
             [freecoin.blockchain :as blockchain]
             [freecoin.context-helpers :as ch]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
-            [freecoin.views.index-page :as index-page]))
+            [freecoin.views.index-page :as index-page]
+            [taoensso.timbre :as log]))
 
 (lc/defresource index-page
   :allowed-methods [:get]
@@ -53,14 +53,14 @@
   :available-media-types ["text/html"]
 
   :exists? (fn [ctx]
-             (if-let [uid (:uid (auth/is-signed-in ctx))]
-               (let [wallet (wallet/fetch wallet-store uid)]
+             (if-let [email (:email (auth/is-signed-in ctx))]
+               (let [wallet (wallet/fetch wallet-store email)]
                  {:wallet wallet})
                {}))
 
   :handle-ok (fn [ctx]
                (if-let [wallet (:wallet ctx)]
-                 (-> (routes/absolute-path :account :uid (:uid wallet))
+                 (-> (routes/absolute-path :account :email (:email wallet))
                      r/redirect
                      lr/ring-response)
                  (-> {:sign-in-url "/sign-in-with-sso"}
@@ -92,17 +92,17 @@
   :exists? (fn [ctx]
              (let [token-response (::token-response ctx)
                    sso-id (get-in token-response [:user-info :sub])
-                   email (get-in token-response [:user-info :email])
+                   email (log/spy (get-in token-response [:user-info :email]))
                    name (first (s/split email #"@"))]
                ;; the wallet exists already
-               (if-let [wallet (wallet/fetch-by-sso-id wallet-store sso-id)]
-                 {::uid (:uid wallet)}
-
+               (if-let [wallet (wallet/fetch-by-email wallet-store email)]
+                 {::email (:email wallet)}
+                 
                  ;; a new wallet has to be made
                  (when-let [{:keys [wallet apikey]}
                             (wallet/new-empty-wallet!
                                 wallet-store
-                              blockchain uuid/uuid
+                              blockchain 
                               sso-id name email)]
 
                    ;; TODO: distribute other shares to organization and auditor
@@ -115,14 +115,14 @@
                    ;;  }))
 
                    ;; saved in context
-                   {::uid (:uid wallet)
+                   {::email (:email wallet)
                     ::cookie-data apikey}))))
 
   :handle-ok (fn [ctx]
                (lr/ring-response
-                (cond-> (r/redirect (routes/absolute-path :account :uid (::uid ctx)))
+                (cond-> (r/redirect (routes/absolute-path :account :email (::email ctx)))
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
-                  true (assoc-in [:session :signed-in-uid] (::uid ctx)))))
+                  true (assoc-in [:session :signed-in-email] (::email ctx)))))
   :handle-not-found (-> (routes/absolute-path :landing-page)
                         r/redirect
                         lr/ring-response))
@@ -138,7 +138,7 @@
                (-> (routes/absolute-path :index)
                    r/redirect
                    (preserve-session (:request ctx))
-                   (update-in [:session] dissoc :signed-in-uid)
+                   (update-in [:session] dissoc :signed-in-email)
                    lr/ring-response)))
 
 (lc/defresource forget-secret
@@ -149,7 +149,7 @@
 
   :handle-ok
   (fn [ctx]
-    (-> (routes/absolute-path :account :uid (:uid ctx))
+    (-> (routes/absolute-path :account :email (:email ctx))
         r/redirect
         (preserve-session (:request ctx))
         (update-in [:session] dissoc :cookie-data)

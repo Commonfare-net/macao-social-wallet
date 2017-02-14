@@ -30,22 +30,22 @@
             [freecoin.utils :as util]))
 
 (defn new-transaction-confirmation!
-  ([confirmation-store uuid-generator sender-uid recipient-uid amount]
-   (new-transaction-confirmation! confirmation-store uuid-generator sender-uid recipient-uid amount #{}))
-  ([confirmation-store uuid-generator sender-uid recipient-uid amount tags]
+  ([confirmation-store uuid-generator sender-email recipient-email amount]
+   (new-transaction-confirmation! confirmation-store uuid-generator sender-email recipient-email amount #{}))
+  ([confirmation-store uuid-generator sender-email recipient-email amount tags]
    (let [confirmation {:uid (uuid-generator)
                        :type :transaction
-                       :data {:sender-uid sender-uid
-                              :recipient-uid recipient-uid
+                       :data {:sender-uid sender-email
+                              :recipient-uid recipient-email
                               :amount (util/bigdecimal->long amount)
                               :tags tags}}
          stored (some-> (mongo/store! confirmation-store :uid confirmation)
                         (update-in [:data :amount] util/long->bigdecimal))]
      stored)))
 
-(defn fetch [confirmation-store uid]
-  (some-> (mongo/fetch confirmation-store uid)
+(defn fetch [confirmation-store email]
+  (some-> (mongo/fetch confirmation-store email)
           (update-in [:data :amount] util/long->bigdecimal)))
 
-(defn delete! [confirmation-store uid]
-  (mongo/delete! confirmation-store uid))
+(defn delete! [confirmation-store email]
+  (mongo/delete! confirmation-store email))

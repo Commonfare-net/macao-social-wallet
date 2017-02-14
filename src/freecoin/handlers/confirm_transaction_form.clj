@@ -50,18 +50,18 @@
 
   :exists?
   (fn [ctx]
-    (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
-          signed-in-uid (:uid ctx)]
+    (let [confirmation-email (:confirmation-email (ch/context->params ctx))
+          signed-in-email (:email ctx)]
       (when-let [confirmation
-                 (confirmation/fetch confirmation-store confirmation-uid)]
-        (when (= signed-in-uid (get-in confirmation [:data :sender-uid]))
+                 (confirmation/fetch confirmation-store confirmation-email)]
+        (when (= signed-in-email (get-in confirmation [:data :sender-email]))
           {::confirmation confirmation}))))
 
   :handle-ok
   (fn [ctx]
     (let [confirmation (::confirmation ctx)
           recipient (wallet/fetch wallet-store
-                      (get-in ctx [::confirmation :data :recipient-uid]))
+                      (get-in ctx [::confirmation :data :recipient-email]))
           show-pin-entry (= nil (ch/context->cookie-data ctx))]
       (-> {:confirmation confirmation
            :recipient recipient
@@ -83,14 +83,14 @@
 
   :authorized?
   (fn [ctx]
-    (let [signed-in-uid (ch/context->signed-in-uid ctx)
-          sender-wallet (wallet/fetch wallet-store signed-in-uid)
-          confirmation-uid (:confirmation-uid (ch/context->params ctx))
-          confirmation (confirmation/fetch confirmation-store confirmation-uid)]
+    (let [signed-in-email (ch/context->signed-in-email ctx)
+          sender-wallet (wallet/fetch wallet-store signed-in-email)
+          confirmation-email (:confirmation-email (ch/context->params ctx))
+          confirmation (confirmation/fetch confirmation-store confirmation-email)]
 
       (when (and sender-wallet
                  confirmation
-                 (= signed-in-uid (-> confirmation :data :sender-uid)))
+                 (= signed-in-email (-> confirmation :data :sender-email)))
         {::confirmation confirmation
          ::sender-wallet sender-wallet})))
 
@@ -110,10 +110,10 @@
 
   :post!
   (fn [ctx]
-    (let [{:keys [sender-uid recipient-uid amount tags]}
+    (let [{:keys [sender-email recipient-email amount tags]}
           (-> ctx ::confirmation :data)
-          sender-wallet (wallet/fetch wallet-store sender-uid)
-          recipient-wallet (wallet/fetch wallet-store recipient-uid)
+          sender-wallet (wallet/fetch wallet-store sender-email)
+          recipient-wallet (wallet/fetch wallet-store recipient-email)
           secret (::secret ctx)]
       (blockchain/make-transaction blockchain
                                    (:account-id sender-wallet) amount
@@ -123,11 +123,11 @@
        confirmation-store
        (-> ctx ::confirmation :uid))
 
-      {::uid (:uid sender-wallet) ::secret secret}))
+      {::email (:email sender-wallet) ::secret secret}))
 
   :post-redirect?
   (fn [ctx]
-    {:location (routes/absolute-path :account :uid (::uid ctx))})
+    {:location (routes/absolute-path :account :email (::email ctx))})
 
   :handle-see-other
   (fn [ctx]
@@ -140,7 +140,7 @@
 
   :handle-forbidden
   (fn [ctx]
-    (-> (routes/absolute-path :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))
+    (-> (routes/absolute-path :get-confirm-transaction-form :confirmation-email (-> ctx ::confirmation :email))
         r/redirect
         (fh/flash-form-problem ctx)
         lr/ring-response)))

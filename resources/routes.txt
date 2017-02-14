@@ -7,10 +7,10 @@ GET  /sso-callback                      sso-callback
 GET  /sign-out                          sign-out
 GET  /forget-secret                     forget-secret
 
-GET  /account/:uid                      account
-GET  /qrcode/:uid                       qrcode
+GET  /account/:email                     account
+GET  /qrcode/:email                      qrcode
 
-GET  /transactions/:uid                 get-user-transactions
+GET  /transactions/:email                get-user-transactions
 GET  /transactions                      get-all-transactions
 
 GET  /tags                              get-all-tags

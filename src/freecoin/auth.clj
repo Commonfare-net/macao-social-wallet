@@ -30,11 +30,11 @@
             [freecoin.db.wallet :as wallet]))
 
 (defn is-signed-in [ctx]
-  (when-let [uid (ch/context->signed-in-uid ctx)]
-    {:uid uid}))
+  (when-let [email (ch/context->signed-in-email ctx)]
+    {:email email}))
 
 (defn has-wallet [ctx wallet-store]
-  (if-let [wallet (wallet/fetch wallet-store (:uid ctx))]
+  (if-let [wallet (wallet/fetch wallet-store (:email ctx))]
     {:wallet wallet}
     [false {:error {:status :fatal
                     :reason "wallet not found"}}]))
