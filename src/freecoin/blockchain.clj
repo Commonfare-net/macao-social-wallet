@@ -50,7 +50,10 @@
   (list-transactions [bk params])
   (get-transaction   [bk account-id txid])
   (make-transaction  [bk from-account-id amount to-account-id params])
+
+  ;; tags
   (list-tags         [bk params])
+  (tag-details       [bk name params])
 
   ;; vouchers
   (create-voucher [bk account-id amount expiration secret])
@@ -184,6 +187,10 @@ Used to identify the class type."
               {:tag   _id
                :count count
                :amount (util/long->bigdecimal amount)}) tags)))
+
+  (tag-details [bk name params]
+    (log/info "Fetching the tag details")
+    {})
 
   (create-voucher [bk account-id amount expiration secret] nil)
 

@@ -49,6 +49,7 @@
             [freecoin.handlers.participants :as participants]
             [freecoin.handlers.transaction-form :as transaction-form]
             [freecoin.handlers.tags :as tags]
+            [freecoin.handlers.tag :as tag]
             [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
@@ -100,15 +101,16 @@
      :get-participant-search-form   (participants/query-form   wallet-store)
      :participants                  (participants/participants wallet-store)
 
-     :get-transaction-form          (transaction-form/get-transaction-form          wallet-store)
-     :post-transaction-form         (transaction-form/post-transaction-form         wallet-store confirmation-store)
+     :get-transaction-form          (transaction-form/get-transaction-form wallet-store)
+     :post-transaction-form         (transaction-form/post-transaction-form wallet-store confirmation-store)
 
      :get-all-tags                  (tags/get-tags blockchain)
+     :get-tag-details               (tag/get-tag-details blockchain)
 
      :get-confirm-transaction-form  (confirm-transaction-form/get-confirm-transaction-form  wallet-store confirmation-store)
      :post-confirm-transaction-form (confirm-transaction-form/post-confirm-transaction-form wallet-store confirmation-store blockchain)
-     :get-user-transactions         (transactions-list/list-user-transactions        wallet-store blockchain)
-     :get-all-transactions          (transactions-list/list-all-transactions         wallet-store blockchain)
+     :get-user-transactions         (transactions-list/list-user-transactions wallet-store blockchain)
+     :get-all-transactions          (transactions-list/list-all-transactions wallet-store blockchain)
 
      :get-activity-streams          (transactions-list/list-all-activity-streams  wallet-store blockchain)
      :nxt                           todo}))
@@ -138,7 +140,7 @@
 (defn create-app [config-m stores-m blockchain]
   (let [debug-mode (config/debug config-m)]
     (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
-        (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
+        (conditionally-wrap-with #(ld/wrap-trace % :header :ui) true #_debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
                                                      (config/secure? config-m)))
         #_(mw-logger/wrap-with-logger))))
