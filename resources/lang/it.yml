@@ -24,3 +24,20 @@ transaction:
 participant:
   list-title: "Participanti"
   not-found: "Nessun partecipante trovato"
+
+tags:
+  page:
+    title: "Lista di tag"
+    table:
+      tag: "Tag"
+      count: "# transazioni taggate"
+      value: "Valore totale"
+
+tag:
+  page:
+    title: "Dettali sul tag"
+    table:
+      count: "Transazioni taggate"
+      value: "Valore"
+      created-by: "Creato da"
+      created: "Creato"

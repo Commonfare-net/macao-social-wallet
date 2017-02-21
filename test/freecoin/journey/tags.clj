@@ -59,4 +59,10 @@
              (kc/check-page-is :get-all-tags ks/tags-page-body)
              (kc/selector-includes-content [:title] "Tags")
              (kc/selector-matches-count ks/tags-page--table-rows 3)
-             (kc/selector-includes-content ks/tags-page--table-rows--amount "10"))))
+             (kc/selector-includes-content ks/tags-page--table-rows--amount "10")
+
+             ;; visit the tag details page and verify the moved value
+             (k/visit (routes/absolute-path :get-tag-details :name "dupe"))
+             (kc/check-page-is :get-tag-details ks/tag-details-page-body :name "dupe")
+             (kc/selector-includes-content ks/tag-details-page--moved-value "10")
+             (kc/selector-includes-content ks/tag-details-page--transactions "1"))))

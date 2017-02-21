@@ -22,29 +22,29 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.views.tags
+(ns freecoin.views.tag
   (:require [freecoin.translation :as t]
-            [freecoin.routes :as http]))
+            [taoensso.timbre :as log]))
 
-(defn tag-link
-  [name]
-  [:a {:href (http/path :get-tag-details :name name)} name])
-
-(defn build-html [tags]
-  {:title (t/locale [:tags :page :title])
-   :heading (t/locale [:tags :page :title])
-   :body-class "func--tags-page--body"
+(defn build-html
+  "Renders the tag details page content"
+  [{:keys [tag count amount created created-by] :as tag-entity}]
+  {:title (str (t/locale [:tag :page :title]) ": " tag)
+   :heading (str (t/locale [:tag :page :title]) ": " tag)
+   :body-class "func--tag-page--body"
    :body
    [:div
-    [:table.func--tags-page--table.table.table-striped
-     [:thead
-      [:tr
-       [:th (t/locale [:tags :page :table :tag])]
-       [:th (t/locale [:tags :page :table :count])]
-       [:th (t/locale [:tags :page :table :value])]]]
+    [:table.func--tag-page--table.table.table-striped
      [:tbody
-      (for [{:keys [tag count amount]} tags]
-        [:tr
-         [:td (tag-link tag)]
-         [:td count]
-         [:td amount]])]]]})
+      [:tr.func--tag-page--count
+       [:th (t/locale [:tag :page :table :count])]
+       [:td count]]
+      [:tr.func--tag-page--amount
+       [:th (t/locale [:tag :page :table :value])]
+       [:td amount]]
+      [:tr.func--tag-page--created-by
+       [:th (t/locale [:tag :page :table :created-by])]
+       [:td created-by]]
+      [:tr.func--tag-page--created
+       [:th (t/locale [:tag :page :table :created])]
+       [:td created]]]]]})

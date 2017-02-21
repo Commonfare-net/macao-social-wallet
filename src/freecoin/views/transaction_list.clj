@@ -62,7 +62,7 @@
         (map (fn [t]
                (let [from (wallet/fetch-by-account-id wallet-store (:from-id t))
                      to (wallet/fetch-by-account-id wallet-store (:to-id t))
-                     tag (fn [t] [:span.tag [:a {:href "#"} t]])]
+                     tag (fn [t] [:span.tag [:a {:href (routes/path :get-tag-details :name t)} t]])]
                  [:tr
                   [:td [:a {:href (routes/path :account :email (:email from))} (:name from)]]
                   [:td [:a {:href (routes/path :account :email (:email to))} (:name to)]]

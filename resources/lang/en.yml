@@ -21,7 +21,7 @@ transaction:
   too-small-amount: "Amount too small"
   invalid-amount: "Invalid amount"
   invalid-recipient: "Invalid recipient"
-  
+
 participant:
   list-title: "Participants"
   not-found: "No participant found"
@@ -33,3 +33,12 @@ tags:
       tag: "Tag"
       count: "# tagged transactions"
       value: "Total moved value"
+
+tag:
+  page:
+    title: "Tag details"
+    table:
+      count: "Count"
+      value: "Value"
+      created-by: "Created by"
+      created: "Created"

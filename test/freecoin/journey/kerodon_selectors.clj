@@ -23,3 +23,7 @@
 (def tags-page-body :.func--tags-page--body)
 (def tags-page--table-rows [:.func--tags-page--table :tbody :tr])
 (def tags-page--table-rows--amount [:.func--tags-page--table :tbody :*:last-child])
+
+(def tag-details-page-body :.func--tag-page--body)
+(def tag-details-page--moved-value [:.func--tag-page--table :tbody :tr.func--tag-page--amount :td])
+(def tag-details-page--transactions [:.func--tag-page--table :tbody :tr.func--tag-page--count :td])

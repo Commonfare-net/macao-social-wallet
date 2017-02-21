@@ -22,29 +22,22 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.views.tags
-  (:require [freecoin.translation :as t]
-            [freecoin.routes :as http]))
+(ns freecoin.handlers.tag
+  (:require [liberator.core :as lc]
+            [freecoin.views :as fv]
+            [freecoin.auth :as auth]
+            [freecoin.views.tag :as tv]
+            [freecoin.blockchain :as blockchain]))
 
-(defn tag-link
-  [name]
-  [:a {:href (http/path :get-tag-details :name name)} name])
+(lc/defresource get-tag-details [blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
 
-(defn build-html [tags]
-  {:title (t/locale [:tags :page :title])
-   :heading (t/locale [:tags :page :title])
-   :body-class "func--tags-page--body"
-   :body
-   [:div
-    [:table.func--tags-page--table.table.table-striped
-     [:thead
-      [:tr
-       [:th (t/locale [:tags :page :table :tag])]
-       [:th (t/locale [:tags :page :table :count])]
-       [:th (t/locale [:tags :page :table :value])]]]
-     [:tbody
-      (for [{:keys [tag count amount]} tags]
-        [:tr
-         [:td (tag-link tag)]
-         [:td count]
-         [:td amount]])]]]})
+  :authorized? auth/is-signed-in
+
+  :handle-ok
+  (fn [ctx]
+    (let [name (get-in ctx [:request :params :name])
+          tag (blockchain/tag-details blockchain name {})]
+      (-> (tv/build-html tag)
+          fv/render-page))))
