@@ -49,7 +49,7 @@
            (k/visit (routes/absolute-path :sign-in))
            (kc/check-and-follow-redirect "to stonecutter callback")
            (kc/check-and-follow-redirect "to account page")
-           (kc/check-page-is :account [ks/account-page-body] :uid "some-uuid")))
+           (kc/check-page-is :account [ks/account-page-body] :email email)))
 
 (facts "Participant can sign out"
        (-> (k/session test-app)

@@ -35,8 +35,8 @@
   ([confirmation-store uuid-generator sender-email recipient-email amount tags]
    (let [confirmation {:uid (uuid-generator)
                        :type :transaction
-                       :data {:sender-uid sender-email
-                              :recipient-uid recipient-email
+                       :data {:sender-email sender-email
+                              :recipient-email recipient-email
                               :amount (util/bigdecimal->long amount)
                               :tags tags}}
          stored (some-> (mongo/store! confirmation-store :uid confirmation)

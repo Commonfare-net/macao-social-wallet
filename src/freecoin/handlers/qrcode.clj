@@ -42,7 +42,7 @@
 
   :handle-ok
   (fn [ctx]
-    (if-let [email (log/warn (:email (:wallet ctx)))]
+    (if-let [email (:email (:wallet ctx))]
       (qr/as-input-stream
        (qr/from (format "http://%s:%d/send/to/%s"
                         (:address param/host)

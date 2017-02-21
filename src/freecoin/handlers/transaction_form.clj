@@ -76,11 +76,11 @@
   (fn [ctx]
     (let [amount (get-in ctx [::form-data :amount])
           tags (get-in ctx [::form-data :tags] #{})
-          sender-uid (ch/context->signed-in-uid ctx)
+          sender-email (ch/context->signed-in-email ctx)
           recipient (::recipient-wallet ctx)]
       (when-let [confirmation (confirmation/new-transaction-confirmation!
                                confirmation-store uuid/uuid
-                               sender-uid (:uid recipient) amount tags)]
+                               sender-email (:email recipient) amount tags)]
         {::confirmation confirmation})))
 
   :post-redirect?

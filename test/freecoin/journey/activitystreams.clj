@@ -71,7 +71,7 @@
                 "displayName" (:to transaction)}
    "object"    {"type"       "STUB"
                "displayName" (str (:amount transaction))
-               "url" (str (env/env :base-url) "/transactions/UID")}
+               "url" (str (env/env :base-url) "/transactions/EMAIL")}
    })
   
 (defn test-activity [transactions]
@@ -94,10 +94,10 @@
           (map no-variables output) => (map no-variables contents)))
   state)
 
-(defn make-transaction [state blockchain from-uid amount to-uid params]
+(defn make-transaction [state blockchain from-email amount to-email params]
   (let [wallet-store (:wallet-store stores-m)
-        from (wallet/fetch wallet-store from-uid)
-        to (wallet/fetch wallet-store to-uid)]
+        from (wallet/fetch wallet-store from-email)
+        to (wallet/fetch wallet-store to-email)]
     (blockchain/make-transaction blockchain (:account-id from) amount (:account-id to) params))
   state)
 
@@ -115,11 +115,11 @@
          (-> (k/session test-app)
 
              (h/sign-up "recipient")
-             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
              h/sign-out
 
              (h/sign-up "sender")
-             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->uid)
 
              ;; do a transaction
              (k/visit (routes/absolute-path :get-transaction-form))
@@ -163,16 +163,16 @@
          (-> (k/session test-app)
 
              (h/sign-up "recipient")
-             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
              h/sign-out
 
              (h/sign-up "sender")
-             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->uid)
              h/sign-out
 
              ;; do a few transactions
-             (make-transaction blockchain (kh/recall memory :sender-uid) 99 (kh/recall memory :recipient-uid) {})
-             (make-transaction blockchain (kh/recall memory :sender-uid) 101 (kh/recall memory :recipient-uid) {})
+             (make-transaction blockchain (kh/recall memory :sender-email) 99 (kh/recall memory :recipient-email) {})
+             (make-transaction blockchain (kh/recall memory :sender-email) 101 (kh/recall memory :recipient-email) {})
 
              ;; visit the activitystreams page
              (k/visit (routes/absolute-path :get-activity-streams))
@@ -190,19 +190,19 @@
          (-> (k/session test-app)
 
              (h/sign-up "recipient")
-             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
              h/sign-out
 
              (h/sign-up "sender")
-             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->uid)
              h/sign-out
 
              ;; do a few transactions
-             (make-transaction blockchain (kh/recall memory :sender-uid) 1 (kh/recall memory :recipient-uid)
+             (make-transaction blockchain (kh/recall memory :sender-email) 1 (kh/recall memory :recipient-email)
                                {:timestamp (time/datetime 2015 12 1)})
-             (make-transaction blockchain (kh/recall memory :sender-uid) 2 (kh/recall memory :recipient-uid)
+             (make-transaction blockchain (kh/recall memory :sender-email) 2 (kh/recall memory :recipient-email)
                                {:timestamp (time/datetime 2015 12 2)})
-             (make-transaction blockchain (kh/recall memory :sender-uid) 3 (kh/recall memory :recipient-uid)
+             (make-transaction blockchain (kh/recall memory :sender-email) 3 (kh/recall memory :recipient-email)
                                {:timestamp (time/datetime 2015 12 3)})
 
              ;; visit the activitystreams page

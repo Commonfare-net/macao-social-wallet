@@ -27,11 +27,29 @@
 
 (ns freecoin.routes
   (:require [taoensso.timbre :as log]
-            [scenic.routes :as scenic]
             [bidi.bidi :as bidi]
             [freecoin.config :as config]))
 
-(def routes (scenic/load-routes-from-file "routes.txt"))
+(def routes ["" '(["/" {:get :index}]
+                  ["/landing-page" {:get :landing-page}]
+                  ["/sign-in-with-sso" {:get :sign-in}]
+                  ["/sso-callback" {:get :sso-callback}]
+                  ["/sign-out" {:get :sign-out}]
+                  ["/forget-secret" {:get :forget-secret}]
+                  [["/account/" [#".+\@.+\..+" :email]] {:get :account}]
+                  [["/qrcode/" [#".+\@.+\..+" :email]] {:get :qrcode}]
+                  [["/transactions/" [#".+\@.+\..+" :email]] {:get :get-user-transactions}]
+                  ["/transactions" {:get :get-all-transactions}]
+                  ["/tags" {:get :get-all-tags}]
+                  ["/participant-query" {:get :get-participant-search-form}]
+                  ["/participants" {:get :participants}]
+                  ["/send" {:get :get-transaction-form}]
+                  ["/send" {:post :post-transaction-form}]
+                  [["/send/confirm/" :confirmation-uid] {:get :get-confirm-transaction-form}]
+                  [["/send/confirm/" :confirmation-uid] {:post :post-confirm-transaction-form}]
+                  ["/activities" {:get :get-activity-streams}]
+                  ["/echo" {:get :echo}]
+                  ["/version" {:get :version}])])
 
 (defn path [action & params]
   (try

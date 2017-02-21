@@ -92,11 +92,13 @@
   :exists? (fn [ctx]
              (let [token-response (::token-response ctx)
                    sso-id (get-in token-response [:user-info :sub])
-                   email (log/spy (get-in token-response [:user-info :email]))
+                   email (get-in token-response [:user-info :email])
                    name (first (s/split email #"@"))]
                ;; the wallet exists already
                (if-let [wallet (wallet/fetch-by-email wallet-store email)]
-                 {::email (:email wallet)}
+                 (do
+                   (log/debug "The wallet for email " email " already exists")
+                   {::email (:email wallet)})
                  
                  ;; a new wallet has to be made
                  (when-let [{:keys [wallet apikey]}
