@@ -50,10 +50,10 @@
 
   :exists?
   (fn [ctx]
-    (let [confirmation-email (:confirmation-email (ch/context->params ctx))
+    (let [confirmation-uid (:confirmation-uid (ch/context->params ctx))
           signed-in-email (:email ctx)]
       (when-let [confirmation
-                 (confirmation/fetch confirmation-store confirmation-email)]
+                 (confirmation/fetch confirmation-store confirmation-uid)]
         (when (= signed-in-email (get-in confirmation [:data :sender-email]))
           {::confirmation confirmation}))))
 
@@ -85,8 +85,8 @@
   (fn [ctx]
     (let [signed-in-email (ch/context->signed-in-email ctx)
           sender-wallet (wallet/fetch wallet-store signed-in-email)
-          confirmation-email (:confirmation-email (ch/context->params ctx))
-          confirmation (confirmation/fetch confirmation-store confirmation-email)]
+          confirmation-uid (:confirmation-uid (ch/context->params ctx))
+          confirmation (confirmation/fetch confirmation-store confirmation-uid)]
 
       (when (and sender-wallet
                  confirmation
@@ -140,7 +140,7 @@
 
   :handle-forbidden
   (fn [ctx]
-    (-> (routes/absolute-path :get-confirm-transaction-form :confirmation-email (-> ctx ::confirmation :email))
+    (-> (routes/absolute-path :get-confirm-transaction-form :confirmation-uid (-> ctx ::confirmation :uid))
         r/redirect
         (fh/flash-form-problem ctx)
         lr/ring-response)))

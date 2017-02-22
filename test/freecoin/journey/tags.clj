@@ -31,11 +31,11 @@
          (-> (k/session test-app)
 
              (jh/sign-up "recipient")
-             (kh/remember memory :recipient-uid kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
              jh/sign-out
 
              (jh/sign-up "sender")
-             (kh/remember memory :sender-uid kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->uid)
 
              ;; visit the tags page and show that there is no tag
              (k/visit (routes/absolute-path :get-all-tags))
@@ -52,7 +52,7 @@
              (kc/check-and-follow-redirect "to confirm transaction")
              (kc/check-and-press ks/confirm-transaction-form--submit)
              (kc/check-and-follow-redirect "to sender's account page")
-             (kc/check-page-is :account [ks/account-page-body] :uid (kh/recall memory :sender-uid))
+             (kc/check-page-is :account [ks/account-page-body] :email (kh/recall memory :sender-email))
 
              ;; visit the tags page and show that there are three tags
              (k/visit (routes/absolute-path :get-all-tags))

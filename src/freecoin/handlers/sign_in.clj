@@ -97,7 +97,7 @@
                ;; the wallet exists already
                (if-let [wallet (wallet/fetch-by-email wallet-store email)]
                  (do
-                   (log/debug "The wallet for email " email " already exists")
+                   (log/trace "The wallet for email " email " already exists")
                    {::email (:email wallet)})
                  
                  ;; a new wallet has to be made

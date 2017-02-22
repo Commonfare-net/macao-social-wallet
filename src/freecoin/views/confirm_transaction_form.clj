@@ -5,7 +5,7 @@
             [freecoin.config :as config]
             [freecoin.translation :as t]))
 
-(defn confirm-transaction-form-spec [confirmation-email show-pin-entry]
+(defn confirm-transaction-form-spec [confirmation-uid show-pin-entry]
   (let [submit {:name :submit
                 :type :submit
                 :class "func--confirm-transaction-form--submit"}]
@@ -18,7 +18,7 @@
                 submit]
                [submit])
      :action (routes/absolute-path :post-confirm-transaction-form
-                                   :confirmation-email confirmation-email)
+                                   :confirmation-uid confirmation-uid)
      :validations (if show-pin-entry
                     [ [:required [:secret] (t/locale [:transaction :enter-pin])]]
                     [])
@@ -33,7 +33,7 @@
     [:span amount " -> " (:name recipient)]]])
 
 (defn build [context show-pin-entry]
-  (if-let [confirmation-email (-> context :confirmation :email)]
+  (if-let [confirmation-uid (-> context :confirmation :uid)]
     (let [amount (-> context :confirmation :data :amount)
           recipient (-> context :recipient)]
       {:title (t/locale [:transaction :confirm-title])
@@ -42,4 +42,4 @@
        :body [:div {}
               [:div {:class "transaction-recipient-confirm"}
                (render-recipient recipient amount)]
-              (fh/render-form (confirm-transaction-form-spec confirmation-email show-pin-entry) (:request context))]})))
+              (fh/render-form (confirm-transaction-form-spec confirmation-uid show-pin-entry) (:request context))]})))

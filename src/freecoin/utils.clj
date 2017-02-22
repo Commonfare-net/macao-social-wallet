@@ -78,6 +78,7 @@
     'FACT  nil ;; (dolog n t d)
     (dolog n t d)))
 
+;; TODO: why?
 (defn bigdecimal->long
   "Convert from BigDecimal to long for storage into mongo"
   [bd]
