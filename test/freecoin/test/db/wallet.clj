@@ -27,30 +27,26 @@
 
 (ns freecoin.test.db.wallet
   (:require [midje.sweet :refer :all]
-            [freecoin.db.uuid :as uuid]
             [freecoin.db.mongo :as fm]
             [freecoin.blockchain :as fb]
             [freecoin.db.wallet :as wallet]))
 
 (facts "Can create and fetch an empty wallet"
-       (let [uuid-generator (constantly "a-uuid")
-             wallet-store (fm/create-memory-store)
+       (let [wallet-store (fm/create-memory-store)
              blockchain (fb/create-in-memory-blockchain :bk)]
          (fact "can create a wallet"
-               (let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain uuid-generator
+               (let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain
                                                                        "sso-id" "name" "test@email.com")]
-                 wallet => (just {:uid "a-uuid"
-                                  :sso-id "sso-id"
+                 wallet => (just {:sso-id "sso-id"
                                   :name "name"
                                   :email "test@email.com"
                                   :public-key nil
                                   :private-key nil
                                   :account-id anything})))
          
-         (fact "can fetch the wallet by its uid"
-               (wallet/fetch wallet-store "a-uuid")
-               => (just {:uid "a-uuid"
-                         :sso-id "sso-id"
+         (fact "can fetch the wallet by its email"
+               (wallet/fetch wallet-store "test@email.com")
+               => (just {:sso-id "sso-id"
                          :name "name"
                          :email "test@email.com"
                          :public-key nil
@@ -59,8 +55,7 @@
          
          (fact "can fetch wallet by sso-id"
                (wallet/fetch-by-sso-id wallet-store "sso-id")
-               => (just {:uid "a-uuid"
-                         :sso-id "sso-id"
+               => (just {:sso-id "sso-id"
                          :name "name"
                          :email "test@email.com"
                          :public-key nil
@@ -69,7 +64,7 @@
 
 (defn create-wallet [wallet-store blockchain wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
-    (:wallet (wallet/new-empty-wallet! wallet-store blockchain uuid/uuid sso-id name email))))
+    (:wallet (wallet/new-empty-wallet! wallet-store blockchain sso-id name email))))
 
 (defn populate-wallet-store [wallet-store blockchain]
   (let [wallets-data [{:name "James Jones" :email "james@jones.com" :sso-id "sso-id-1"}

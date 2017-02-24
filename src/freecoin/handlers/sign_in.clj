@@ -95,7 +95,7 @@
                    email (get-in token-response [:user-info :email])
                    name (first (s/split email #"@"))]
                ;; the wallet exists already
-               (if-let [wallet (wallet/fetch-by-email wallet-store email)]
+               (if-let [wallet (wallet/fetch wallet-store email)]
                  (do
                    (log/trace "The wallet for email " email " already exists")
                    {::email (:email wallet)})

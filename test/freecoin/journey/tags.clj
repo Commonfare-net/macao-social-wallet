@@ -31,11 +31,11 @@
          (-> (k/session test-app)
 
              (jh/sign-up "recipient")
-             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->email)
              jh/sign-out
 
              (jh/sign-up "sender")
-             (kh/remember memory :sender-email kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->email)
 
              ;; visit the tags page and show that there is no tag
              (k/visit (routes/absolute-path :get-all-tags))

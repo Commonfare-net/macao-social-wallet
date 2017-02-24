@@ -23,7 +23,7 @@
 (defn recall [memory-atom key]
   (get @memory-atom key))
 
-(defn state-on-account-page->uid [state]
+(defn state-on-account-page->email [state]
   (let [uri (get-in state [:request :uri])]
     (-> state
         (get-in [:request :uri])

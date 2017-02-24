@@ -115,11 +115,11 @@
          (-> (k/session test-app)
 
              (h/sign-up "recipient")
-             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->email)
              h/sign-out
 
              (h/sign-up "sender")
-             (kh/remember memory :sender-email kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->email)
 
              ;; do a transaction
              (k/visit (routes/absolute-path :get-transaction-form))
@@ -163,11 +163,11 @@
          (-> (k/session test-app)
 
              (h/sign-up "recipient")
-             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->email)
              h/sign-out
 
              (h/sign-up "sender")
-             (kh/remember memory :sender-email kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->email)
              h/sign-out
 
              ;; do a few transactions
@@ -190,11 +190,11 @@
          (-> (k/session test-app)
 
              (h/sign-up "recipient")
-             (kh/remember memory :recipient-email kh/state-on-account-page->uid)
+             (kh/remember memory :recipient-email kh/state-on-account-page->email)
              h/sign-out
 
              (h/sign-up "sender")
-             (kh/remember memory :sender-email kh/state-on-account-page->uid)
+             (kh/remember memory :sender-email kh/state-on-account-page->email)
              h/sign-out
 
              ;; do a few transactions

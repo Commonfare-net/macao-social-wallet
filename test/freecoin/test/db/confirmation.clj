@@ -31,16 +31,19 @@
             [freecoin.db.confirmation :as confirmation]
             [freecoin.test-helpers.store :as test-store]))
 
+(def sender-email "sender@email.com")
+(def recipient-email "recipient@email.com")
+
 (facts "Can create and fetch a transaction confirmation"
        (let [uuid-generator (constantly "a-uuid")
              confirmation-store (fm/create-memory-store)]
          (fact "can create a transaction confirmation"
                (let [confirmation (confirmation/new-transaction-confirmation! confirmation-store uuid-generator
-                                                                              "sender-uid" "recipient-uid" 10M)]
+                                                                              sender-email recipient-email 10M)]
                  confirmation => (just {:uid "a-uuid"
                                         :type :transaction
-                                        :data {:sender-uid "sender-uid"
-                                               :recipient-uid "recipient-uid"
+                                        :data {:sender-email sender-email
+                                               :recipient-email recipient-email
                                                :amount 10M
                                                :tags #{}}})))
 
@@ -48,29 +51,29 @@
                (confirmation/fetch confirmation-store "a-uuid")
                => (just {:uid "a-uuid"
                          :type :transaction
-                         :data {:sender-uid "sender-uid"
-                                :recipient-uid "recipient-uid"
+                         :data {:sender-email sender-email
+                                :recipient-email recipient-email
                                 :amount 10M
                                 :tags #{}}}))
 
          (fact "transaction confirmations can have tags"
                (let [confirmation (confirmation/new-transaction-confirmation! confirmation-store
                                                                               uuid-generator
-                                                                              "sender-uid"
-                                                                              "recipient-uid"
+                                                                              sender-email
+                                                                              recipient-email
                                                                               10M
                                                                               #{:air-drop})]
                  confirmation => (just {:uid "a-uuid"
                                         :type :transaction
-                                        :data {:sender-uid "sender-uid"
-                                               :recipient-uid "recipient-uid"
+                                        :data {:sender-email sender-email
+                                               :recipient-email recipient-email
                                                :amount 10M
                                                :tags #{:air-drop}}})))))
 
 (fact "Can delete a confirmation"
       (let [confirmation-store (fm/create-memory-store)
             confirmation (confirmation/new-transaction-confirmation! confirmation-store (constantly "uid")
-                                                                     "sender-uid" "recipient-uid" 10M)]
+                                                                     sender-email recipient-email 10M)]
         (test-store/summary confirmation-store) => (contains {:entry-count 1})
         (confirmation/delete! confirmation-store "uid")
         (test-store/summary confirmation-store) => (contains {:entry-count 0})))

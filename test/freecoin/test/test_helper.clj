@@ -11,8 +11,8 @@
        (assoc :params query-m)
        (assoc :session session))))
 
-(defn authenticated-session [uid]
-  {:signed-in-uid uid})
+(defn authenticated-session [email]
+  {:signed-in-email email})
 
 (defn check-redirects-to [path]
   (midje/chatty-checker [response] (and
@@ -24,8 +24,8 @@
                              (= status (:status response))
                              )))
 
-(defn check-signed-in-as [uid]
-  (midje/chatty-checker [response] (= uid (get-in response [:session :signed-in-uid]))))
+(defn check-signed-in-as [email]
+  (midje/chatty-checker [response] (= email (get-in response [:session :signed-in-email]))))
 
 (def check-has-wallet-key
   (midje/contains {:session (midje/contains {:cookie-data midje/anything})}))

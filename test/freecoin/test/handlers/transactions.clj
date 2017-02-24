@@ -44,17 +44,18 @@
             [cheshire.core :as cheshire]
             [simple-time.core :as time]))
 
+(def sender-email "sender@email.com")
+(def recipient-email "recipient@email.com")
+
 (defn setup-with-sender-and-recipient []
   (let [wallet-store (fm/create-memory-store)
         blockchain (fb/create-in-memory-blockchain :bk)
         sender-details (w/new-empty-wallet!
-                        wallet-store blockchain
-                        (constantly "sender-uid")
-                        "sender-sso-id" "sender" "sender@email.com")
+                        wallet-store blockchain 
+                        "sender-sso-id" "sender" sender-email)
         recipient-details (w/new-empty-wallet!
                            wallet-store blockchain
-                           (constantly "recipient-uid")
-                           "recipient-sso-id" "recipient" "recipient@email.com")]
+                           "recipient-sso-id" "recipient" recipient-email)]
     {:wallet-store wallet-store
      :blockchain blockchain
      :sender-wallet (:wallet sender-details)
@@ -75,7 +76,7 @@
 
          (fact "returns 200 when participant authenticated but without cookie-data"
                (-> (th/create-request :get (absolute-path :get-transaction-form)
-                                      {} {:signed-in-uid "sender-uid"})
+                                      {} {:signed-in-email "sender@email.com"})
                    transaction-form-handler
                    :status) => 200)
 
@@ -89,7 +90,7 @@
 
          (fact "returns 200 when participant authenticated with cookie-data"
                (let [response (-> (th/create-request :get (absolute-path :get-transaction-form)
-                                                     {} {:signed-in-uid "sender-uid"
+                                                     {} {:signed-in-email sender-email
                                                          :cookie-data sender-apikey})
                                   transaction-form-handler)]
                  (:status response) => 200
@@ -108,7 +109,7 @@
 
          (fact "returns 302 when participant authenticated but without cookie-data"
                (-> (th/create-request :post "/post-transaction-form"
-                                      {} {:signed-in-uid "sender-uid"})
+                                      {} {:signed-in-email sender-email})
                    form-post-handler
                    :status) => 302)
 
@@ -118,7 +119,7 @@
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
                                     {:amount "5.00" :recipient "recipient"}
-                                    {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
+                                    {:signed-in-email sender-email :cookie-data sender-apikey})
                                    form-post-handler)
                       transaction-confirmation (first (fm/query confirmation-store {}))]
                   (fact "creates a transaction confirmation"
@@ -135,31 +136,31 @@
                                   (into {}))
                       response (-> (th/create-request :post "/post-transaction-form"
                                                       params
-                                                      {:signed-in-uid "sender-uid"
+                                                      {:signed-in-email sender-email
                                                        :cookie-data sender-apikey})
                                    form-post-handler)]
                   response => (th/check-redirects-to (absolute-path :get-transaction-form))))
 
           ?amount        ?recipient
-          "0.0"          "recipient-uid"
-          "not-a-float"  "recipient-uid"
-          "5.0"          "nonexistent-uid"
+          "0.0"          recipient-email
+          "not-a-float"  recipient-email
+          "5.0"          "nonexistent-email"
           "5.0"          nil
-          nil            "recipient-uid")))
+          nil            recipient-email)))
 
 (facts "about the confirm transaction form"
        (let [{:keys [wallet-store]} (setup-with-sender-and-recipient)
              confirmation-store (fm/create-memory-store)
              confirmation (c/new-transaction-confirmation! confirmation-store
                                                            (constantly "confirmation-uid")
-                                                           "sender-uid" "recipient-uid" 10M)
+                                                           sender-email recipient-email 10M)
              confirm-transaction-handler (ctf/get-confirm-transaction-form wallet-store confirmation-store)]
 
          (fact "displays confirm transaction form"
                (let [response
                      (-> (th/create-request :get "/confirm-transaction/confirmation-uid"
                                             {:confirmation-uid "confirmation-uid"}
-                                            {:signed-in-uid "sender-uid"})
+                                            {:signed-in-email sender-email})
                          confirm-transaction-handler)]
                  (:status response) => 200
                  (:body response) => (contains #"Confirm transaction")))
@@ -169,14 +170,14 @@
          (fact "returns 404 when confirmation does not exist"
                (-> (th/create-request :get "/confirm-transaction/nonexisting-confirmation-uid"
                                       {:confirmation-uid "nonexisting-confirmation-uid"}
-                                      {:signed-in-uid "sender-uid"})
+                                      {:signed-in-email sender-email})
                    confirm-transaction-handler
                    :status) => 404)
 
-         (fact "returns 404 when confirmation sender-uid does not match signed in user's uid"
+         (fact "returns 404 when confirmation sender-email does not match signed in user's uid"
                (-> (th/create-request :get "/confirm-transaction/confirmation-uid"
                                       {:confirmation-uid "confirmation-uid"}
-                                      {:signed-in-uid "not-the-senders-uid"})
+                                      {:signed-in-email "not-the-senders-email"})
                    confirm-transaction-handler
                    :status) => 404)
 
@@ -194,19 +195,20 @@
 
          (fact "returns 401 when participant authenticated but not authorised"
                (-> (th/create-request :post "/post-confirm-transaction-form"
-                                      {} {:signed-in-uid "sender-uid"})
+                                      {} {:signed-in-email sender-email})
                    form-post-handler
                    :status) => 401)
 
          (fact "returns 401 when transaction was not created by the signed-in participant"
                (let [confirmation-store (fm/create-memory-store)
-                     confirmation-for-different-sender (c/new-transaction-confirmation!
-                                                        confirmation-store (constantly "confirmation-for-different-sender-uid")
-                                                        "different-sender-uid" "recipient-uid" 10M)
+                     confirmation-for-different-sender (c/new-transaction-confirmation! 
+                                                        confirmation-store
+                                                        (constantly "confirmation-for-different-sender-uid")
+                                                        "different-sender@email.com" recipient-email 10M)
                      form-post-handler (ctf/post-confirm-transaction-form wallet-store confirmation-store blockchain)]
                  (-> (th/create-request :post "/post-confirm-transaction-form"
                                         {:confirmation-uid "confirmation-for-different-sender-uid"}
-                                        {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
+                                        {:signed-in-email sender-email :cookie-data sender-apikey})
                      form-post-handler
                      :status)) => 401)
 
@@ -214,11 +216,11 @@
                 (let [confirmation-store (fm/create-memory-store)
                       confirmation (c/new-transaction-confirmation!
                                     confirmation-store (constantly "confirmation-uid")
-                                    "sender-uid" "recipient-uid" 10M)
+                                    sender-email recipient-email 10M)
                       form-post-handler (ctf/post-confirm-transaction-form wallet-store confirmation-store blockchain)
                       response (-> (th/create-request :post "/post-confirm-transaction-form"
                                                       {:confirmation-uid "confirmation-uid"}
-                                                      {:signed-in-uid "sender-uid" :cookie-data sender-apikey})
+                                                      {:signed-in-email sender-email :cookie-data sender-apikey})
                                    form-post-handler)]
 
                   (fact "creates a transaction"
@@ -228,7 +230,7 @@
                         (:entry-count (test-store/summary confirmation-store)) => 0)
 
                   (fact "redirects to signed-in participant's account page"
-                        response => (th/check-redirects-to (absolute-path :account :uid (:uid sender-wallet))))))))
+                        response => (th/check-redirects-to (absolute-path :account :email (:email sender-wallet))))))))
 
 (facts "about parsing the tags parameter"
        (tabular (fact "Tags are optional, and can be provided as one or multiple entries"
