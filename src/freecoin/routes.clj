@@ -30,15 +30,18 @@
             [bidi.bidi :as bidi]
             [freecoin.config :as config]))
 
-(def routes ["" '(["/" {:get :index}]
+(def email-reg-exp [#".+\@.+\..+" :email])
+
+;; TODO: better way than eval?
+(def routes ["" [["/" {:get :index}]
                   ["/landing-page" {:get :landing-page}]
                   ["/sign-in-with-sso" {:get :sign-in}]
                   ["/sso-callback" {:get :sso-callback}]
                   ["/sign-out" {:get :sign-out}]
                   ["/forget-secret" {:get :forget-secret}]
-                  [["/account/" [#".+\@.+\..+" :email]] {:get :account}]
-                  [["/qrcode/" [#".+\@.+\..+" :email]] {:get :qrcode}]
-                  [["/transactions/" [#".+\@.+\..+" :email]] {:get :get-user-transactions}]
+                  [["/account/" (eval email-reg-exp)] {:get :account}]
+                  [["/qrcode/" (eval email-reg-exp)] {:get :qrcode}]
+                  [["/transactions/" (eval email-reg-exp)] {:get :get-user-transactions}]
                   ["/transactions" {:get :get-all-transactions}]
                   ["/tags" {:get :get-all-tags}]
                   ["/participant-query" {:get :get-participant-search-form}]
@@ -49,11 +52,11 @@
                   [["/send/confirm/" :confirmation-uid] {:post :post-confirm-transaction-form}]
                   ["/activities" {:get :get-activity-streams}]
                   ["/echo" {:get :echo}]
-                  ["/version" {:get :version}])])
+                  ["/version" {:get :version}]]])
 
 (defn path [action & params]
   (try
-    (apply bidi/path-for routes action params)
+    (apply bidi/path-for routes (log/spy action) (log/spy params))
     (catch Exception e
       (log/warn (format "Key: '%s' probably does not match a route.\n%s" action e))
       (throw (Exception. (format "Error constructing url for action '%s', with params '%s'" action params))))))
