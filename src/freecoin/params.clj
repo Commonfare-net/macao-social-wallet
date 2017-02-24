@@ -35,20 +35,6 @@
   {:address "fork"
    :port 8000})
 
-(defn- get-mongo-uri []
-  (let [mongo-ip (get env/env :mongo-port-27017-tcp-addr "localhost")
-        db-name "fxctest1"]
-    (format "mongodb://%s:27017/%s" mongo-ip db-name)))
-
-(def webapp
-  {:db-config {:url (get-mongo-uri)}
-
-   :host host
-   :cookie-config {;; see: https://github.com/ring-clojure/ring/wiki/Cookies
-                   :secure false ;restrict the cookie to HTTPS URLs if true
-                   :http-only true}})
-
-
 ;; defaults
 (def encryption
   {:version 1
