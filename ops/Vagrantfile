@@ -2,29 +2,18 @@
 # vi: set ft=ruby :
 
 VAGRANTFILE_API_VERSION = "2"
-digital_ocean_memory = 1024
-
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
-  config.vm.box = "https://vagrant.devuan.org/devuan_jessie_beta/devuan_jessie_1.0.0-beta_amd64_vagrant.box"
-           #"http://vagrant.devuan.org/devuan-jessie-amd64-alpha2.box"
-           #i386 "http://vagrant.devuan.org/devuan-jessie-i386-alpha2.box"
-    config.vm.define "staging_vm", primary: true do |dev|
-      dev.vm.network "private_network", ip: "192.168.50.80"
-      dev.vm.network :forwarded_port, guest: 22, host: 2280, id: "ssh", auto_correct: false
-      dev.vm.network :forwarded_port, guest: 8000, host: 8000, id: "freecoin", auto_correct: false
-      config.vm.synced_folder ".", "/vagrant", disabled: true
-      config.ssh.username = "root"
-      config.ssh.password = "devuan"
-      #confing.vm.guest = :debian
+  config.vm.box = "https://files.devuan.org/devuan_jessie_beta/testing/devuan_jessie_1.0.0-beta2_amd64_vagrant.box"
 
-      dev.vm.provider :virtualbox do |vbox|
-        vbox.customize ["modifyvm", :id, "--memory", 2048]
-      end
+  config.vm.define "freecoin", primary: true do |fxc|
+    fxc.vm.network "private_network", ip: "192.168.50.80"
+    fxc.vm.network :forwarded_port, guest: 8000, host: 8111,
+                   id: "freecoin", auto_correct: false
+    fxc.vm.provider :virtualbox do |vbox|
+      vbox.customize ["modifyvm", :id, "--memory", 2046]
+    end
+    fxc.vm.provision "shell", path: "freecoin_install.sh"
+  end
 
-     dev.vm.provision "ansible" do |ansible|
-       ansible.playbook = "site.yml"
-       ansible.sudo = true
-     end
-   end
 end
