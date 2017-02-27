@@ -13,7 +13,7 @@
      :fields (if show-pin-entry
                [{:name :secret
                  :label (t/locale [:transaction :enter-pin])
-                 :type :number
+                 :type :password
                  :class "func--confirm-transaction-form--secret"}
                 submit]
                [submit])
