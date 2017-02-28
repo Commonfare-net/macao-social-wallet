@@ -64,8 +64,8 @@
                      to (wallet/fetch-by-account-id wallet-store (:to-id t))
                      tag (fn [t] [:span.tag [:a {:href "#"} t]])]
                  [:tr
-                  [:td [:a {:href (routes/path :account :uid (:uid from))} (:name from)]]
-                  [:td [:a {:href (routes/path :account :uid (:uid to))} (:name to)]]
+                  [:td [:a {:href (routes/path :account :email (:email from))} (:name from)]]
+                  [:td [:a {:href (routes/path :account :email (:email to))} (:name to)]]
                   [:td (:amount t)]
                   [:td (-> t :timestamp st/parse (st/format :medium-date-time))]
                   [:td (interpose ", " (map tag (:tags t)))]]))

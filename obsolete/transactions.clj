@@ -76,8 +76,8 @@
   :allowed-methods       [:post]
   :available-media-types ["application/json"]
 
-  :authorized?           (fn [ctx] (:result  (auth/check wallet-store (ch/context->signed-in-uid ctx))))
-  :unauthorized          (fn [ctx] (:problem (auth/check wallet-store (ch/context->signed-in-uid ctx))))
+  :authorized?           (fn [ctx] (:result  (auth/check wallet-store (ch/context->signed-in-email ctx))))
+  :unauthorized          (fn [ctx] (:problem (auth/check wallet-store (ch/context->signed-in-email ctx))))
 
   :allowed? (fn [ctx]
               (let [{:keys [status data problems]}

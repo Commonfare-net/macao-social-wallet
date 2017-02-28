@@ -70,7 +70,7 @@
   :exists? #(auth/has-wallet % wallet-store)
 
   :handle-ok (fn [ctx]
-               (if-let [other-participant (get-in ctx [:request :params :uid])]
+               (if-let [other-participant (get-in ctx [:request :params :email])]
                  (other-participant-wallet other-participant wallet-store blockchain)
                  (my-wallet ctx blockchain))))
 

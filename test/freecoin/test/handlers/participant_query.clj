@@ -2,7 +2,6 @@
   (:require [midje.sweet :refer :all]
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
-            [freecoin.db.uuid :as uuid]
             [freecoin.db.mongo :as fm]
             [freecoin.db.wallet :as w]
             [freecoin.blockchain :as fb]
@@ -12,7 +11,7 @@
 
 (defn create-wallet [wallet-store blockchain wallet-data]
   (let [{:keys [sso-id name email]} wallet-data]
-    (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid sso-id name email))))
+    (:wallet (w/new-empty-wallet! wallet-store blockchain sso-id name email))))
 
 (defn index->wallet-data [index]
   (let [sso-id (str "sso-id-" index)
@@ -25,38 +24,38 @@
        (fact "displays the signed-in participant's balance"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                         "stonecutter-user-id" "name" "test@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
-                                                      (assoc :params {:uid (:uid wallet)})
-                                                      (assoc :session {:signed-in-uid (:uid wallet)})))]
+                                                      (assoc :params {:email (:email wallet)})
+                                                      (assoc :session {:signed-in-email (:email wallet)})))]
                (:status response) => 200
                (:body response) => (contains (t/locale [:wallet :balance]))))
 
-       (fact "displays the balance of the participant wallet with the given uid"
+       (fact "displays the balance of the participant wallet with the given email"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                            "stonecutter-user-id" "name" "test@email.com"))
-                   her-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                   her-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                             "stonecutter-user-id" "alice" "alice@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
-                                                      (assoc :params {:uid (:uid her-wallet)})
-                                                      (assoc :session {:signed-in-uid (:uid my-wallet)})))]
+                                                      (assoc :params {:email (:email her-wallet)})
+                                                      (assoc :session {:signed-in-email (:email my-wallet)})))]
                (:status response) => 200
                (:body response) => (contains (t/locale [:wallet :balance]))))
 
-       (fact "gives a 404 when the requested uid doesn't map to an existing wallet"
+       (fact "gives a 404 when the requested email doesn't map to an existing wallet"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                            "stonecutter-user-id" "name" "test@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
-                                                      (assoc :params {:uid uuid/uuid})
-                                                      (assoc :session {:signed-in-uid (:uid my-wallet)})))]
+                                                      (assoc :params {:email "test@mail.com"})
+                                                      (assoc :session {:signed-in-email (:email my-wallet)})))]
                (:status response) => 404)))
 
 ;;        (fact "can not be accessed when user is not signed in"))
@@ -65,12 +64,12 @@
        (fact "can be accessed by signed-in users"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain uuid/uuid
+                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                         "stonecutter-user-id" "name" "test@email.com"))
                    query-form-handler (fp/query-form wallet-store)
                    response (-> (th/create-request
                                  :get "/participants-query"
-                                 {} (th/authenticated-session (:uid wallet)))
+                                 {} (th/authenticated-session (:email wallet)))
                                 query-form-handler)]
                (:status response) => 200))
 
@@ -99,7 +98,7 @@
                    participants-handler (fp/participants wallet-store)
                    response (-> (th/create-request
                                  :get "/participants"
-                                 {} (th/authenticated-session (:uid (first wallets))))
+                                 {} (th/authenticated-session (:email (first wallets))))
                                 participants-handler)]
                (:status response) => 200
                (-> (:body response) html/html-snippet) => (th/element-count [:.clj--participant__item] 5)))
@@ -117,7 +116,7 @@
                     query-m {:field ?field :value ?value}
                     response (-> (th/create-request
                                   :get "/participants"
-                                  query-m (th/authenticated-session (:uid (first wallets))))
+                                  query-m (th/authenticated-session (:email (first wallets))))
                                  participants-handler)]
                 (-> (:body response) html/html-snippet)
                 => (th/element-count [:.clj--participant__item] ?expected-count)))

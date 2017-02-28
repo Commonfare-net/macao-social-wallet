@@ -137,6 +137,7 @@
 
 (defn create-app [config-m stores-m blockchain]
   (let [debug-mode (config/debug config-m)]
+    ;; TODO: Get rid of scenic?
     (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
@@ -163,6 +164,7 @@
     app-state
     (if-let [db (:db app-state)]
       (let [config-m (config/create-config)
+            ;; TODO: add the other store (maybe)
             stores-m (storage/create-mongo-stores db)
             blockchain (blockchain/new-stub db)
             server (-> (create-app config-m stores-m blockchain)

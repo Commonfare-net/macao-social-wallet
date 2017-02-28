@@ -1,6 +1,7 @@
 (ns freecoin.db.storage
   (:require [freecoin.db.mongo :as m]))
 
+;; TODO: for completeness the transactions collection should be here too
 (defn create-mongo-stores [db]
   {:wallet-store       (m/create-wallet-store db)
    :confirmation-store (m/create-confirmation-store db)})
