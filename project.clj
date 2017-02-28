@@ -33,11 +33,28 @@
                  [clavatar "0.3.0"]
                  ;; Gossip is a lein tool to generate call-graphs for Clojure code
                  [cc.artifice/lein-gossip "0.2.1"]
-                 [circleci/clj-yaml "0.5.5"]]
+                 [circleci/clj-yaml "0.5.5"]
+
+                 ; frecoinadmin gorilla stuff
+                 [org.clojure/data.json "0.2.6"]
+                 [org.clojure/data.csv "0.1.3"]
+                 [clojure-humanize "0.2.0"]
+                 [ring/ring-json "0.4.0"]
+                 [gorilla-renderable "2.0.0"]
+                 [gorilla-plot "0.1.4"]
+                 [javax.servlet/servlet-api "2.5"]
+                 [grimradical/clj-semver "0.3.0" :exclusions [org.clojure/clojure]]
+                 [cider/cider-nrepl "0.12.0"]
+                 [org.clojure/tools.nrepl "0.2.12"]
+                 ]
 
 
   :source-paths ["src"]
   :resource-paths ["resources" "test-resources"]
+  :template-additions ["ws/index.clj"]
+  :target-path "target/%s"
+  :main ^:skip-aot gorilla-repl.core
+
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
              ]
