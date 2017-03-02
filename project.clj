@@ -75,11 +75,23 @@
                                   :source-paths ["src" "scripts"]
                                   :main transaction-graph.main}]
              :production {:source-paths ["src" "prod"]
-                          :main freecoin.main}
+                          :main freecoin.main
+                          ;; TODO replace with scipt
+                          :env [[:base-url "http://localhost:8000"]
+                                [:client-id "LOCALFREECOIN"]
+                                [:client-secret "FREECOINSECRET"]
+                                [:auth-url "http://localhost:5000"]
+                                [:secure "false"]]}
              :uberjar {:dependencies [[ns-tracker ~ns-tracker-version]]
                        :source-paths ["src" "prod"]
                        :aot :all
-                       :main freecoin.main}}
+                       :main freecoin.main
+                       ;; TODO replace with script
+                       :env [[:base-url "http://localhost:8000"]
+                                [:client-id "LOCALFREECOIN"]
+                                [:client-secret "FREECOINSECRET"]
+                                [:auth-url "http://localhost:5000"]
+                                [:secure "false"]]}}
   :plugins [[lein-ring "0.9.3"]
             [lein-environ "1.0.0"]]
   :ring {:reload-paths ["src"]
