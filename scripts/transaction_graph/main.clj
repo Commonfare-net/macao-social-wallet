@@ -12,9 +12,9 @@
 
 (def ^:private wallet-counter (atom 0))
 
-(defn new-wallet! [wallet-store blockchain uuid-generator wallet-data-generator]
+(defn new-wallet! [wallet-store blockchain wallet-data-generator]
   (let [{:keys [sso-id name email]} (wallet-data-generator)]
-    (wallet/new-empty-wallet! wallet-store blockchain uuid-generator sso-id name email)))
+    (wallet/new-empty-wallet! wallet-store blockchain sso-id name email)))
 
 (defn new-transaction! [blockchain transaction-data-generator wallets-and-secrets]
   (let [{:keys [from-account-id amount
@@ -57,7 +57,7 @@
         wallet-data-generator (create-wallet-generator (create-index-generator))
         transaction-data-generator (create-transaction-generator random-selection random-selection random-amount)
         wallets-and-secrets (->> #(new-wallet! wallet-store blockchain
-                                               uuid/uuid wallet-data-generator)
+                                               wallet-data-generator)
                                  repeatedly
                                  (take n-wallets)
                                  doall)]

@@ -196,9 +196,10 @@
 (defn lein-ring-init []
   (prn "lein-ring-init")
   (swap! app-state connect-db)
+  (assert (:db @app-state) "The DB is not set")
   (swap! lein-ring-handler
                   (fn [_] (let [config-m (config/create-config)
-                                db (:db app-state)
+                                db (:db @app-state)
                                 stores-m (storage/create-mongo-stores db)
                                 blockchain (blockchain/new-stub db)]
                             (prn "Restarting server....")

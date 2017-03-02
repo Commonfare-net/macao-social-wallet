@@ -8,7 +8,7 @@
   (if (nil? id) {:error "id is null"}
       (mc/find-map-by-id db coll id)))
 
-(defn find [db coll filter]
+(defn find-by-filter [db coll filter]
   (mc/find-maps db coll filter))
 
 (defn find-all [db coll]
