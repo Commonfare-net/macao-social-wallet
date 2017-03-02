@@ -153,7 +153,7 @@ Used to identify the class type."
   (list-transactions [bk params]
     (log/debug "getting transactions" params)
     (normalize-transactions
-     (storage/find db "transactions" (add-transaction-list-params params))))
+     (storage/find-by-filter db "transactions" (add-transaction-list-params params))))
 
   (get-transaction   [bk account-id txid] nil)
 
