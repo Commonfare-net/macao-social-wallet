@@ -40,7 +40,7 @@ Inside `ops/stonecutter` there is another setup to create and run a local Stonec
 Install all necessary dependencies, for instance using the following packages found on APT based systems:
 
 ```
-openjdk-7-jdk mongodb libversioneer-clojure haveged
+openjdk-7-jdk mongodb libversioneer-clojure haveged mongodb-server
 ```
 
 then install Leiningen which will take care of all Clojure dependencies
@@ -49,6 +49,12 @@ then install Leiningen which will take care of all Clojure dependencies
 mkdir ~/bin
 wget https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -O ~/bin/lein
 chmod +x ~/bin/lein
+```
+
+then start the MongoDB server in which Freecoin will store its data:
+
+```
+sudo service mongod start
 ```
 
 then from inside the Freecoin source, start it with
