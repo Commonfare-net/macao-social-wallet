@@ -57,12 +57,14 @@
            (m/store! store :field-1 record-3)
            (tabular
             (fact "query returns correct result"
-                  (set (m/query store ?query {})) => (set ?result))
-            ?query                                       ?result
-            {:field-2 "r1f2,r2f2"}                       [record-1 record-2]
-            {:field-1 "r1f1"}                            [record-1]
-            {:field-2 "r1f2,r2f2" :field-3 "r1f3,r3f3"}  [record-1]
-            {:field-2 "haven't got one"}                 []))))
+                  (set (m/query store ?query ?params)) => (set ?result))
+            ?query                                       ?params    ?result
+            {:field-2 "r1f2,r2f2"}                       {}         [record-1 record-2]
+            {:field-2 "r1f2,r2f2"}                       {:skip 1}  [record-2]
+            {:field-2 "r1f2,r2f2"}                       {:limit 1} [record-1]
+            {:field-1 "r1f1"}                            {}         [record-1]
+            {:field-2 "r1f2,r2f2" :field-3 "r1f3,r3f3"}  {}         [record-1]
+            {:field-2 "haven't got one"}                 {}         []))))
 
 (facts "run store and query tests for both in-memory and mongo stores"
        (run-store-and-query-tests (m/create-memory-store) "in-memory")

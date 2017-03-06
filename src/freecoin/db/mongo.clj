@@ -27,6 +27,7 @@
 
 (ns freecoin.db.mongo
   (:require [monger.collection :as mc]
+            [taoensso.timbre :as log]
             [monger.query :as mq]
             [monger.core :as mongo]))
 
@@ -55,14 +56,22 @@
 (defn apply-skip
   [q skip-num]
   (if skip-num
-    (mq/skip q skip-num)
-    q))
+    (do
+      (log/warn "Applying skip:" skip-num)
+      (mq/skip q skip-num))
+    (do
+      (log/warn "Not applying skip:" skip-num)
+      q)))
 
 (defn apply-limit
   [q limit-num]
   (if limit-num
-    (mq/limit q limit-num)
-    q))
+    (do
+      (log/warn "Applying limit:" limit-num)
+      (mq/limit q limit-num))
+    (do
+      (log/warn "Not applying limit:" limit-num)
+      q)))
 
 (defn debug-q
   [q]
@@ -85,7 +94,7 @@
       (-> (mc/find-map-by-id mongo-db coll k)
           (dissoc :_id))))
 
-  (query [this query {:keys [skip-num limit-num]}]
+  (query [this query {skip-num :skip limit-num :limit}]
     (map #(dissoc % :_id)
          (mq/with-collection mongo-db coll
            (-> (mq/find query)
@@ -113,8 +122,12 @@
 
   (fetch [this k] (@data k))
 
-  (query [this query _]
-    (filter #(= query (select-keys % (keys query))) (vals @data)))
+  (query [this query {:keys [skip limit]}]
+    (let [results (filter #(= query (select-keys % (keys query))) (vals @data))
+          skipped (if skip (drop skip results) results)]
+      (if limit
+        (take limit skipped)
+        skipped)))
 
   (delete! [this k]
     (swap! data dissoc k)))
