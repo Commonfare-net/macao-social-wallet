@@ -85,7 +85,9 @@
                    participants-query-form/build
                    fv/render-page)))
 
-(defn request->wallet-query [request]
+(defn request->wallet-query
+  "Extracts the query spec for a wallet field from the request parameters"
+  [request]
   (if-let [{:keys [field value]}
            (-> request :params
                (utils/select-all-or-nothing [:field :value]))]

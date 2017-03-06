@@ -27,6 +27,7 @@
 
 (ns freecoin.db.mongo
   (:require [monger.collection :as mc]
+            [monger.query :as mq]
             [monger.core :as mongo]))
 
 (def ^:private wallet-collection "wallets")
@@ -69,7 +70,7 @@
           (dissoc :_id))))
 
   (query [this query]
-     (->> (mc/find-maps mongo-db coll query)
+    (->> (mq/with-collection mongo-db coll (mq/find query))
          (map #(dissoc % :_id))))
 
   (delete! [this k]
