@@ -70,14 +70,15 @@
   (mongo/fetch wallet-store email))
 
 (defn fetch-by-sso-id [wallet-store sso-id]
-  (first (mongo/query wallet-store {:sso-id sso-id})))
+  (first (mongo/query wallet-store {:sso-id sso-id} {})))
 
 (defn fetch-by-name [wallet-store name]
-  (first (mongo/query wallet-store {:name name})))
+  (first (mongo/query wallet-store {:name name} {})))
 
 (defn fetch-by-account-id [wallet-store name]
-  (first (mongo/query wallet-store {:account-id name})))
+  (first (mongo/query wallet-store {:account-id name} {})))
 
 (defn query
-  ([wallet-store] (query wallet-store {}))
-  ([wallet-store query-m] (mongo/query wallet-store query-m)))
+  ([wallet-store] (query wallet-store {} {}))
+  ([wallet-store query-m] (query wallet-store query-m {}))
+  ([wallet-store query-m param-m] (mongo/query wallet-store query-m param-m)))

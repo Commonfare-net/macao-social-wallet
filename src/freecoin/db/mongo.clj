@@ -47,10 +47,26 @@
     "Update the item found using key k by running the update-fn on it and storing it")
   (fetch [e k]
     "Retrieve item based on primary id")
-  (query [e query]
+  (query [e query params]
     "Items are returned using a query map")
   (delete! [e k]
     "Delete item based on primary id"))
+
+(defn apply-skip
+  [q skip-num]
+  (if skip-num
+    (mq/skip q skip-num)
+    q))
+
+(defn apply-limit
+  [q limit-num]
+  (if limit-num
+    (mq/limit q limit-num)
+    q))
+
+(defn debug-q
+  [q]
+  (doto q (clojure.pprint/pprint)))
 
 (defrecord MongoStore [mongo-db coll]
   FreecoinStore
@@ -69,9 +85,12 @@
       (-> (mc/find-map-by-id mongo-db coll k)
           (dissoc :_id))))
 
-  (query [this query]
-    (->> (mq/with-collection mongo-db coll (mq/find query))
-         (map #(dissoc % :_id))))
+  (query [this query {:keys [skip-num limit-num]}]
+    (map #(dissoc % :_id)
+         (mq/with-collection mongo-db coll
+           (-> (mq/find query)
+               (apply-skip skip-num)
+               (apply-limit limit-num)))))
 
   (delete! [this k]
     (when k
@@ -94,7 +113,7 @@
 
   (fetch [this k] (@data k))
 
-  (query [this query]
+  (query [this query _]
     (filter #(= query (select-keys % (keys query))) (vals @data)))
 
   (delete! [this k]

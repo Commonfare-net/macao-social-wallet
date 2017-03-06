@@ -51,7 +51,7 @@
   (let [wallet-store (fm/create-memory-store)
         blockchain (fb/create-in-memory-blockchain :bk)
         sender-details (w/new-empty-wallet!
-                        wallet-store blockchain 
+                        wallet-store blockchain
                         "sender-sso-id" "sender" sender-email)
         recipient-details (w/new-empty-wallet!
                            wallet-store blockchain
@@ -121,7 +121,7 @@
                                     {:amount "5.00" :recipient "recipient"}
                                     {:signed-in-email sender-email :cookie-data sender-apikey})
                                    form-post-handler)
-                      transaction-confirmation (first (fm/query confirmation-store {}))]
+                      transaction-confirmation (first (fm/query confirmation-store {} {}))]
                   (fact "creates a transaction confirmation"
                         (test-store/entry-count confirmation-store) => 1)
 
@@ -201,7 +201,7 @@
 
          (fact "returns 401 when transaction was not created by the signed-in participant"
                (let [confirmation-store (fm/create-memory-store)
-                     confirmation-for-different-sender (c/new-transaction-confirmation! 
+                     confirmation-for-different-sender (c/new-transaction-confirmation!
                                                         confirmation-store
                                                         (constantly "confirmation-for-different-sender-uid")
                                                         "different-sender@email.com" recipient-email 10M)
