@@ -17,6 +17,9 @@
 (defn port [config-m]
   (Integer. (get-env config-m :port "8000")))
 
+(defn gorilla-port [config-m]
+  (Integer. (get-env config-m :gorilla-port "8990")))
+
 (defn host [config-m]
   (get-env config-m :host "localhost"))
 
