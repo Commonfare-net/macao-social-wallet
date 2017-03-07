@@ -12,7 +12,8 @@
             [gorilla-repl.version :as version]
             [gorilla-repl.handle :as handle]
             [clojure.set :as set]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [freecoin.config :as config])
   (:gen-class))
 
 ;; the combined routes - we serve up everything in the "public" directory of resources under "/".
@@ -58,4 +59,5 @@
 
 (defn -main
   [& args]
-  (run-gorilla-server {:port 8990}))
+  (let [config-m (config/create-config)]
+    (run-gorilla-server {:port (config/gorilla-port config-m)})))

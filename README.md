@@ -59,6 +59,15 @@ lein ring server
 
 This command will open a browser on localhost port 8000
 
+### Running the app using the uberjar
+
+- For freecoin
+-- java -cp target/uberjar/freecoin-<VERSION>-standalone.jar freecoin.main
+
+For freecoin admin
+
+-- java -cp target/uberjar/freecoin-<VERSION>-standalone.jar gorilla_repl.core
+
 ## Running the app from a live repl (for developers)
 
 The server can be started and stopped from the repl by doing the following
