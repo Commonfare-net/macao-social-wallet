@@ -62,11 +62,10 @@ This command will open a browser on localhost port 8000
 ### Running the app using the uberjar
 
 - For freecoin
--- java -cp target/uberjar/freecoin-<VERSION>-standalone.jar freecoin.main
+ java -cp target/uberjar/freecoin-<VERSION>-standalone.jar freecoin.main
 
-For freecoin admin
-
--- java -cp target/uberjar/freecoin-<VERSION>-standalone.jar gorilla_repl.core
+- For freecoin admin
+ java -cp target/uberjar/freecoin-<VERSION>-standalone.jar gorilla_repl.core
 
 ## Running the app from a live repl (for developers)
 
