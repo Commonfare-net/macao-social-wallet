@@ -18,8 +18,8 @@ Stonecutter is running on port 8000
 
 ## Freecoin
 
-Because stonecutter is on SNAPSHOT version we need `export LEIN_SNAPSHOTS_IN_RELEASE=1`
-Then we can start the freecoin app by running `java -cp target/uberjar/freecoin-0.2.0-standalone.jar freecoin.main`
+Because stonecutter is on SNAPSHOT version we need `export LEIN_SNAPSHOTS_IN_RELEASE=1` before we do the uberjar.
+Then we can start the freecoin app by running `java -cp target/uberjar/freecoin-0.2.0-standalone.jar freecoin.main`. The jar should be on the same dir as rsources/land for the translation.
 Freecoin is running on port 5000
 
 Lastly we can start the administrative functionality of freecoin like `java -cp target/uberjar/freecoin-0.2.0-standalone.jar gorilla_repl.core`
