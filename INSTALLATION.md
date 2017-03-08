@@ -5,7 +5,7 @@
 Java needs to be installed on the machine
 apt-get install openjdk-7-jdk
 
-## MondoDB
+## MongoDB
 
 - [Install MongoDB](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)
 - Start mongoDB like `service mongod start`
