@@ -2,8 +2,8 @@
 
 ## Java
 
-Java needs to be installed on the machine
-apt-get install openjdk-7-jdk
+Java needs to be installed on the machine like
+`apt-get install openjdk-7-jdk`
 
 ## MongoDB
 
@@ -14,13 +14,13 @@ apt-get install openjdk-7-jdk
 
 Copy to the same directory the jar, the test-key.json from test-resources and the .lein-env produced by lein uberjar.
 Start stonecutter like `java -jar stonecutter-0.1.0-SNAPSHOT-standalone.jar`
-Stonecutter is running on port 8000
+Stonecutter is running on port 5000
 
 ## Freecoin
 
-Because stonecutter is on SNAPSHOT version we need `export LEIN_SNAPSHOTS_IN_RELEASE=1` before we do the uberjar.
-Then we can start the freecoin app by running `java -cp target/uberjar/freecoin-0.2.0-standalone.jar freecoin.main`. The jar should be on the same dir as rsources/land for the translation.
-Freecoin is running on port 5000
+Because stonecutter is on SNAPSHOT version we need `export LEIN_SNAPSHOTS_IN_RELEASE=1` before we do the uberjar. Before the build a freecoin entry needs to be added to resources/client-credentials.yml for freecoin with the correct URL.
+Then create a freecoin dir and copy there the jar, the resources/lang and the .lein-env of the uberjar build. We can then start the freecoin app by running `java -cp target/uberjar/freecoin-0.2.0-standalone.jar freecoin.main`. 
+Freecoin is running on port 8000
 
 Lastly we can start the administrative functionality of freecoin like `java -cp target/uberjar/freecoin-0.2.0-standalone.jar gorilla_repl.core`
 The freecoin-admin tool is running on port 8990
@@ -29,3 +29,10 @@ The freecoin-admin tool is running on port 8990
 
 - No X11 DISPLAY variable was set
 -- start with ring server-headless
+
+- Forbidden when redirecting to stonecutter
+-- The credentials.yml is not properly set up
+
+## TODO
+
+- Better configuration management
