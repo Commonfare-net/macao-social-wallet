@@ -57,9 +57,7 @@
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
              ]
-  :env [[:base-url "http://localhost:8000"]
-
-        ;; translation is configured here, strings are hard-coded at compile time
+  :env [;; translation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
         [:translation-language "lang/en.yml"]
         [:translation-fallback "lang/en.yml"]]
@@ -111,12 +109,13 @@
                              [:secure "false"]]}
 
              :admin-run { :main ^:skip-aot gorilla-repl.core;:main gorilla-repl.core
-                          :env [[:base-url "http://localhost:8000"]
-                                [:client-id "LOCALFREECOIN"]
-                                [:client-secret "FREECOINSECRET"]
-                                [:auth-url "http://localhost:5000"]
-                                [:secure "false"]
-                                [:gorilla-port "8990"]]}}
+                         :env [[:gorilla-ip "127.0.0.1"]
+                               [:base-url "http://localhost:8000"]
+                               [:client-id "LOCALFREECOIN"]
+                               [:client-secret "FREECOINSECRET"]
+                               [:auth-url "http://localhost:5000"]
+                               [:secure "false"]
+                               [:gorilla-port "8990"]]}}
   
   :plugins [[lein-ring "0.9.3"]
             [lein-environ "1.0.0"]]
