@@ -57,9 +57,7 @@
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
              ]
-  :env [[:base-url "http://localhost:8000"]
-
-        ;; translation is configured here, strings are hard-coded at compile time
+  :env [;; translation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
         [:translation-language "lang/en.yml"]
         [:translation-fallback "lang/en.yml"]]
@@ -73,11 +71,12 @@
                                          [kerodon "0.8.0"]
                                          [ns-tracker ~ns-tracker-version]]
                           :repl-options {:init-ns freecoin.core}
-                          :env [[:base-url "http://localhost:8000"]
+                          :env [[:base-url "http://192.168.10.17:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
-                                [:auth-url "http://localhost:5000"]
-                                [:secure "false"]]
+                                [:auth-url "http://192.168.10.17:5000"]
+                                [:secure "false"]
+                                [:debug "true"]
                           :plugins [[lein-midje "3.1.3"]]}
 
              :rel [:release :release-local]
