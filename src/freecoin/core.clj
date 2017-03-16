@@ -63,7 +63,7 @@
   (soc/configure (config/auth-url config-m)
                  (config/client-id config-m)
                  (config/client-secret config-m)
-                 (routes/absolute-path :sso-callback)))
+                 (routes/absolute-path :ocp-home)))
 
 (defmethod lr/render-seq-generic "application/activity+json" [data _]
   (json/write-str data))
@@ -95,9 +95,11 @@
      :landing-page                  (sign-in/landing-page wallet-store blockchain)
      :sign-in                       (sign-in/sign-in sso-configuration)
      :sso-callback                  (sign-in/sso-callback wallet-store blockchain sso-configuration)
+     :ocp-sso-callback              (sign-in/ocp-sso-callback wallet-store blockchain sso-configuration)
      :sign-out                      sign-in/sign-out
      :forget-secret                 sign-in/forget-secret
      :account                       (participants/account      wallet-store blockchain)
+     :balance                       (participants/balance wallet-store blockchain)
      :get-participant-search-form   (participants/query-form   wallet-store)
      :participants                  (participants/participants wallet-store)
 
@@ -144,7 +146,7 @@
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) true #_debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
                                                      (config/secure? config-m)))
-        #_(mw-logger/wrap-with-logger))))
+        (mw-logger/wrap-with-logger))))
 
 ;; launching and halting the app
 (defonce app-state (atom {}))

@@ -37,6 +37,9 @@
                  ["/landing-page" {:get :landing-page}]
                  ["/sign-in-with-sso" {:get :sign-in}]
                  ["/sso-callback" {:get :sso-callback}]
+                 ["/ocp-sso-callback" {:get :ocp-sso-callback}]
+                 ["/work/home" {:get :ocp-home}]
+                 ["/balance" {:get :balance}]
                  ["/sign-out" {:get :sign-out}]
                  ["/forget-secret" {:get :forget-secret}]
                  [["/account/" (eval email-reg-exp)] {:get :account}]
@@ -64,3 +67,6 @@
 
 (defn absolute-path [action & params]
   (str (-> config/create-config config/base-url) (apply path action params)))
+
+(defn localhost-path [action & params]
+  (str "http://localhost:8000" (apply path action params)))

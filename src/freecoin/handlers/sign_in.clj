@@ -40,7 +40,8 @@
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
             [freecoin.views.index-page :as index-page]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [freecoin.handlers.participants :as participants]))
 
 (lc/defresource index-page
   :allowed-methods [:get]
@@ -70,8 +71,8 @@
 (lc/defresource sign-in [sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (-> (soc/authorisation-redirect-response sso-config)
-                 lr/ring-response))
+  :handle-ok (log/spy (-> (soc/authorisation-redirect-response sso-config)
+                          lr/ring-response)))
 
 (defn wallet->access-key [blockchain wallet]
   (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]
@@ -83,15 +84,15 @@
   :allowed? (fn [ctx]
               (when-let [code (get-in ctx [:request :params :code])]
                 (try
-                  (when-let [token-response (soc/request-access-token! sso-config code)]
-                    {::token-response token-response})
+                  (when-let [token-response (soc/request-access-token! sso-config (log/spy code))]
+                    {::token-response (log/spy token-response)})
                   (catch Exception e nil))))
   :handle-forbidden (-> (routes/absolute-path :landing-page)
                         r/redirect
                         lr/ring-response)
   :exists? (fn [ctx]
              (let [token-response (::token-response ctx)
-                   sso-id (get-in token-response [:user-info :sub])
+                   sso-id (log/spy (get-in token-response [:user-info :sub]))
                    email (get-in token-response [:user-info :email])
                    name (first (s/split email #"@"))]
                ;; the wallet exists already
@@ -105,7 +106,7 @@
                             (wallet/new-empty-wallet!
                                 wallet-store
                               blockchain 
-                              sso-id name email)]
+                              (log/spy sso-id) name email)]
 
                    ;; TODO: distribute other shares to organization and auditor
                    ;; see in freecoin.db.wallet
@@ -123,6 +124,63 @@
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (cond-> (r/redirect (routes/absolute-path :account :email (::email ctx)))
+                  (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
+                  true (assoc-in [:session :signed-in-email] (::email ctx)))))
+  :handle-not-found (-> (routes/absolute-path :landing-page)
+                        r/redirect
+                        lr/ring-response))
+
+(lc/defresource ocp-sso-callback [wallet-store blockchain sso-config]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :allowed? (fn [ctx]
+              (when-let [code (get-in ctx [:request :params :code])]
+                (try
+                  (when-let [token-response (log/spy (soc/request-access-token! sso-config (log/spy code)))]
+                    {::token-response (log/spy token-response)})
+                  (catch Exception e nil))))
+  ;; TODO : redirect back to the sender IP
+  :handle-forbidden (-> (routes/localhost-path :ocp-home)
+                        r/redirect
+                        lr/ring-response)
+  :exists? (fn [ctx]
+             (let [token-response (::token-response ctx)
+                   sso-id (log/spy (get-in token-response [:user-info :sub]))
+                   email (get-in token-response [:user-info :email])
+                   name (first (s/split email #"@"))]
+               ;; the wallet exists already
+               (if-let [wallet (log/spy (wallet/fetch wallet-store email))]
+                 (do
+                   (log/info "The wallet for email " email " already exists")
+                   {::email (:email wallet)
+                    ::wallet wallet})
+                 
+                 ;; a new wallet has to be made
+                 (do
+                   (log/info "Creating new wallet")
+                   (when-let [{:keys [wallet apikey]}
+                              (wallet/new-empty-wallet!
+                                  wallet-store
+                                blockchain 
+                                (log/spy sso-id) name email)]
+
+                     ;; TODO: distribute other shares to organization and auditor
+                     ;; see in freecoin.db.wallet
+                     ;; {:wallet (mongo/store! wallet-store :uid wallet)
+                     ;;  :apikey       (secret->apikey              account-secret)
+                     ;;  :participant  (secret->participant-shares  account-secret)
+                     ;;  :organization (secret->organization-shares account-secret)
+                     ;;  :auditor      (secret->auditor-shares      account-secret)
+                     ;;  }))
+
+                     ;; saved in context
+                     {::email (:email wallet)
+                      ::cookie-data apikey
+                      ::wallet wallet})))))
+
+  :handle-ok (fn [ctx]
+               (lr/ring-response
+                (cond-> (r/redirect (routes/absolute-path :balance (::email ctx)))
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
                   true (assoc-in [:session :signed-in-email] (::email ctx)))))
   :handle-not-found (-> (routes/absolute-path :landing-page)

@@ -39,7 +39,18 @@
             [freecoin.views :as fv]
             [freecoin.views.participants-query-form :as participants-query-form]
             [freecoin.views.participants-list :as participants-list]
-            [freecoin.views.account-page :as account-page]))
+            [freecoin.views.account-page :as account-page]
+            [stonecutter-oauth.client :as soc]
+            [freecoin.routes :as routes]))
+
+(defn get-balance [ctx blockchain]
+  (if-let [wallet (:wallet ctx)]
+    (blockchain/get-balance blockchain (:account-id wallet))
+    (do
+      (log/warn "Wallet Not Found!")
+      (-> (routes/localhost-path :ocp-home)
+                        r/redirect
+                        lr/ring-response))))
 
 (defn render-wallet [wallet blockchain]
   (-> {:wallet wallet
@@ -73,6 +84,21 @@
                (if-let [other-participant (get-in ctx [:request :params :email])]
                  (other-participant-wallet other-participant wallet-store blockchain)
                  (my-wallet ctx blockchain))))
+
+(lc/defresource balance [wallet-store blockchain]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+
+  :authorized? #(auth/is-signed-in %)
+
+  :exists? #(auth/has-wallet % wallet-store)
+
+  :handle-ok (fn [ctx]
+               (get-balance ctx blockchain))
+
+  :handle-not-found (-> (routes/localhost-path :ocp-home)
+                        r/redirect
+                        lr/ring-response))
 
 (lc/defresource query-form [wallet-store]
   :allowed-methods [:get]

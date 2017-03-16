@@ -1,5 +1,8 @@
 (def ns-tracker-version "0.3.1")
 
+;; TODO 0.0.0.0
+(def external-ip "192.168.10.112")
+
 (defproject freecoin "0.2.0"
   :description "Freecoin digital currency toolkit"
   :url "http://freecoin.ch"
@@ -71,12 +74,12 @@
                                          [kerodon "0.8.0"]
                                          [ns-tracker ~ns-tracker-version]]
                           :repl-options {:init-ns freecoin.core}
-                          :env [[:base-url "http://192.168.10.17:8000"]
+                          :env [[:base-url "http://192.168.10.155:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
-                                [:auth-url "http://192.168.10.17:5000"]
+                                [:auth-url "http://192.168.10.155:5000"]
                                 [:secure "false"]
-                                [:debug "true"]
+                                [:debug "true"]]
                           :plugins [[lein-midje "3.1.3"]]}
 
              :rel [:release :release-local]
