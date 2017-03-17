@@ -7,7 +7,7 @@
             :url "http://www.d-centproject.eu"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [com.taoensso/timbre "4.8.0"]
-                 [liberator "0.14.1"]
+                 [liberator "0.14.1" :exclusions [hiccup]]
                  [clj-http "3.4.1"]
                  [scenic "0.2.5"]
                  [ring/ring-core "1.5.1"]
@@ -26,15 +26,19 @@
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [com.tiemens/secretshare "1.4.2"]
                  [buddy/buddy-hashers "1.2.0"]
-                 [simple-time "0.2.1"]
+                 [simple-time "0.2.1" :exclusions [joda-time]]
                  [environ "1.1.0"]
                  [clojure-humanize "0.2.2"]
                  [clj.qrgen "0.4.0"]
                  [clavatar "0.3.0"]
                  ;; Gossip is a lein tool to generate call-graphs for Clojure code
                  [cc.artifice/lein-gossip "0.2.1"]
-                 [circleci/clj-yaml "0.5.5"]]
+                 [circleci/clj-yaml "0.5.5"]
 
+                 ; fxc secret sharing protocol
+                 [org.clojars.dyne/fxc "0.2.0"]]
+
+  :pedantic? :warn
 
   :source-paths ["src"]
   :resource-paths ["resources" "test-resources"]
