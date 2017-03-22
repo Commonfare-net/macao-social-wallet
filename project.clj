@@ -51,7 +51,7 @@
 
   :source-paths ["src"]
   :resource-paths ["resources" "test-resources"]
-  :template-additions ["ws/index.clj"]
+
   :target-path "target/%s"
 
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
@@ -92,28 +92,29 @@
              :production {:source-paths ["src" "prod"]
                           :main freecoin.main
                           ;; TODO replace with scipt
-                          :env [[:base-url "http://localhost:8000"]
+                          :env [[:base-url "http://freecoin1prod.dyne.org:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
-                                [:auth-url "http://localhost:5000"]
+                                [:auth-url "http://freecoin1staging.dyne.org:5000"]
                                 [:secure "false"]]}
              :uberjar {:dependencies [[ns-tracker ~ns-tracker-version]]
                        :source-paths ["src" "prod"]
                        :aot :all
                        
                        ;; TODO replace with script
-                       :env [[:base-url "http://localhost:8000"]
+                       :env [[:base-url "http://freecoin1staging.dyne.org:8000"]
                              [:client-id "LOCALFREECOIN"]
                              [:client-secret "FREECOINSECRET"]
-                             [:auth-url "http://localhost:5000"]
-                             [:secure "false"]]}
+                             [:auth-url "http://freecoin1staging.dyne.org:5000"]
+                             [:secure "false"]
+                             [:gorilla-ip "freecoin1staging.dyne.org"]]}
 
              :admin-run { :main ^:skip-aot gorilla-repl.core;:main gorilla-repl.core
                          :env [[:gorilla-ip "127.0.0.1"]
-                               [:base-url "http://localhost:8000"]
+                               [:base-url "http://80.86.85.3:8000"]
                                [:client-id "LOCALFREECOIN"]
                                [:client-secret "FREECOINSECRET"]
-                               [:auth-url "http://localhost:5000"]
+                               [:auth-url "http://80.86.85.3:5000"]
                                [:secure "false"]
                                [:gorilla-port "8990"]]}}
   
