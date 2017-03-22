@@ -24,7 +24,7 @@ Because stonecutter is on SNAPSHOT version we need `export LEIN_SNAPSHOTS_IN_REL
 
 Before the build a freecoin entry needs to be added to resources/client-credentials.yml for freecoin with the correct URL.
 
-Then create a freecoin dir and copy there the jar, the resources/lang and the .lein-env of the uberjar build.
+Then create a freecoin dir and copy there the jar and the .lein-env of the uberjar build. Instead of the .lein-env file environmental variables or Java system properties can be used.
 
 We can then start the freecoin app by running `java -cp target/uberjar/freecoin-0.2.0-standalone.jar freecoin.main`.
 
@@ -48,3 +48,4 @@ The freecoin-admin tool is running on port 8990
 ## TODO
 
 - Better configuration management (instead of lein-env files)
+- Get rid of the ws/index manual dependency (javascript)
