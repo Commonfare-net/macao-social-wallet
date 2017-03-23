@@ -32,9 +32,10 @@
 (defn run-gorilla-server
   [conf]
   ;; get configuration information from parameters
-  (let [version (or (:version conf) "develop")
+  (assert (:gorilla-ip conf) "Need to set the gorilla-ip")
+  (let [gorilla-ip (:gorilla-ip conf)
+        version (or (:version conf) "develop")
         webapp-requested-port (or (:port conf) 0)
-        ip (or (:ip conf) "127.0.0.1")
         nrepl-requested-port (or (:nrepl-port conf) 0)  ;; auto-select port if none requested
         nrepl-port-file (io/file (or (:nrepl-port-file conf) ".nrepl-port"))
         gorilla-port-file (io/file (or (:gorilla-port-file conf) ".gorilla-port"))
@@ -51,13 +52,14 @@
     ;; first startup nREPL
     (nrepl/start-and-connect nrepl-requested-port nrepl-port-file)
     ;; and then the webserver
-    (let [s (server/run-server #'app-routes {:port webapp-requested-port :join? false :ip ip :max-body 500000000})
+    (let [s (server/run-server #'app-routes {:port webapp-requested-port :join? false :ip gorilla-ip :max-body 500000000})
           webapp-port (:local-port (meta s))]
       (spit (doto gorilla-port-file .deleteOnExit) webapp-port)
-      (println (str "Running at http://" ip ":" webapp-port "/index.html"))
+      (println (str "Running at "  gorilla-ip ":" webapp-port "/index.html"))
       (println "Ctrl+C to exit."))))
 
 (defn -main
   [& args]
   (let [config-m (config/create-config)]
-    (run-gorilla-server {:port (config/gorilla-port config-m)})))
+    (run-gorilla-server {:port (config/gorilla-port config-m)
+                         :gorilla-ip (config/gorilla-ip config-m)})))

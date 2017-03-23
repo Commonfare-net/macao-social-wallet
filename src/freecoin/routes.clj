@@ -63,4 +63,5 @@
       (throw (Exception. (format "Error constructing url for action '%s', with params '%s'" action params))))))
 
 (defn absolute-path [action & params]
-  (str (-> config/create-config config/base-url) (apply path action params)))
+  (let [base-url (-> (config/create-config) config/base-url)]
+    (str base-url (apply path action params))))
