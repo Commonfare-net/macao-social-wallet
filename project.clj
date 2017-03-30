@@ -57,15 +57,16 @@
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
              ]
-  :env [;; translation is configured here, strings are hard-coded at compile time
+  :env [[:base-url "http://localhost:8000"]
+
+        ;; translation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
         [:translation-language "lang/en.yml"]
         [:translation-fallback "lang/en.yml"]]
 
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]
-            "test-transactions" ["with-profile" "transaction-graph" "run"]
-            "run-admin" ["with-profile" "admin-run" "run"]}
+            "test-transactions" ["with-profile" "transaction-graph" "run"]}
   :profiles {:dev [:dev-common :dev-local]
              :dev-common {:dependencies [[midje "1.8.3"] 
                                          [kerodon "0.8.0"]
@@ -100,7 +101,7 @@
              :uberjar {:dependencies [[ns-tracker ~ns-tracker-version]]
                        :source-paths ["src" "prod"]
                        :aot :all
-                       
+                       :main freecoin.main
                        ;; TODO replace with script
                        :env [[:base-url "http://freecoin1staging.dyne.org:8000"]
                              [:client-id "LOCALFREECOIN"]
