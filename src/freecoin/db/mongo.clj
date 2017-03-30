@@ -32,6 +32,7 @@
 (def ^:private wallet-collection "wallets")
 (def ^:private confirmation-collection "confirmations")
 (def ^:private transaction-collection "transactions")
+(def ^:private account-collection "accounts")
 
 (defn get-mongo-db-and-conn [mongo-uri]
   (let [db-and-conn (mongo/connect-via-uri mongo-uri)]
@@ -130,3 +131,6 @@
 
 (defn create-transaction-store [db]
   (create-mongo-store db transaction-collection))
+
+(defn create-account-store [db]
+  (create-mongo-store db account-collection))

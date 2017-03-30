@@ -116,6 +116,7 @@
           recipient-wallet (wallet/fetch wallet-store recipient-email)
           secret (::secret ctx)]
       (blockchain/make-transaction blockchain
+                                   ;; TODO: Replace account-id with email
                                    (:account-id sender-wallet) amount
                                    (:account-id recipient-wallet) {:secret secret
                                                                    :tags tags})

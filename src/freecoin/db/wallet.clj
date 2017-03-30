@@ -30,8 +30,7 @@
             [freecoin.db.mongo :as mongo]))
 
 (defn- empty-wallet [sso-id name email]
-  {:sso-id sso-id     ;; id from single sign-on service
-   :name  name        ;; identifier, case insensitive, space counts
+  {:name  name        ;; identifier, case insensitive, space counts
    :email email       ;; verified email account
 ;   :info nil          ;; misc information text on the account
 ;   :creation-date nil ;; date on which the wallet was created
@@ -56,9 +55,9 @@
 (defn secret->auditor-shares [secret]
   (take-last 3 (:slices secret)))
 
-(defn new-empty-wallet! [wallet-store blockchain sso-id name email]
+(defn new-empty-wallet! [wallet-store blockchain name email]
   (let [{:keys [account-id account-secret]} (blockchain/create-account blockchain)
-        wallet (-> (empty-wallet sso-id name email)
+        wallet (-> (empty-wallet name email)
                    (assoc :account-id account-id))]
     {:wallet       (mongo/store! wallet-store :email wallet)
      :apikey       (secret->apikey              account-secret)

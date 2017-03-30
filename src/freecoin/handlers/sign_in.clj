@@ -33,10 +33,14 @@
             [stonecutter-oauth.client :as soc]
             [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
+            [freecoin.db.mongo :as mongo]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
             [freecoin.views.index-page :as index-page]
+            [freecoin.views.sign-in :as sign-in-page]
+            [freecoin.form_helpers :as fh]
+            [freecoin.context-helpers :as ch]
             [taoensso.timbre :as log]))
 
 (lc/defresource index-page
@@ -60,35 +64,46 @@
                  (-> (routes/absolute-path :account :email (:email wallet))
                      r/redirect
                      lr/ring-response)
-                 (-> {:sign-in-url "/sign-in-with-sso"}
+                 (-> {:sign-in-url "/sign-in"}
                      landing-page/landing-page
                      fv/render-page))))
 
-(lc/defresource sign-in [sso-config]
+(lc/defresource sign-in 
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (-> (soc/authorisation-redirect-response sso-config)
-                 lr/ring-response))
+  :handle-ok (fn [ctx] 
+               (-> ctx 
+                   sign-in-page/build
+                   fv/render-page)))
 
-(lc/defresource sso-callback [wallet-store blockchain sso-config]
-  :allowed-methods [:get]
+(lc/defresource log-in [account-store wallet-store blockchain]
+  :allowed-methods [:post]
   :available-media-types ["text/html"]
-  :allowed? (fn [ctx]
-              (when-let [code (get-in ctx [:request :params :code])]
-                (try
-                  (when-let [token-response (soc/request-access-token! sso-config code)]
-                    {::token-response token-response})
-                  (catch Exception e nil))))
-  :handle-forbidden (-> (routes/absolute-path :landing-page)
-                        r/redirect
-                        lr/ring-response)
+
+  :authorized? (fn [ctx]
+                 (log/info "##############")
+                 (let [{:keys [status data problems]}
+                       (fh/validate-form sign-in-page/sign-in-form
+                                         (ch/context->params ctx))]
+                   (if (= :ok (log/spy status))
+                     (let [email (-> ctx :request :params :user-name)]
+                       (when-let [account (mongo/fetch account-store email)]
+                         (when (= (-> ctx :request :params :user-name) (:password account))
+                           {:email (:email account)})))
+                     ;; It never gets here cause it rdirects to handle-unauthorised or its default
+                     (do
+                       (log/info (str "Problems: " (clojure.pprint/pprint problems)))
+                       [false (fh/form-problem (log/spy problems))]))))
+
+  :handle-unauthorized (fn [ctx]
+                         (lr/ring-response (fh/flash-form-problem
+                                            (r/redirect (routes/absolute-path :sign-in))
+                                            ctx)))
+
   :exists? (fn [ctx]
-             (let [token-response (::token-response ctx)
-                   sso-id (get-in token-response [:user-info :sub])
-                   email (get-in token-response [:user-info :email])
-                   name (first (s/split email #"@"))]
-               ;; the wallet exists already
-               (if-let [wallet (wallet/fetch wallet-store email)]
+             ;; the wallet exists already
+             (let [email (:email ctx)]
+               (if-let [wallet (wallet/fetch wallet-store "account")]
                  (do
                    (log/trace "The wallet for email " email " already exists")
                    {::email (:email wallet)})
@@ -98,7 +113,7 @@
                             (wallet/new-empty-wallet!
                                 wallet-store
                               blockchain 
-                              sso-id name email)]
+                              name email)]
 
                    ;; TODO: distribute other shares to organization and auditor
                    ;; see in freecoin.db.wallet
@@ -110,17 +125,31 @@
                    ;;  }))
 
                    ;; saved in context
-                   {::email (:email wallet)
-                    ::cookie-data apikey}))))
+                   {::email (:email wallet)}))))
 
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (cond-> (r/redirect (routes/absolute-path :account :email (::email ctx)))
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
                   true (assoc-in [:session :signed-in-email] (::email ctx)))))
+
+  ;; TODO: Maybe add not found text to landing page?
   :handle-not-found (-> (routes/absolute-path :landing-page)
                         r/redirect
                         lr/ring-response))
+
+(lc/defresource create-account [account-store]
+  :allowed-methods [:post]
+  :available-media-types ["text/html"]
+
+  :post! (fn [ctx]
+           ;; TODO
+           )
+
+  :post-redirect?
+  ;; TODO: this should be replaced with a confirmation page, while waiting for the email confirmation
+  (fn [ctx]
+    {:location (routes/absolute-path :account :email (::email ctx))}))
 
 (defn preserve-session [response request]
   (assoc response :session (:session request)))
@@ -135,17 +164,3 @@
                    (preserve-session (:request ctx))
                    (update-in [:session] dissoc :signed-in-email)
                    lr/ring-response)))
-
-(lc/defresource forget-secret
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-
-  :authorized? #(auth/is-signed-in %)
-
-  :handle-ok
-  (fn [ctx]
-    (-> (routes/absolute-path :account :email (:email ctx))
-        r/redirect
-        (preserve-session (:request ctx))
-        (update-in [:session] dissoc :cookie-data)
-        lr/ring-response)))

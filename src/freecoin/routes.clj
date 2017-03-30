@@ -35,7 +35,10 @@
 ;; TODO: better way than eval?
 (def routes ["" [["/" {:get :index}]
                  ["/landing-page" {:get :landing-page}]
-                 ["/sign-in-with-sso" {:get :sign-in}]
+                 ["/sign-in" {:get :sign-in}]
+                 ["/log-in" {:post :log-in}]
+                 ;; TODO need get?
+                 ["/sign-up" {:post :create-account}]
                  ["/sso-callback" {:get :sso-callback}]
                  ["/sign-out" {:get :sign-out}]
                  ["/forget-secret" {:get :forget-secret}]

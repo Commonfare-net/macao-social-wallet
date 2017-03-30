@@ -36,7 +36,7 @@
   (get-env config-m :cookie-secret "encryptthecookie"))
 
 (defn debug [config-m]
-  (get-env config-m :debug false))
+  (get-env config-m :debug true))
 
 (defn- get-docker-mongo-uri [config-m]
   (when-let [mongo-ip (get-env config-m :mongo-port-27017-tcp-addr)]
