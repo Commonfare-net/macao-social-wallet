@@ -1,3 +1,7 @@
+DO NOT REMOVE!!!!
+
+This branch is meant as a placeholder for obsolete and unused code before cleaning up master
+
 # Freecoin - digital social currency toolkit
 
 [![software by Dyne.org](https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png)](http://www.dyne.org)
