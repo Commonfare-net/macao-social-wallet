@@ -70,10 +70,6 @@
   :handle-ok (-> (soc/authorisation-redirect-response sso-config)
                  lr/ring-response))
 
-(defn wallet->access-key [blockchain wallet]
-  (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]
-    (s/join "::" [(:cookie secret) (:_id secret)])))
-
 (lc/defresource sso-callback [wallet-store blockchain sso-config]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
