@@ -86,8 +86,8 @@
   (let [wallet-store (storage/get-wallet-store stores-m)
         confirmation-store (storage/get-confirmation-store stores-m)
         sso-configuration (create-stonecutter-config config-m)]
-    (when (= :invalid-configuration sso-configuration)
-      (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
+    ;; (when (= :invalid-configuration sso-configuration)
+    ;;   (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
     {:version                       (debug/version sso-configuration)
      :echo                          (debug/echo    sso-configuration)
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
