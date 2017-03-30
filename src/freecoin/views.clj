@@ -27,14 +27,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views
-  (:require [hiccup.page :as page]
-            [formidable.parse :as fp]
-            [cheshire.core :as cheshire]
-            [autoclave.core :as autoclave]))
-
-(def response-representation
-  {"application/json" "application/json"
-   "application/x-www-form-urlencoded" "text/html"})
+  (:require [hiccup.page :as page]))
 
 (defn render-page [{:keys [title heading body body-class] :as content}]
   (page/html5
