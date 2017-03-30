@@ -31,11 +31,8 @@
             [ring.util.response :as r]
             [clojure.string :as s]
             [stonecutter-oauth.client :as soc]
-            [freecoin.config :as config]
             [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
-            [freecoin.blockchain :as blockchain]
-            [freecoin.context-helpers :as ch]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
@@ -48,7 +45,7 @@
   :handle-ok (-> (index-page/build)
                  fv/render-page))
 
-(lc/defresource landing-page [wallet-store blockchain]
+(lc/defresource landing-page [wallet-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 
@@ -72,10 +69,6 @@
   :available-media-types ["text/html"]
   :handle-ok (-> (soc/authorisation-redirect-response sso-config)
                  lr/ring-response))
-
-(defn wallet->access-key [blockchain wallet]
-  (let [secret (get-in wallet [:blockchain-secrets (blockchain/label blockchain)])]
-    (s/join "::" [(:cookie secret) (:_id secret)])))
 
 (lc/defresource sso-callback [wallet-store blockchain sso-config]
   :allowed-methods [:get]

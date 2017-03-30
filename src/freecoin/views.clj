@@ -27,14 +27,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views
-  (:require [hiccup.page :as page]
-            [formidable.parse :as fp]
-            [cheshire.core :as cheshire]
-            [autoclave.core :as autoclave]))
-
-(def response-representation
-  {"application/json" "application/json"
-   "application/x-www-form-urlencoded" "text/html"})
+  (:require [hiccup.page :as page]))
 
 (defn render-page [{:keys [title heading body body-class] :as content}]
   (page/html5
@@ -50,29 +43,3 @@
     [:div {:class "container"}
      [:h1 (or heading title)]
      body]]))
-
-(defn render-template [template {:keys [title] :as content}]
-  (render-page {:title (:title content)
-                :body  (template content)}))
-
-(defn parse-hybrid-form [request form-spec content-type]
-  (case content-type
-    "application/x-www-form-urlencoded"
-    (fp/with-fallback
-      (fn [problems] {:status :error
-                      :problems problems})
-      {:status :ok
-       :data (fp/parse-params form-spec (:params request))})
-
-    "application/json"
-    (let [data (cheshire/parse-string
-                (autoclave/json-sanitize (slurp (:body request))) true)]
-      (fp/with-fallback
-        (fn [problems] {:status :error
-                        :problems problems})
-        {:status :ok
-         :data (fp/parse-params form-spec data)}))
-
-    {:status :error
-     :problems [{:keys []
-                 :msg (str "unknown content type: " content-type)}]}))

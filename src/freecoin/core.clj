@@ -33,8 +33,6 @@
             [taoensso.timbre :as log]
             [clojure.data.json :as json]
             [ring.middleware.defaults :as ring-mw]
-            [ring.middleware.cookies :refer [wrap-cookies]]
-            [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.logger :as mw-logger]
             [scenic.routes :as scenic]
@@ -42,7 +40,6 @@
             [freecoin.db.mongo :as mongo]
             [freecoin.db.storage :as storage]
             [freecoin.blockchain :as blockchain]
-            [freecoin.translation :as translation]
             [freecoin.routes :as routes]
             [freecoin.config :as config]
             [freecoin.handlers.sign-in :as sign-in]
@@ -92,7 +89,7 @@
      :echo                          (debug/echo    sso-configuration)
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
-     :landing-page                  (sign-in/landing-page wallet-store blockchain)
+     :landing-page                  (sign-in/landing-page wallet-store)
      :sign-in                       (sign-in/sign-in sso-configuration)
      :sso-callback                  (sign-in/sso-callback wallet-store blockchain sso-configuration)
      :sign-out                      sign-in/sign-out
