@@ -92,17 +92,8 @@
                              [:client-id "LOCALFREECOIN"]
                              [:client-secret "FREECOINSECRET"]
                              [:auth-url "http://freecoin1staging.dyne.org:5000"]
-                             [:secure "false"]
-                             [:gorilla-ip "freecoin1staging.dyne.org"]]}
-
-             :admin-run { :main ^:skip-aot gorilla-repl.core;:main gorilla-repl.core
-                         :env [[:gorilla-ip "127.0.0.1"]
-                               [:base-url "http://80.86.85.3:8000"]
-                               [:client-id "LOCALFREECOIN"]
-                               [:client-secret "FREECOINSECRET"]
-                               [:auth-url "http://80.86.85.3:5000"]
-                               [:secure "false"]
-                               [:gorilla-port "8990"]]}}
+                             [:secure "false"]]}
+             }
   
   :plugins [[lein-ring "0.9.3"]
             [lein-environ "1.0.0"]]
