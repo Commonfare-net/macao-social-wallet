@@ -2,8 +2,7 @@
   (:require [environ.core :as env]))
 
 (def env-vars #{:port :host :base-url :secure :debug
-                :client-id :client-secret :auth-url
-                :gorilla-port :gorilla-ip})
+                :client-id :client-secret :auth-url})
 
 (defn create-config []
   (select-keys env/env env-vars))
@@ -17,12 +16,6 @@
 
 (defn port [config-m]
   (Integer. (get-env config-m :port "8000")))
-
-(defn gorilla-port [config-m]
-  (Integer. (get-env config-m :gorilla-port "8990")))
-
-(defn gorilla-ip [config-m]
-  (get-env config-m :gorilla-ip "127.0.0.1"))
 
 (defn host [config-m]
   (get-env config-m :host "localhost"))
