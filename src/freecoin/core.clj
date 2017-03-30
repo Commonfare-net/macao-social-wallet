@@ -90,7 +90,7 @@
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store)
-     :sign-in                       (sign-in/sign-in sso-configuration)
+     :sign-in                       sign-in/sign-in
      :sso-callback                  (sign-in/sso-callback wallet-store blockchain sso-configuration)
      :sign-out                      sign-in/sign-out
      :forget-secret                 sign-in/forget-secret

@@ -37,6 +37,7 @@
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
             [freecoin.views.index-page :as index-page]
+            [freecoin.views.sign-in :as sign-in-page]
             [taoensso.timbre :as log]))
 
 (lc/defresource index-page
@@ -56,19 +57,24 @@
                {}))
 
   :handle-ok (fn [ctx]
+               (log/info "handler landing")
                (if-let [wallet (:wallet ctx)]
                  (-> (routes/absolute-path :account :email (:email wallet))
                      r/redirect
                      lr/ring-response)
-                 (-> {:sign-in-url "/sign-in-with-sso"}
-                     landing-page/landing-page
-                     fv/render-page))))
+                 (do (log/info "GOT HERE")
+                     (-> {:sign-in-url "/sign-in"}
+                         landing-page/landing-page
+                         fv/render-page)))))
 
-(lc/defresource sign-in [sso-config]
+(lc/defresource sign-in 
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (-> (soc/authorisation-redirect-response sso-config)
-                 lr/ring-response))
+  :handle-ok (fn [ctx]
+               (log/info "sign-in handler " ctx)
+               (-> ctx
+                   sign-in-page/build
+                   fv/render-page)))
 
 (lc/defresource sso-callback [wallet-store blockchain sso-config]
   :allowed-methods [:get]
