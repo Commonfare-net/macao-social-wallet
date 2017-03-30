@@ -33,27 +33,11 @@
                  [clavatar "0.3.0"]
                  ;; Gossip is a lein tool to generate call-graphs for Clojure code
                  [cc.artifice/lein-gossip "0.2.1"]
-                 [circleci/clj-yaml "0.5.5"]
-
-                 ; frecoinadmin gorilla stuff
-                 [org.clojure/data.json "0.2.6"]
-                 [org.clojure/data.csv "0.1.3"]
-                 [clojure-humanize "0.2.0"]
-                 [ring/ring-json "0.4.0"]
-                 [gorilla-renderable "2.0.0"]
-                 [gorilla-plot "0.1.4"]
-                 [javax.servlet/servlet-api "2.5"]
-                 [grimradical/clj-semver "0.3.0" :exclusions [org.clojure/clojure]]
-                 [cider/cider-nrepl "0.12.0"]
-                 [org.clojure/tools.nrepl "0.2.12"]
-                 ]
+                 [circleci/clj-yaml "0.5.5"]]
 
 
   :source-paths ["src"]
   :resource-paths ["resources" "test-resources"]
-
-  :target-path "target/%s"
-
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
              ]
@@ -68,7 +52,8 @@
             "prod" ["with-profile" "production" "run"]
             "test-transactions" ["with-profile" "transaction-graph" "run"]}
   :profiles {:dev [:dev-common :dev-local]
-             :dev-common {:dependencies [[midje "1.8.3"] 
+             :dev-common {:dependencies [[midje "1.8.3"]
+                                         [peridot "0.4.4"]
                                          [kerodon "0.8.0"]
                                          [ns-tracker ~ns-tracker-version]]
                           :repl-options {:init-ns freecoin.core}
