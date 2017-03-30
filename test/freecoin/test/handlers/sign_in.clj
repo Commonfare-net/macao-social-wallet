@@ -32,7 +32,7 @@
        (fact "When not signed in, displays link to sign in with stonecutter"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   landing-page-handler (fs/landing-page wallet-store blockchain)
+                   landing-page-handler (fs/landing-page wallet-store)
                    response (landing-page-handler (rmr/request :get "/landing-page"))]
                (:status response) => 200
                (-> (:body response) (html/html-snippet [:body])) => (th/links-to? [:.clj--sign-in-link] "/sign-in-with-sso")))
@@ -42,7 +42,7 @@
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                         "stonecutter-user-id" "name" test-email))
-                   landing-page-handler (fs/landing-page wallet-store blockchain)
+                   landing-page-handler (fs/landing-page wallet-store)
                    response (landing-page-handler (-> (rmr/request :get "/landing-page")
                                                       (assoc :session {:signed-in-email (:email wallet)})))]
                response => (th/check-redirects-to (absolute-path :account :email (:email wallet))))))

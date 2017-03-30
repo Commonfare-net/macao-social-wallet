@@ -89,7 +89,7 @@
      :echo                          (debug/echo    sso-configuration)
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
-     :landing-page                  (sign-in/landing-page wallet-store blockchain)
+     :landing-page                  (sign-in/landing-page wallet-store)
      :sign-in                       (sign-in/sign-in sso-configuration)
      :sso-callback                  (sign-in/sso-callback wallet-store blockchain sso-configuration)
      :sign-out                      sign-in/sign-out

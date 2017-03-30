@@ -45,7 +45,7 @@
   :handle-ok (-> (index-page/build)
                  fv/render-page))
 
-(lc/defresource landing-page [wallet-store blockchain]
+(lc/defresource landing-page [wallet-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
 
