@@ -33,6 +33,7 @@
             [stonecutter-oauth.client :as soc]
             [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
+            [freecoin.db.account :as account]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
@@ -57,15 +58,13 @@
                {}))
 
   :handle-ok (fn [ctx]
-               (log/info "handler landing")
                (if-let [wallet (:wallet ctx)]
                  (-> (routes/absolute-path :account :email (:email wallet))
                      r/redirect
                      lr/ring-response)
-                 (do (log/info "GOT HERE")
-                     (-> {:sign-in-url "/sign-in"}
-                         landing-page/landing-page
-                         fv/render-page)))))
+                 (-> {:sign-in-url "/sign-in"}
+                     landing-page/landing-page
+                     fv/render-page))))
 
 (lc/defresource sign-in 
   :allowed-methods [:get]
@@ -76,57 +75,70 @@
                    sign-in-page/build
                    fv/render-page)))
 
-(lc/defresource sso-callback [wallet-store blockchain sso-config]
+(lc/defresource log-in [account-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :allowed? (fn [ctx]
-              (when-let [code (get-in ctx [:request :params :code])]
-                (try
-                  (when-let [token-response (soc/request-access-token! sso-config code)]
-                    {::token-response token-response})
-                  (catch Exception e nil))))
-  :handle-forbidden (-> (routes/absolute-path :landing-page)
-                        r/redirect
-                        lr/ring-response)
+
+  :authorized? (fn [ctx]
+                 (when-let [account (account/fetch account-store email)]
+                   (when "password matches"
+                     {:email (:email account)})))
+
+  :handle-unauthorized (fn [ctx]
+                         (-> ctx
+                             (merge {:unauthorized true})
+                             landing-page/landing-page
+                             fv/render-page))
+
   :exists? (fn [ctx]
-             (let [token-response (::token-response ctx)
-                   sso-id (get-in token-response [:user-info :sub])
-                   email (get-in token-response [:user-info :email])
-                   name (first (s/split email #"@"))]
-               ;; the wallet exists already
-               (if-let [wallet (wallet/fetch wallet-store email)]
-                 (do
-                   (log/trace "The wallet for email " email " already exists")
-                   {::email (:email wallet)})
-                 
-                 ;; a new wallet has to be made
-                 (when-let [{:keys [wallet apikey]}
-                            (wallet/new-empty-wallet!
-                                wallet-store
-                              blockchain 
-                              sso-id name email)]
+             ;; the wallet exists already
+             (if-let [wallet (wallet/fetch wallet-store (:email account))]
+               (do
+                 (log/trace "The wallet for email " email " already exists")
+                 {::email (:email wallet)})
+               
+               ;; a new wallet has to be made
+               (when-let [{:keys [wallet apikey]}
+                          (wallet/new-empty-wallet!
+                              wallet-store
+                            blockchain 
+                            sso-id name email)]
 
-                   ;; TODO: distribute other shares to organization and auditor
-                   ;; see in freecoin.db.wallet
-                   ;; {:wallet (mongo/store! wallet-store :uid wallet)
-                   ;;  :apikey       (secret->apikey              account-secret)
-                   ;;  :participant  (secret->participant-shares  account-secret)
-                   ;;  :organization (secret->organization-shares account-secret)
-                   ;;  :auditor      (secret->auditor-shares      account-secret)
-                   ;;  }))
+                 ;; TODO: distribute other shares to organization and auditor
+                 ;; see in freecoin.db.wallet
+                 ;; {:wallet (mongo/store! wallet-store :uid wallet)
+                 ;;  :apikey       (secret->apikey              account-secret)
+                 ;;  :participant  (secret->participant-shares  account-secret)
+                 ;;  :organization (secret->organization-shares account-secret)
+                 ;;  :auditor      (secret->auditor-shares      account-secret)
+                 ;;  }))
 
-                   ;; saved in context
-                   {::email (:email wallet)
-                    ::cookie-data apikey}))))
+                 ;; saved in context
+                 {::email (:email wallet)})))
 
   :handle-ok (fn [ctx]
                (lr/ring-response
                 (cond-> (r/redirect (routes/absolute-path :account :email (::email ctx)))
                   (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
                   true (assoc-in [:session :signed-in-email] (::email ctx)))))
+
+  ;; TODO: Maybe add not found text to landing page?
   :handle-not-found (-> (routes/absolute-path :landing-page)
                         r/redirect
                         lr/ring-response))
+
+(lc/defresource create-account [account-store]
+  :allowed-methods [:post]
+  :available-media-types ["text/html"]
+
+  :post! (fn [ctx]
+           ;; TODO
+           )
+
+  :post-redirect?
+  ;; TODO: this should be replaced with a confirmation page, while waiting for the email confirmation
+  (fn [ctx]
+    {:location (routes/absolute-path :account :email (::email ctx))}))
 
 (defn preserve-session [response request]
   (assoc response :session (:session request)))
@@ -141,17 +153,3 @@
                    (preserve-session (:request ctx))
                    (update-in [:session] dissoc :signed-in-email)
                    lr/ring-response)))
-
-(lc/defresource forget-secret
-  :allowed-methods [:get]
-  :available-media-types ["text/html"]
-
-  :authorized? #(auth/is-signed-in %)
-
-  :handle-ok
-  (fn [ctx]
-    (-> (routes/absolute-path :account :email (:email ctx))
-        r/redirect
-        (preserve-session (:request ctx))
-        (update-in [:session] dissoc :cookie-data)
-        lr/ring-response)))
