@@ -27,16 +27,19 @@
    [clj-yaml.core :as yaml]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [environ.core :as env]))
+   [environ.core :as env]
+   [taoensso.timbre :as log]))
 
 (defn load-translations-from-string [s]
   (yaml/parse-string s))
 
 (defn load-translations-from-file [file-name]
-  (-> file-name
-      io/resource
-      slurp
-      load-translations-from-string))
+  (if file-name
+    (-> file-name
+        io/resource
+        slurp
+        load-translations-from-string)
+    (log/error "The translation file could not be read.")))
 
 (defn deep-merge
   "Recursively merges maps. If keys are not maps, the last value wins."
