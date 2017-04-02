@@ -14,7 +14,7 @@
                  [ring/ring-anti-forgery "1.0.1"]
                  [ring/ring-defaults "0.2.3"]
                  [ring.middleware.logger "0.5.0" :exclusions [org.slf4j/slf4j-api]]
-                 [compojure "1.5.2"] 
+                 [compojure "1.5.2"]
                  [org.clojars.d-cent/stonecutter-oauth "0.2.0-SNAPSHOT" :exclusions [org.slf4j/slf4j-api]]
                  [http-kit "2.2.0"]
                  [enlive "1.1.6"]
@@ -67,7 +67,7 @@
             "test-transactions" ["with-profile" "transaction-graph" "run"]
             "run-admin" ["with-profile" "admin-run" "run"]}
   :profiles {:dev [:dev-common :dev-local]
-             :dev-common {:dependencies [[midje "1.8.3"] 
+             :dev-common {:dependencies [[midje "1.8.3"]
                                          [kerodon "0.8.0"]
                                          [ns-tracker ~ns-tracker-version]]
                           :repl-options {:init-ns freecoin.core}
@@ -100,7 +100,7 @@
              :uberjar {:dependencies [[ns-tracker ~ns-tracker-version]]
                        :source-paths ["src" "prod"]
                        :aot :all
-                       
+
                        ;; TODO replace with script
                        :env [[:base-url "http://freecoin1staging.dyne.org:8000"]
                              [:client-id "LOCALFREECOIN"]
@@ -117,7 +117,6 @@
                                [:auth-url "http://80.86.85.3:5000"]
                                [:secure "false"]
                                [:gorilla-port "8990"]]}}
-  
   :plugins [[lein-ring "0.9.3"]
             [lein-environ "1.0.0"]]
   :ring {:reload-paths ["src"]
