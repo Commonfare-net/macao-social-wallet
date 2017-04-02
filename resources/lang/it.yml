@@ -1,5 +1,12 @@
 ---
 
+top-menu:
+  landing-page: "Home"
+  get-transaction-form: "Invia crediti"
+  get-all-transactions: "Elenco transazioni"
+  participants: "Membri"
+  sign-out: "Esci
+
 wallet:
   welcome: "Benvenuti su Freecoin"
   name: "Nome"

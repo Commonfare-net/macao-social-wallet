@@ -87,10 +87,8 @@
 
 (defn request->wallet-query
   "Extracts the query spec for a wallet field from the request parameters"
-  [request]
-  (if-let [{:keys [field value]}
-           (-> request :params
-               (utils/select-all-or-nothing [:field :value]))]
+  [{:keys [field value]}]
+  (if (and field value)
     {(keyword field) value}
     {}))
 
@@ -101,6 +99,9 @@
   :authorized? #(auth/is-signed-in %)
 
   :handle-ok (fn [ctx]
-               (-> {:wallets (wallet/query wallet-store (request->wallet-query (:request ctx)))}
-                   participants-list/participants-list
-                   fv/render-page)))
+               (let [params (-> ctx :request :params)
+                     query (request->wallet-query params)
+                     pagination (utils/pagination params)]
+                 (-> {:wallets (wallet/query wallet-store query pagination)}
+                     participants-list/participants-list
+                     fv/render-page))))

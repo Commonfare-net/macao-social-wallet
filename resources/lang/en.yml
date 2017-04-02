@@ -1,5 +1,12 @@
 ---
 
+top-menu:
+  landing-page: "Home"
+  get-transaction-form: "Send credits"
+  get-all-transactions: "Transaction list"
+  participants: "List members"
+  sign-out: "Log out"
+
 wallet:
   welcome: "Welcome to Freecoin"
   name: "Name"

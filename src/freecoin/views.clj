@@ -27,7 +27,34 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views
-  (:require [hiccup.page :as page]))
+  (:require [hiccup.page :as page]
+            [freecoin.routes :as r]
+            [freecoin.translation :as t]))
+
+(defn menu-entry
+  "Turns an action key into its correspondent entry in the translation table"
+  [key]
+  [:top-menu key])
+
+(defn- menu-link
+  ([link]
+   (menu-link link "menu-entry"))
+  ([link class]
+   [:li {:class class
+         :role "presentation"}
+    [:a {:href (r/path link)} (t/locale (menu-entry link))]]))
+
+(defn top-menu
+  "Displays the top menu with links to the various application pages"
+  []
+  [:div
+   [:ul {:class "nav nav-pills"}
+    (for [link [:landing-page
+                :get-transaction-form
+                :get-all-transactions
+                :participants]]
+      (menu-link link))
+    (menu-link :sign-out "menu-entry-last")]])
 
 (defn render-page [{:keys [title heading body body-class] :as content}]
   (page/html5
@@ -40,6 +67,7 @@
     (page/include-css "/static/css/freecoin.css")
     (page/include-css "/static/css/json-html.css")]
    [:body {:class body-class}
+    (top-menu)
     [:div {:class "container"}
      [:h1 (or heading title)]
      body]]))

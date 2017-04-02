@@ -36,9 +36,9 @@
        (fact "displays the balance of the participant wallet with the given email"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
+                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                            "stonecutter-user-id" "name" "test@email.com"))
-                   her-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
+                   her-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                             "stonecutter-user-id" "alice" "alice@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
@@ -50,7 +50,7 @@
        (fact "gives a 404 when the requested email doesn't map to an existing wallet"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
+                   my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                            "stonecutter-user-id" "name" "test@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
@@ -64,7 +64,7 @@
        (fact "can be accessed by signed-in users"
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
-                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
+                   wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                         "stonecutter-user-id" "name" "test@email.com"))
                    query-form-handler (fp/query-form wallet-store)
                    response (-> (th/create-request
@@ -102,6 +102,34 @@
                                 participants-handler)]
                (:status response) => 200
                (-> (:body response) html/html-snippet) => (th/element-count [:.clj--participant__item] 5)))
+
+       (tabular
+        (fact "can specify both skip and limit parameters to restrict the results"
+              (let [wallet-store (fm/create-memory-store)
+                    blockchain (fb/create-in-memory-blockchain :bk)
+                    wallets (doall (->> (range 5)
+                                        (map index->wallet-data)
+                                        (map (partial create-wallet wallet-store blockchain))))
+                    participants-handler (fp/participants wallet-store)
+                    response (-> (th/create-request
+                                  :get "/participants"
+                                  ?pagination (th/authenticated-session (:email (first wallets))))
+                                 participants-handler)]
+                (:status response) => 200
+                (-> (:body response) html/html-snippet) => (th/element-count [:.clj--participant__item] ?results)))
+        ?pagination ?results
+        ; no pagination -> all results
+        {}          5
+
+        ; just skip one -> one result less
+        {:skip  1}  4
+
+        ; limit results -> less results
+        {:limit 4}  4
+
+        ; skip to reduce codomain to less than limit -> less than limit
+        {:skip  3
+         :limit 5}  2)
 
        (tabular
 

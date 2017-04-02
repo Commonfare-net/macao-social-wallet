@@ -88,3 +88,11 @@
   "Convert from long to BigDecimal for retrievals from mongo"
   [l]
   (/ (BigDecimal. l) 100000))
+
+(defn pagination
+  "Given a ring request, extracts and applies the pagination parameters to a query map"
+  [{:keys [skip limit]}]
+  (let [defaults {:skip 0 :limit 20}
+        truthy-or-default (fn [default new-value]
+                            (or new-value default))]
+    (merge-with truthy-or-default defaults {:skip skip :limit limit})))
