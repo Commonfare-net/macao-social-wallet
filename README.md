@@ -6,6 +6,8 @@ Freecoin aims to be a framework for remuneration and authentication supporting m
 
 [![Build Status](https://travis-ci.org/PIENews/freecoin.svg?branch=master)](https://travis-ci.org/PIENews/freecoin)
 
+[![Code Climate](https://codeclimate.com/github/PIENews/freecoin.png)](https://codeclimate.com/github/PIENews/freecoin)
+
 ## Design
 
 The design of Freecoin is informed by an extensive economic and user-centered research conducted by the D-CENT project and documented in deliverables that are available to the public:
