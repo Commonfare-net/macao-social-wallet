@@ -67,10 +67,8 @@
   [q limit-num]
   (if limit-num
     (do
-      (log/warn "Applying limit:" limit-num)
       (mq/limit q limit-num))
     (do
-      (log/warn "Not applying limit:" limit-num)
       q)))
 
 (defn debug-q
