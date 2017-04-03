@@ -31,6 +31,7 @@
 
 (def ^:private wallet-collection "wallets")
 (def ^:private confirmation-collection "confirmations")
+(def ^:private transaction-collection "transactions")
 
 (defn get-mongo-db-and-conn [mongo-uri]
   (let [db-and-conn (mongo/connect-via-uri mongo-uri)]
@@ -49,7 +50,9 @@
   (query [e query]
     "Items are returned using a query map")
   (delete! [e k]
-    "Delete item based on primary id"))
+    "Delete item based on primary id")
+  (aggregate [e formula]
+    "Process data records and return computed results"))
 
 (defrecord MongoStore [mongo-db coll]
   FreecoinStore
@@ -74,7 +77,10 @@
 
   (delete! [this k]
     (when k
-      (mc/remove-by-id mongo-db coll k))))
+      (mc/remove-by-id mongo-db coll k)))
+
+  (aggregate [this formula]
+    (mc/aggregate mongo-db coll formula)))
 
 (defn create-mongo-store [mongo-db coll]
   (MongoStore. mongo-db coll))
@@ -97,7 +103,10 @@
     (filter #(= query (select-keys % (keys query))) (vals @data)))
 
   (delete! [this k]
-    (swap! data dissoc k)))
+    (swap! data dissoc k))
+
+  ;; TODO aggregate
+  )
 
 (defn create-memory-store
   "Create a memory store"
@@ -110,3 +119,6 @@
 
 (defn create-confirmation-store [db]
   (create-mongo-store db confirmation-collection))
+
+(defn create-transaction-store [db]
+  (create-mongo-store db transaction-collection))

@@ -165,7 +165,7 @@
       (let [config-m (config/create-config)
             ;; TODO: add the other store (maybe)
             stores-m (storage/create-mongo-stores db)
-            blockchain (blockchain/new-stub db)
+            blockchain (blockchain/new-stub stores-m)
             server (-> (create-app config-m stores-m blockchain)
                        (server/run-server {:port (config/port config-m)
                                            :host (config/host config-m)}))]

@@ -11,7 +11,7 @@
             [stonecutter-oauth.client :as soc]))
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
-(def blockchain (blockchain/new-stub (ih/get-test-db)))
+(def blockchain (blockchain/new-stub stores-m))
 
 (defn sign-up [state auth-code]
   (-> state

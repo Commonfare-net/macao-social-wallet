@@ -15,7 +15,7 @@
 (ih/setup-db)
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
-(def blockchain (blockchain/new-stub (ih/get-test-db)))
+(def blockchain (blockchain/new-stub stores-m))
 
 (background
  (soc/request-access-token! anything "sender") => {:user-info {:sub "sender"
