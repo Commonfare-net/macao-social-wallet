@@ -52,7 +52,9 @@
   (delete! [e k]
     "Delete item based on primary id")
   (aggregate [e formula]
-    "Process data records and return computed results"))
+    "Process data records and return computed results")
+  (delete-all! [e]
+    "Delete all items from a coll"))
 
 (defrecord MongoStore [mongo-db coll]
   FreecoinStore
@@ -80,7 +82,10 @@
       (mc/remove-by-id mongo-db coll k)))
 
   (aggregate [this formula]
-    (mc/aggregate mongo-db coll formula)))
+    (mc/aggregate mongo-db coll formula))
+
+  (delete-all! [this]
+    (mc/remove mongo-db coll)))
 
 (defn create-mongo-store [mongo-db coll]
   (MongoStore. mongo-db coll))
@@ -105,6 +110,9 @@
   (delete! [this k]
     (swap! data dissoc k))
 
+  (delete-all! [this]
+    (reset! data {}))
+  
   ;; TODO aggregate
   )
 
