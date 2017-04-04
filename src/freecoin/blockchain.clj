@@ -29,7 +29,7 @@
 (ns freecoin.blockchain
   (:require [clojure.string :as str]
             [taoensso.timbre :as log]
-            [freecoin.fxc :as fxc]
+            [fxc.core :as fxc]
             [freecoin.params :as param]
             [freecoin.db.mongo :as mongo]
             [freecoin.db.storage :as storage]
@@ -133,10 +133,13 @@ Used to identify the class type."
   (import-account [bk account-id secrets] nil)
 
   (create-account [bk]
-    (let [secret (fxc/create-secret param/encryption (recname bk))]
-      {:account-id (:_id secret)
+    (let [secret (fxc/generate :url 64)
+          uniqueid (fxc/generate :url 128)]
+      {:account-id uniqueid
+       ;; TODO: establish a unique-id generation algo and cycle of
+       ;; life; this is not related to the :email uniqueness
        :account-secret secret}
-      ;; TODO: wrap all this with symmetric encryption using secrets
+      ;; TODO: wrap all this with symmetric encryption using fxc secrets
       ))
 
   (get-address [bk account-id] nil)
@@ -214,8 +217,9 @@ Used to identify the class type."
   ;; account
   (import-account [bk account-id secret] nil)
   (create-account [bk]
-    (let [secret (fxc/create-secret param/encryption blockchain-label)]
-      {:account-id (:_id secret)
+    (let [secret (fxc/generate :url 64)
+          uniqueid (fxc/generate :url 128)]
+      {:account-id uniqueid
        :account-secret secret}))
 
   (get-address [bk account-id] nil)
