@@ -32,9 +32,6 @@ Freecoin is running on port 8000
 
 Then copy to the same directory the ws sources.
 
-Lastly we can start the administrative functionality of freecoin like `java -cp target/uberjar/freecoin-0.2.0-standalone.jar gorilla_repl.core`. 
-
-
 The freecoin-admin tool is running on port 8990
 
 ## Troubleshooting
