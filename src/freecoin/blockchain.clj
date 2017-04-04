@@ -31,7 +31,8 @@
             [taoensso.timbre :as log]
             [freecoin.fxc :as fxc]
             [freecoin.params :as param]
-            [freecoin.storage :as storage]
+            [freecoin.db.mongo :as mongo]
+            [freecoin.db.storage :as storage]
             [freecoin.utils :as util]
             [simple-time.core :as time]))
 
@@ -125,7 +126,7 @@ Used to identify the class type."
               (fn [v] {"$or" [{:from-id v} {:to-id v}]})}))
 
 ;; inherits from Blockchain and implements its methods
-(defrecord Stub [db]
+(defrecord Stub [stores-m]
   Blockchain
   (label [bk] (keyword (recname bk)))
 
@@ -139,13 +140,14 @@ Used to identify the class type."
       ))
 
   (get-address [bk account-id] nil)
+  
   (get-balance [bk account-id]
     ;; we use the aggregate function in mongodb, sort of simplified map/reduce
-    (let [received-map (first (storage/aggregate db "transactions"
+    (let [received-map (first (mongo/aggregate (storage/get-transaction-store stores-m) 
                                                  [{"$match" {:to-id account-id}}
                                                   {"$group" {:_id "$to-id"
                                                              :total {"$sum" "$amount"}}}]))
-          sent-map  (first (storage/aggregate db "transactions"
+          sent-map  (first (mongo/aggregate (storage/get-transaction-store stores-m)
                                               [{"$match" {:from-id account-id}}
                                                {"$group" {:_id "$from-id"
                                                           :total {"$sum" "$amount"}}}]))
@@ -156,7 +158,7 @@ Used to identify the class type."
   (list-transactions [bk params]
     (log/debug "getting transactions" params)
     (normalize-transactions
-     (storage/find-by-filter db "transactions" (add-transaction-list-params params))))
+     (mongo/query (storage/get-transaction-store stores-m) (add-transaction-list-params params))))
 
   (get-transaction   [bk account-id txid] nil)
 
@@ -172,7 +174,7 @@ Used to identify the class type."
                        :amount (util/bigdecimal->long amount)}]
       ;; TODO: Keep track of accounts to verify validity of from- and
       ;; to- accounts
-      (storage/insert db "transactions" transaction)))
+      (mongo/store! (storage/get-transaction-store stores-m) :_id transaction)))
 
   (list-tags [bk params]
     (let [by-tag [{:$unwind :$tags}]
@@ -182,7 +184,7 @@ Used to identify the class type."
           params (into tags-params [{:$group {:_id "$tags"
                                               :count {"$sum" 1}
                                               :amount {"$sum" "$amount"}}}])
-          tags (storage/aggregate db "transactions" params)]
+          tags (mongo/aggregate (storage/get-transaction-store stores-m)  params)]
       (mapv (fn [{:keys [_id count amount]}]
               {:tag   _id
                :count count
@@ -197,8 +199,8 @@ Used to identify the class type."
 
 (defn new-stub
   "Check that the blockchain is available, then return a record"
-  [db]
-  (Stub. db))
+  [stores-m]
+  (Stub. stores-m))
 
 (defn in-memory-filter [entry params]
   true)
