@@ -138,10 +138,10 @@
   (let [debug-mode (config/debug config-m)]
     ;; TODO: Get rid of scenic?
     (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
-        (conditionally-wrap-with #(ld/wrap-trace % :header :ui) true #_debug-mode)
+        (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
                                                      (config/secure? config-m)))
-        #_(mw-logger/wrap-with-logger))))
+        (mw-logger/wrap-with-logger))))
 
 ;; launching and halting the app
 (defonce app-state (atom {}))
