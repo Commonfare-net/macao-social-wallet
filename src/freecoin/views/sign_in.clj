@@ -5,8 +5,9 @@
             [freecoin.translation :as t]
             [taoensso.timbre :as log]))
 
-(def sign-up
-  {:fields [{:name :first-name :type :text}
+(def sign-up-form
+  {:renderer :bootstrap3-stacked
+   :fields [{:name :first-name :type :text}
             {:name :last-name :type :text}
             {:name :email :type :email}
             {:name :password :type :password}]
@@ -15,12 +16,13 @@
    :action (routes/path :create-account)
    :method "post"})
 
-(def sign-in
-  {:fields [{:name :user-name :type :text} 
+(def sign-in-form
+  {:renderer :bootstrap3-stacked
+   :fields [{:name :email :type :email} 
             {:name :password :type :password}]
-   :validations [[:required [:user-name :password]]]
+   :validations [[:required [:email :password]]]
    :action (routes/path :log-in)
-   :method "get"})
+   :method "post"})
 
 (defn build [context]
   {:title (t/locale [:sign-in :title])
@@ -29,6 +31,6 @@
    :body [:div {}
           [:div (t/locale [:sing-in :heading])]
           [:div {:class "func-sign-in"}
-           (fh/render-form sign-in (:request context))]
+           (fh/render-form sign-in-form (:request context))]
           [:div {:class "func-sign-up"}
-           (fh/render-form sign-up (:request context))]]})
+           (fh/render-form sign-up-form (:request context))]]})

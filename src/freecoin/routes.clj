@@ -36,7 +36,7 @@
 (def routes ["" [["/" {:get :index}]
                  ["/landing-page" {:get :landing-page}]
                  ["/sign-in" {:get :sign-in}]
-                 ["/log-in" {:get :log-in}]
+                 ["/log-in" {:post :log-in}]
                  ;; TODO need get?
                  ["/sign-up" {:post :create-account}]
                  ["/sso-callback" {:get :sso-callback}]

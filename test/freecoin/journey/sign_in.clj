@@ -38,7 +38,7 @@
        (-> (k/session test-app)
            (k/visit (routes/absolute-path :landing-page))
            (kc/check-page-is :landing-page [ks/landing-page-body])))
-
+;; TODO fix tests for authication without SSO
 (facts "A participant can authenticate and create an account, then is redirected to the account page to view their balance"
        (against-background
         (soc/authorisation-redirect-response anything)

@@ -33,12 +33,14 @@
             [stonecutter-oauth.client :as soc]
             [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
-            [freecoin.db.account :as account]
+            [freecoin.db.mongo :as mongo]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views.landing-page :as landing-page]
             [freecoin.views.index-page :as index-page]
             [freecoin.views.sign-in :as sign-in-page]
+            [freecoin.form_helpers :as fh]
+            [freecoin.context-helpers :as ch]
             [taoensso.timbre :as log]))
 
 (lc/defresource index-page
@@ -69,52 +71,61 @@
 (lc/defresource sign-in 
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (fn [ctx]
-               (log/info "sign-in handler " ctx)
-               (-> ctx
+  :handle-ok (fn [ctx] 
+               (-> ctx 
                    sign-in-page/build
                    fv/render-page)))
 
-(lc/defresource log-in [account-store]
-  :allowed-methods [:get]
+(lc/defresource log-in [account-store wallet-store blockchain]
+  :allowed-methods [:post]
   :available-media-types ["text/html"]
 
   :authorized? (fn [ctx]
-                 (when-let [account (account/fetch account-store email)]
-                   (when "password matches"
-                     {:email (:email account)})))
+                 (log/info "##############")
+                 (let [{:keys [status data problems]}
+                       (fh/validate-form sign-in-page/sign-in-form
+                                         (ch/context->params ctx))]
+                   (if (= :ok (log/spy status))
+                     (let [email (-> ctx :request :params :user-name)]
+                       (when-let [account (mongo/fetch account-store email)]
+                         (when (= (-> ctx :request :params :user-name) (:password account))
+                           {:email (:email account)})))
+                     ;; It never gets here cause it rdirects to handle-unauthorised or its default
+                     (do
+                       (log/info (str "Problems: " (clojure.pprint/pprint problems)))
+                       [false (fh/form-problem (log/spy problems))]))))
 
   :handle-unauthorized (fn [ctx]
-                         (-> ctx
-                             (merge {:unauthorized true})
-                             landing-page/landing-page
-                             fv/render-page))
+                         (lr/ring-response (fh/flash-form-problem
+                                            (r/redirect (routes/absolute-path :sign-in))
+                                            ctx)))
 
   :exists? (fn [ctx]
              ;; the wallet exists already
-             (if-let [wallet (wallet/fetch wallet-store (:email account))]
-               (do
-                 (log/trace "The wallet for email " email " already exists")
-                 {::email (:email wallet)})
-               
-               ;; a new wallet has to be made
-               (when-let [{:keys [wallet apikey]}
-                          (wallet/new-empty-wallet!
-                              wallet-store
-                            blockchain 
-                            sso-id name email)]
+             (let [email (:email ctx)]
+               (if-let [wallet (wallet/fetch wallet-store "account")]
+                 (do
+                   (log/trace "The wallet for email " email " already exists")
+                   {::email (:email wallet)})
+                 
+                 ;; a new wallet has to be made
+                 (when-let [{:keys [wallet apikey]}
+                            (wallet/new-empty-wallet!
+                                wallet-store
+                              blockchain 
+                              name email)]
 
-                 ;; TODO: distribute other shares to organization and auditor
-                 ;; see in freecoin.db.wallet
-                 ;; {:wallet (mongo/store! wallet-store :uid wallet)
-                 ;;  :apikey       (secret->apikey              account-secret)
-                 ;;  :participant  (secret->participant-shares  account-secret)
-                 ;;  :organization (secret->organization-shares account-secret)
-                 ;;  :auditor      (secret->auditor-shares      account-secret)
-                 ;;  }))
+                   ;; TODO: distribute other shares to organization and auditor
+                   ;; see in freecoin.db.wallet
+                   ;; {:wallet (mongo/store! wallet-store :uid wallet)
+                   ;;  :apikey       (secret->apikey              account-secret)
+                   ;;  :participant  (secret->participant-shares  account-secret)
+                   ;;  :organization (secret->organization-shares account-secret)
+                   ;;  :auditor      (secret->auditor-shares      account-secret)
+                   ;;  }))
 
-                 ;; saved in context
-                 {::email (:email wallet)})))
+                   ;; saved in context
+                   {::email (:email wallet)}))))
 
   :handle-ok (fn [ctx]
                (lr/ring-response
