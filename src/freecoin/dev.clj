@@ -27,6 +27,7 @@
 
 (ns freecoin.dev
   (:require [ns-tracker.core :refer [ns-tracker]]
+            [taoensso.timbre :as log]
             [clojure.java.shell :refer [sh]]))
 
 (defn- notify [title message]
