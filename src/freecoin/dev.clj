@@ -30,7 +30,12 @@
             [clojure.java.shell :refer [sh]]))
 
 (defn- notify [title message]
-  (sh "notify-send" "-t" "500" title message))
+  (case (System/getProperty "os.name")
+    "Mac OS X"
+    (sh "osascript" "-e" (str "display notification \"" message "\" with title \"" title "\""))
+    "Linux"
+    (sh "notify-send" "-t" "500" title message)
+    (log/error "Unsupported operating system")))
 
 (defn- check-namespace-changes [track]
   (try
