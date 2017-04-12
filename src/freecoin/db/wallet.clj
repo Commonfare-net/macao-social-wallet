@@ -29,7 +29,7 @@
   (:require [freecoin.blockchain :as blockchain]
             [freecoin.db.mongo :as mongo]))
 
-(defn- empty-wallet [sso-id name email]
+(defn- empty-wallet [name email]
   {:name  name        ;; identifier, case insensitive, space counts
    :email email       ;; verified email account
 ;   :info nil          ;; misc information text on the account

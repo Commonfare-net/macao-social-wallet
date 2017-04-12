@@ -14,7 +14,7 @@
 
 (defn new-wallet! [wallet-store blockchain wallet-data-generator]
   (let [{:keys [sso-id name email]} (wallet-data-generator)]
-    (wallet/new-empty-wallet! wallet-store blockchain sso-id name email)))
+    (wallet/new-empty-wallet! wallet-store blockchain name email)))
 
 (defn new-transaction! [blockchain transaction-data-generator wallets-and-secrets]
   (let [{:keys [from-account-id amount

@@ -33,7 +33,8 @@
 (defn sign-out [state]
   (k/visit state (routes/absolute-path :sign-out)))
 
-(facts "Participant can send freecoins to another account"
+;; TODO sgn up and sign in
+#_(facts "Participant can send freecoins to another account"
        (let [memory (atom {})]
          (-> (k/session test-app)
 
@@ -99,7 +100,8 @@
              (kc/selector-includes-content [:title] "Transaction list")
              (kc/selector-matches-count [:select :option] (+ 2 (kh/recall memory :existing-tags))))))
 
-(facts "Error messages show in form on invalid input"
+;; TODO sgn up and sign in
+#_(facts "Error messages show in form on invalid input"
        (let [memory (atom {})]
          (-> (k/session test-app)
 
@@ -129,7 +131,8 @@
              (kc/check-page-is :get-transaction-form [ks/transaction-form--submit])
              (kc/selector-includes-content [ks/transaction-form--error-message] "Recipient: Not found"))))
 
-
+;; TODO sgn up and sign in
+#_
 (facts "Participant can send freecoins to another account by entering PIN. First, PIN is removed from session by visiting 'forget PIN' URL"
        (let [memory (atom {})]
          (-> (k/session test-app)
@@ -180,6 +183,8 @@
              (k/visit (routes/absolute-path :get-all-transactions))
              (kc/selector-matches-count [:select :option] (kh/recall memory :existing-tags)))))
 
+;; TODO sgn up and sign in
+#_
 (facts "Participants can filter transactions by tag"
        (let [memory (atom {})]
          (-> (k/session test-app)

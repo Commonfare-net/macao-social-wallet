@@ -12,7 +12,6 @@
             [freecoin.test.test-helper :as th]
             [freecoin.test-helpers.store :as test-store]))
 
-(def sso-url "http://SSO_URL")
 (def client-id "CLIENT_ID")
 (def client-secret "CLIENT_SECRET")
 (def callback-uri "CALLBACK_URI")
@@ -21,8 +20,6 @@
 (def absolute-path (partial routes/absolute-path))
 
 (def empty-wallet {})
-
-(def test-sso-config (sc/configure sso-url client-id client-secret callback-uri))
 
 (def db-connection (atom nil))
 
@@ -41,14 +38,15 @@
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
-                                                        "stonecutter-user-id" "name" test-email))
+                                                        "name" test-email))
                    landing-page-handler (fs/landing-page wallet-store)
                    response (landing-page-handler (-> (rmr/request :get "/landing-page")
                                                       (assoc :session {:signed-in-email (:email wallet)})))]
                response => (th/check-redirects-to (absolute-path :account :email (:email wallet))))))
 
-(fact "the sign-in endpoint redirects to the stonecutter authorisation url"
-      (let [sign-in-handler (fs/sign-in test-sso-config)
+;; TODO replace - no sso
+#_(fact "the sign-in endpoint redirects to the stonecutter authorisation url"
+      (let [sign-in-handler (fs/sign-in)
             response (sign-in-handler (rmr/request :get "/sign-in-with-sso"))
             expected-authorisation-url (str sso-url "/authorisation?"
                                             "client_id=" client-id
@@ -56,7 +54,8 @@
                                             "&redirect_uri=" callback-uri)]
         response => (th/check-redirects-to expected-authorisation-url)))
 
-(facts "About the openid callback endpoint"
+;; NO SSO callback anymore. Create simple sign in and email confirmation test instead
+#_(facts "About the openid callback endpoint"
        (facts "When token request yields a valid access_token + id_token"
               (against-background
                (sc/request-access-token! ...sso-config... ...auth-code...)
@@ -81,7 +80,7 @@
                     (let [wallet-store (fm/create-memory-store)
                           blockchain (fb/create-in-memory-blockchain :bk)
                           wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
-                                                               "stonecutter-user-id" "name" test-email))
+                                                               "name" test-email))
                           callback-handler (fs/sso-callback wallet-store blockchain ...sso-config...)
                           response (-> (rmr/request :get "/sso-callback")
                                        (assoc :params {:code ...auth-code...})
