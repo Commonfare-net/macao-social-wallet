@@ -97,6 +97,7 @@
      :sign-in-form                  (sign-in/log-in account-store wallet-store blockchain)
      :sign-up-form                  (sign-in/create-account account-store)
      :email-confirmation            sign-in/email-confirmation
+     :account-activated             sign-in/account-acivated
      :activate-account              (sign-in/activate-account account-store)
 
      :account                       (participants/account      wallet-store blockchain)

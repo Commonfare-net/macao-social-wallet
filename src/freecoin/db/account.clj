@@ -29,19 +29,22 @@
 
 (defn new-account!
   [account-store {:keys [first-name last-name email password] :as account-map}]
-  (mongo/store! account-store :email (assoc account-map :confirmed false)))
+  (mongo/store! account-store :email (assoc account-map :activated false)))
 
 
-(defn confirmed! [account-store email]
-  (mongo/update! account-store email #(assoc % :confirmed true)))
+(defn activate! [account-store email]
+  (mongo/update! account-store email #(assoc % :activated true)))
 
 (defn fetch [account-store email]
   (some-> (mongo/fetch account-store email)
           ;; TODO password encr
           ))
 
-(defn update-activation-link [account-store email activation-link]
-  (mongo/update! account-store email #(assoc % :activation-link activation-link)))
+(defn fetch-by-activation-id [account-store activation-id]
+  (first (mongo/query account-store {:activation-id activation-id})))
+
+(defn update-activation-id! [account-store email activation-link]
+  (mongo/update! account-store email #(assoc % :activation-id activation-link)))
 
 (defn delete! [account-store email]
   (mongo/delete! account-store email))

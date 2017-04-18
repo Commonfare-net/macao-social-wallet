@@ -25,7 +25,7 @@
 (defn get-account-store [stores-m]
   (:account-store stores-m))
 
-(defn empty-db-stores [stores-m]
+(defn empty-db-stores! [stores-m]
   (m/delete-all! (get-wallet-store stores-m))
   (m/delete-all! (get-confirmation-store stores-m))
   (m/delete-all! (get-transaction-store stores-m))

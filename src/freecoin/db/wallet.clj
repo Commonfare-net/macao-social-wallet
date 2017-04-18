@@ -68,9 +68,6 @@
 (defn fetch [wallet-store email]
   (mongo/fetch wallet-store email))
 
-(defn fetch-by-sso-id [wallet-store sso-id]
-  (first (mongo/query wallet-store {:sso-id sso-id})))
-
 (defn fetch-by-name [wallet-store name]
   (first (mongo/query wallet-store {:name name})))
 

@@ -41,6 +41,7 @@
             [freecoin.views.index-page :as index-page]
             [freecoin.views.sign-in :as sign-in-page]
             [freecoin.views.email-confirmation :as email-confirmation]
+            [freecoin.views.account-activated :as aa]
             [freecoin.form_helpers :as fh]
             [freecoin.context-helpers :as ch]
             [taoensso.timbre :as log]
@@ -158,7 +159,7 @@
 (def content-types ["text/html" "application/x-www-form-urlencoded"])
 
 (defn- generate-activation-id []
-  (str (java.util.UUID/randomUUID)))
+  (fxc.core/generate 32))
 
 (defn- activation-link [activationid]
   (routes/absolute-path :activate-account :activation-id activationid))
@@ -180,7 +181,7 @@
 (defn email-activation-link [ctx account-store email]
   (let [activation-id (generate-activation-id)
         activation-url (activation-link activation-id)]
-    (account/update-activation-link account-store email activation-url)
+    (account/update-activation-id! account-store email activation-id)
     (let [email-response (send-email-message email activation-url)]
       (when-not (= :SUCCESS (:error email-response))
         (-> ctx
@@ -211,10 +212,10 @@
                                                     ctx)))
   :post! (fn [ctx]
            (log/info "post!")
-           (let [data (-> ctx :request :form-params)
-                 email (get data "email")]
+           (let [data (-> ctx :request :params)
+                 email (get data :email)]
              ;; TODO add actions if db or email failed
-             (account/new-account! account-store (select-keys data ["first-name" "last-name" "email" "password"]))
+             (account/new-account! account-store (select-keys data [:first-name :last-name :email :password]))
              (email-activation-link ctx account-store email)
              ;; TODO SEND EMAIL HERE
 ))
@@ -236,14 +237,30 @@
                    (email-confirmation/build)
                    fv/render-page)))
 
-(lc/defresource activate-account
+(lc/defresource activate-account [account-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
                (let [activation-code (get-in ctx [:request :params :activation-id])]
-                 ;; TODO get email and check if id is ok for email.
-                 ;; If all ok confirmed true! 
-                 (log/info "ACIVATE ACCOUNT"))))
+                 (if-let [account (account/fetch-by-activation-id account-store activation-code)]
+                   ;; TODO is this the right way or should the email be provided?
+                   (do (account/activate! account-store (:email account))
+                       (-> (routes/absolute-path :account-activated)
+                           r/redirect 
+                           lr/ring-response))
+                   (-> ctx (assoc :error "The activation id could not be found")
+                       (routes/absolute-path :landing-page)
+                       r/redirect
+                       lr/ring-response)))))
+
+(lc/defresource account-acivated
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx]
+               (log/info "Account activated ")
+               (-> ctx
+                   (aa/build)
+                   fv/render-page)))
 
 (defn preserve-session [response request]
   (assoc response :session (:session request)))

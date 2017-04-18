@@ -54,3 +54,8 @@ email-confirmation:
   heading: "Email confirmation sent"
   text: "A confirmation email has been sent. "
   text2: "Please check your email and follow the link."
+
+account-activated:
+  title: "Account activated"
+  heading: "You account has been activated!"
+  text: "Your account has been succesfully activated, please log in to continue."
