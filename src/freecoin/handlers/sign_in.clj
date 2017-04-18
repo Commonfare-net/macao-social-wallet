@@ -40,9 +40,11 @@
             [freecoin.views.landing-page :as landing-page]
             [freecoin.views.index-page :as index-page]
             [freecoin.views.sign-in :as sign-in-page]
+            [freecoin.views.email-confirmation :as email-confirmation]
             [freecoin.form_helpers :as fh]
             [freecoin.context-helpers :as ch]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [postal.core :as postal]))
 
 (lc/defresource index-page
   :allowed-methods [:get]
@@ -155,6 +157,38 @@
 
 (def content-types ["text/html" "application/x-www-form-urlencoded"])
 
+(defn- generate-activation-id []
+  (str (java.util.UUID/randomUUID)))
+
+(defn- activation-link [activationid]
+  (routes/absolute-path :activate-account :activation-id activationid))
+
+(defn- send-email-message [email activation-link]
+  ;; TODO what to do with file, env?
+  (let [conf (clojure.edn/read-string (slurp "email-conf.edn"))]
+    ;; TODO with environ
+    (postal/send-message 
+     {:host (:freecoin-email-server conf)
+      :user (:freecoin-email-user conf)
+      :pass (:freecoin-email-pass conf)
+      :ssl true}
+     {:from (:freecoin-email-address conf)
+      :to [email]
+      :subject "Please activate your freecoin account"
+      :body (str "Please click to activate your account " activation-link)})))
+
+(defn email-activation-link [ctx account-store email]
+  (let [activation-id (generate-activation-id)
+        activation-url (activation-link activation-id)]
+    (account/update-activation-link account-store email activation-url)
+    (let [email-response (send-email-message email activation-url)]
+      (when-not (= :SUCCESS (:error email-response))
+        (-> ctx
+            (assoc :error "The activation email failed to send ")
+            (routes/absolute-path :landing-page)
+            r/redirect
+            lr/ring-response)))))
+
 (lc/defresource create-account [account-store]
   :allowed-methods [:post]
   :available-media-types content-types
@@ -177,18 +211,39 @@
                                                     ctx)))
   :post! (fn [ctx]
            (log/info "post!")
-           (let [data (-> ctx :request :form-params)] 
-             (account/new-account! account-store (select-keys data ["first-name" "last-name" "email" "password"]))))
+           (let [data (-> ctx :request :form-params)
+                 email (get data "email")]
+             ;; TODO add actions if db or email failed
+             (account/new-account! account-store (select-keys data ["first-name" "last-name" "email" "password"]))
+             (email-activation-link ctx account-store email)
+             ;; TODO SEND EMAIL HERE
+))
 
 
   ;; TODO: this should be replaced with a confirmation page, while waiting for the email confirmation
-  #_:post-redirect? #_(fn [ctx]
-                    (log/info "post-redirect")
-                    (assoc ctx :location (routes/absolute-path :sign-up-form)))
+  :post-redirect? (fn [ctx]
+                    (log/info "post-redirect")                    
+                    (assoc ctx
+                           :location (routes/absolute-path :email-confirmation)
+                           :email (:email ctx))))
 
-  
-  
-  )
+(lc/defresource email-confirmation
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx]
+               (log/info "Email confirmation ")
+               (-> ctx
+                   (email-confirmation/build)
+                   fv/render-page)))
+
+(lc/defresource activate-account
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx]
+               (let [activation-code (get-in ctx [:request :params :activation-id])]
+                 ;; TODO get email and check if id is ok for email.
+                 ;; If all ok confirmed true! 
+                 (log/info "ACIVATE ACCOUNT"))))
 
 (defn preserve-session [response request]
   (assoc response :session (:session request)))

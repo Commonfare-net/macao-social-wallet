@@ -40,5 +40,8 @@
           ;; TODO password encr
           ))
 
+(defn update-activation-link [account-store email activation-link]
+  (mongo/update! account-store email #(assoc % :activation-link activation-link)))
+
 (defn delete! [account-store email]
   (mongo/delete! account-store email))

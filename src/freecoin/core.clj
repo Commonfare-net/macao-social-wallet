@@ -96,6 +96,8 @@
      :sign-out                      sign-in/sign-out
      :sign-in-form                  (sign-in/log-in account-store wallet-store blockchain)
      :sign-up-form                  (sign-in/create-account account-store)
+     :email-confirmation            sign-in/email-confirmation
+     :activate-account              (sign-in/activate-account account-store)
 
      :account                       (participants/account      wallet-store blockchain)
      :get-participant-search-form   (participants/query-form   wallet-store)
