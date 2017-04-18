@@ -91,9 +91,12 @@
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store)
+
      :sign-in                       sign-in/sign-in
      :sign-out                      sign-in/sign-out
-     :log-in                        (sign-in/log-in account-store wallet-store blockchain)
+     :sign-in-form                  (sign-in/log-in account-store wallet-store blockchain)
+     :sign-up-form                  (sign-in/create-account account-store)
+
      :account                       (participants/account      wallet-store blockchain)
      :get-participant-search-form   (participants/query-form   wallet-store)
      :participants                  (participants/participants wallet-store)

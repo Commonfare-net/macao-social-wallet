@@ -51,8 +51,7 @@
       (swap! current-index inc))))
 
 (defn populate-db [db n-wallets n-transactions]
-  (let [
-        wallet-store (mongo/create-wallet-store db)
+  (let [wallet-store (mongo/create-wallet-store db)
         blockchain (blockchain/new-stub db)
         wallet-data-generator (create-wallet-generator (create-index-generator))
         transaction-data-generator (create-transaction-generator random-selection random-selection random-amount)

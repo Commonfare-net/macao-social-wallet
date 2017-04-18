@@ -33,6 +33,7 @@
             [stonecutter-oauth.client :as soc]
             [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
+            [freecoin.db.account :as account]
             [freecoin.db.mongo :as mongo]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
@@ -81,23 +82,26 @@
   :available-media-types ["text/html"]
 
   :authorized? (fn [ctx]
-                 (log/info "##############")
                  (let [{:keys [status data problems]}
                        (fh/validate-form sign-in-page/sign-in-form
                                          (ch/context->params ctx))]
-                   (if (= :ok (log/spy status))
-                     (let [email (-> ctx :request :params :user-name)]
-                       (when-let [account (mongo/fetch account-store email)]
-                         (when (= (-> ctx :request :params :user-name) (:password account))
-                           {:email (:email account)})))
-                     ;; It never gets here cause it rdirects to handle-unauthorised or its default
+                   (if (= :ok status)
+                     (let [email (-> ctx :request :params :sign-in-email)]
+                       (if-let [account (account/fetch account-store email)]
+                         ;; TODO passrd encr
+                         (if (= (-> ctx :request :params :sign-in-password) (:password account))
+                           {:email email}
+                           [false (fh/form-problem (conj problems
+                                                          {:keys [:sign-in-password] :msg (str "Wrong password for account " email)}))])
+                         [false (fh/form-problem (conj problems
+                                                        {:keys [:sign-in-email] :msg "Account with for this email does not exist"}))]))
                      (do
                        (log/info (str "Problems: " (clojure.pprint/pprint problems)))
-                       [false (fh/form-problem (log/spy problems))]))))
+                       [false (fh/form-problem problems)]))))
 
   :handle-unauthorized (fn [ctx]
                          (lr/ring-response (fh/flash-form-problem
-                                            (r/redirect (routes/absolute-path :sign-in))
+                                            (r/redirect (routes/absolute-path :sign-in-form))
                                             ctx)))
 
   :exists? (fn [ctx]
@@ -134,22 +138,57 @@
                   true (assoc-in [:session :signed-in-email] (::email ctx)))))
 
   ;; TODO: Maybe add not found text to landing page?
+  ;; TODO: do we need this if it is checked above?
   :handle-not-found (-> (routes/absolute-path :landing-page)
                         r/redirect
                         lr/ring-response))
 
+
+(defn check-content-type [ctx content-types]
+  (if (#{:put :post} (get-in ctx [:request :request-method]))
+    (or
+     (some #{(get-in ctx [:request :headers "content-type"])}
+           content-types)
+     [false {:message "Unsupported Content-Type"}])
+    true))
+
+
+(def content-types ["text/html" "application/x-www-form-urlencoded"])
+
 (lc/defresource create-account [account-store]
   :allowed-methods [:post]
-  :available-media-types ["text/html"]
+  :available-media-types content-types
 
+  :known-content-type? #(check-content-type % content-types)
+
+  :processable? (fn [ctx]
+                  (log/info "Processable")
+                  (let [{:keys [status data problems]}
+                        (fh/validate-form sign-in-page/sign-up-form
+                                          (ch/context->params ctx))]
+                    (if (= :ok status)
+                      ctx
+                      [false (fh/form-problem problems)])))
+
+  :handle-unprocessable-entity (fn [ctx]
+                                 (log/info "unprocessable")
+                                 (lr/ring-response (fh/flash-form-problem
+                                                    (r/redirect (routes/absolute-path :sign-in))
+                                                    ctx)))
   :post! (fn [ctx]
-           ;; TODO
-           )
+           (log/info "post!")
+           (let [data (-> ctx :request :form-params)] 
+             (account/new-account! account-store (select-keys data ["first-name" "last-name" "email" "password"]))))
 
-  :post-redirect?
+
   ;; TODO: this should be replaced with a confirmation page, while waiting for the email confirmation
-  (fn [ctx]
-    {:location (routes/absolute-path :account :email (::email ctx))}))
+  #_:post-redirect? #_(fn [ctx]
+                    (log/info "post-redirect")
+                    (assoc ctx :location (routes/absolute-path :sign-up-form)))
+
+  
+  
+  )
 
 (defn preserve-session [response request]
   (assoc response :session (:session request)))

@@ -13,15 +13,15 @@
             {:name :password :type :password}]
    :validations [[:required [:first-name :last-name :email :password]]
                  [:min-length 8 :password]]
-   :action (routes/path :create-account)
+   :action (routes/path :sign-up-form)
    :method "post"})
 
 (def sign-in-form
   {:renderer :bootstrap3-stacked
-   :fields [{:name :email :type :email} 
-            {:name :password :type :password}]
-   :validations [[:required [:email :password]]]
-   :action (routes/path :log-in)
+   :fields [{:name :sign-in-email :type :email} 
+            {:name :sign-in-password :type :password}]
+   :validations [[:required [:sign-in-email :sign-in-password]]]
+   :action (routes/path :sign-in-form)
    :method "post"})
 
 (defn build [context]
