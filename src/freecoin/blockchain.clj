@@ -133,8 +133,8 @@ Used to identify the class type."
   (import-account [bk account-id secrets] nil)
 
   (create-account [bk]
-    (let [secret (fxc/generate :url 64)
-          uniqueid (fxc/generate :url 128)]
+    (let [secret   (fxc/generate 64)
+          uniqueid (fxc/generate 128)]
       {:account-id uniqueid
        ;; TODO: establish a unique-id generation algo and cycle of
        ;; life; this is not related to the :email uniqueness
@@ -217,8 +217,8 @@ Used to identify the class type."
   ;; account
   (import-account [bk account-id secret] nil)
   (create-account [bk]
-    (let [secret (fxc/generate :url 64)
-          uniqueid (fxc/generate :url 128)]
+    (let [secret   (fxc/generate 64)
+          uniqueid (fxc/generate 128)]
       {:account-id uniqueid
        :account-secret secret}))
 
