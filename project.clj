@@ -36,7 +36,7 @@
                  [circleci/clj-yaml "0.5.5"]
 
                  ; fxc secret sharing protocol
-                 [org.clojars.dyne/fxc "0.2.0"]]
+                 [org.clojars.dyne/fxc "0.3.0"]]
 
   :pedantic? :warn
 
