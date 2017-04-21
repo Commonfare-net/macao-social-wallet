@@ -8,6 +8,7 @@
 
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
+;; Aspasia Beneti <aspra@dyne.org>
 
 ;; With contributions by
 ;; Duncan Mortimer <dmortime@thoughtworks.com>
