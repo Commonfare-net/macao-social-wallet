@@ -107,44 +107,40 @@
                                             (r/redirect (routes/absolute-path :sign-in-form))
                                             ctx)))
 
-  :exists? (fn [ctx]
-             ;; the wallet exists already
-             (let [email (:email ctx)]
-               (if-let [wallet (wallet/fetch wallet-store "account")]
-                 (do
-                   (log/trace "The wallet for email " email " already exists")
-                   {::email (:email wallet)})
-                 
-                 ;; a new wallet has to be made
-                 (when-let [{:keys [wallet apikey]}
-                            (wallet/new-empty-wallet!
-                                wallet-store
-                              blockchain 
-                              name email)]
+  :post! (fn [ctx]
+           ;; the wallet exists already
+           (let [email (:email ctx)
+                 name (first (s/split email #"@"))]
+             (if-let [wallet (wallet/fetch wallet-store email)]
+               (do
+                 (log/info "The wallet for email " email " already exists")
+                 {::email (:email wallet)})
+               
+               ;; a new wallet has to be made
+               (when-let [{:keys [wallet apikey]}
+                          (wallet/new-empty-wallet!
+                              wallet-store
+                            blockchain 
+                            name email)]
 
-                   ;; TODO: distribute other shares to organization and auditor
-                   ;; see in freecoin.db.wallet
-                   ;; {:wallet (mongo/store! wallet-store :uid wallet)
-                   ;;  :apikey       (secret->apikey              account-secret)
-                   ;;  :participant  (secret->participant-shares  account-secret)
-                   ;;  :organization (secret->organization-shares account-secret)
-                   ;;  :auditor      (secret->auditor-shares      account-secret)
-                   ;;  }))
+                 ;; TODO: distribute other shares to organization and auditor
+                 ;; see in freecoin.db.wallet
+                 ;; {:wallet (mongo/store! wallet-store :uid wallet)
+                 ;;  :apikey       (secret->apikey              account-secret)
+                 ;;  :participant  (secret->participant-shares  account-secret)
+                 ;;  :organization (secret->organization-shares account-secret)
+                 ;;  :auditor      (secret->auditor-shares      account-secret)
+                 ;;  }))
 
-                   ;; saved in context
-                   {::email (:email wallet)}))))
+                 ;; saved in context
+                 {::email (:email wallet)}))))
 
-  :handle-ok (fn [ctx]
-               (lr/ring-response
-                (cond-> (r/redirect (routes/absolute-path :account :email (::email ctx)))
-                  (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
-                  true (assoc-in [:session :signed-in-email] (::email ctx)))))
-
-  ;; TODO: Maybe add not found text to landing page?
-  ;; TODO: do we need this if it is checked above?
-  :handle-not-found (-> (routes/absolute-path :landing-page)
-                        r/redirect
-                        lr/ring-response))
+  :handle-created (fn [ctx]
+                   (log/info "CREATED")
+                   (lr/ring-response
+                    (cond-> (r/redirect (routes/absolute-path :account :email (::email ctx)))
+                      (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
+                      true (assoc-in [:session :signed-in-email] (::email ctx))))))
 
 
 (defn check-content-type [ctx content-types]
