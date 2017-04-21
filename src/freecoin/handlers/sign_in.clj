@@ -199,7 +199,12 @@
                         (fh/validate-form sign-in-page/sign-up-form
                                           (ch/context->params ctx))]
                     (if (= :ok status)
-                      ctx
+                      (let [email (-> ctx :request :params :email)]
+                        (if (account/fetch account-store email)
+                          [false (fh/form-problem (conj problems
+                                                        {:keys [:password] :msg (str "An account with email " email
+                                                                                     " already exists.")}))]
+                          ctx))
                       [false (fh/form-problem problems)])))
 
   :handle-unprocessable-entity (fn [ctx]
