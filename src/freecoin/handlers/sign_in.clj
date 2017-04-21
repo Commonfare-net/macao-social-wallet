@@ -92,15 +92,19 @@
                    (if (= :ok status)
                      (let [email (-> ctx :request :params :sign-in-email)]
                        (if-let [account (account/fetch account-store email)]
-                         ;; TODO passrd encr
-                         (if (= (-> ctx :request :params :sign-in-password) (:password account))
-                           {:email email}
-                           [false (fh/form-problem (conj problems
-                                                          {:keys [:sign-in-password] :msg (str "Wrong password for account " email)}))])
+                         (if (:activated account)
+                           ;; TODO passrd encr
+                           (if (= (-> ctx :request :params :sign-in-password) (:password account))
+                             {:email email}
+                             [false  (fh/form-problem (conj problems
+                                                            {:keys [:sign-in-password] :msg (str "Wrong password for account " email)}))])
+                           [false  (fh/form-problem (conj problems
+                                                          {:keys [:sign-in-email] :msg (str "The account for " email
+                                                                                               " is not yet active.")}))])
                          [false (fh/form-problem (conj problems
                                                         {:keys [:sign-in-email] :msg "Account with for this email does not exist"}))]))
                      (do
-                       (log/info (str "Problems: " (clojure.pprint/pprint problems)))
+                       ;; TODO needed?
                        [false (fh/form-problem problems)]))))
 
   :handle-unauthorized (fn [ctx]
@@ -114,7 +118,7 @@
                  name (first (s/split email #"@"))]
              (if-let [wallet (wallet/fetch wallet-store email)]
                (do
-                 (log/info "The wallet for email " email " already exists")
+                 (log/trace "The wallet for email " email " already exists")
                  {::email (:email wallet)})
                
                ;; a new wallet has to be made
@@ -137,7 +141,6 @@
                  {::email (:email wallet)}))))
 
   :handle-created (fn [ctx]
-                   (log/info "CREATED")
                    (lr/ring-response
                     (cond-> (r/redirect (routes/absolute-path :account :email (::email ctx)))
                       (::cookie-data ctx) (assoc-in [:session :cookie-data] (::cookie-data ctx))
@@ -151,7 +154,6 @@
            content-types)
      [false {:message "Unsupported Content-Type"}])
     true))
-
 
 (def content-types ["text/html" "application/x-www-form-urlencoded"])
 
@@ -194,7 +196,6 @@
   :known-content-type? #(check-content-type % content-types)
 
   :processable? (fn [ctx]
-                  (log/info "Processable")
                   (let [{:keys [status data problems]}
                         (fh/validate-form sign-in-page/sign-up-form
                                           (ch/context->params ctx))]
@@ -207,13 +208,11 @@
                           ctx))
                       [false (fh/form-problem problems)])))
 
-  :handle-unprocessable-entity (fn [ctx]
-                                 (log/info "unprocessable")
+  :handle-unprocessable-entity (fn [ctx] 
                                  (lr/ring-response (fh/flash-form-problem
                                                     (r/redirect (routes/absolute-path :sign-in))
                                                     ctx)))
   :post! (fn [ctx]
-           (log/info "post!")
            (let [data (-> ctx :request :params)
                  email (get data :email)]
              ;; TODO add actions if db or email failed
@@ -234,7 +233,6 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
-               (log/info "Email confirmation ")
                (-> ctx
                    (email-confirmation/build)
                    fv/render-page)))
@@ -259,7 +257,6 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
-               (log/info "Account activated ")
                (-> ctx
                    (aa/build)
                    fv/render-page)))
