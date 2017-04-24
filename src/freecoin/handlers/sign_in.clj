@@ -220,18 +220,14 @@
            (let [data (-> ctx :request :params)
                  email (get data :email)]
              ;; TODO add actions if db or email failed
-             (account/new-account! account-store (select-keys data [:first-name :last-name :email :password]))
-             (email-activation-link ctx account-store email)
-             ;; TODO SEND EMAIL HERE
-))
+             (if (account/new-account! account-store (select-keys data [:first-name :last-name :email :password]))
+               (email-activation-link ctx account-store email)
+               (log/error "Something went wrong when creating a user in the DB"))))
 
-
-  ;; TODO: this should be replaced with a confirmation page, while waiting for the email confirmation
   :post-redirect? (fn [ctx]
                     (log/info "post-redirect")                    
                     (assoc ctx
-                           :location (routes/absolute-path :email-confirmation)
-                           :email (:email ctx))))
+                           :location (routes/absolute-path :email-confirmation))))
 
 (lc/defresource email-confirmation
   :allowed-methods [:get]
