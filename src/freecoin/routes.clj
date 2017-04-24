@@ -44,7 +44,7 @@
                  ["/forget-secret" {:get :forget-secret}]
                  ["/email-confirmation" {:get :email-confirmation}]
                  [["/account/" (eval email-reg-exp)] {:get :account}]
-                 [["/account/activate/" :activation-id] {:get :activate-account}]
+                 [["/activate/"  (eval email-reg-exp) "/" :activation-id] {:get :activate-account}]
                  ["/account-acivated" {:get :account-activated}]
                  [["/qrcode/" (eval email-reg-exp)] {:get :qrcode}]
                  [["/transactions/" (eval email-reg-exp)] {:get :get-user-transactions}]

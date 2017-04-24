@@ -48,6 +48,12 @@
             [taoensso.timbre :as log]
             [postal.core :as postal]))
 
+(defn error-redirect [ctx error-message]
+  (-> ctx (assoc :error error-message)
+      (routes/absolute-path :landing-page)
+      r/redirect
+      lr/ring-response))
+
 (lc/defresource index-page
   :allowed-methods [:get]
   :available-media-types ["text/html"]
@@ -160,8 +166,10 @@
 (defn- generate-activation-id []
   (fxc.core/generate 32))
 
-(defn- activation-link [activationid]
-  (routes/absolute-path :activate-account :activation-id activationid))
+(defn- activation-link [activationid email]
+  (routes/absolute-path :activate-account 
+                        :email email
+                        :activation-id activationid))
 
 (defn- send-email-message [email activation-link]
   ;; TODO what to do with file, env?
@@ -179,15 +187,11 @@
 
 (defn email-activation-link [ctx account-store email]
   (let [activation-id (generate-activation-id)
-        activation-url (activation-link activation-id)]
+        activation-url (activation-link activation-id email)]
     (account/update-activation-id! account-store email activation-id)
     (let [email-response (send-email-message email activation-url)]
       (when-not (= :SUCCESS (:error email-response))
-        (-> ctx
-            (assoc :error "The activation email failed to send ")
-            (routes/absolute-path :landing-page)
-            r/redirect
-            lr/ring-response)))))
+        (error-redirect ctx "The activation email failed to send ")))))
 
 (lc/defresource create-account [account-store]
   :allowed-methods [:post]
@@ -241,17 +245,17 @@
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
-               (let [activation-code (get-in ctx [:request :params :activation-id])]
+               (let [activation-code (get-in ctx [:request :params :activation-id])
+                     email (get-in ctx [:request :params :email])]
                  (if-let [account (account/fetch-by-activation-id account-store activation-code)]
                    ;; TODO is this the right way or should the email be provided?
-                   (do (account/activate! account-store (:email account))
-                       (-> (routes/absolute-path :account-activated)
-                           r/redirect 
-                           lr/ring-response))
-                   (-> ctx (assoc :error "The activation id could not be found")
-                       (routes/absolute-path :landing-page)
-                       r/redirect
-                       lr/ring-response)))))
+                   (if (= (:email account) email)
+                     (do (account/activate! account-store (:email account))
+                         (-> (routes/absolute-path :account-activated)
+                             r/redirect 
+                             lr/ring-response))
+                     (error-redirect ctx "The email and activation id do not match"))
+                   (error-redirect ctx "The activation id could not be found")))))
 
 (lc/defresource account-acivated
   :allowed-methods [:get]
