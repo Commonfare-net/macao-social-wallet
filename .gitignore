@@ -18,4 +18,4 @@ deploy.tar.gz
 /doc/dot/*png
 /doc/dot/*dot
 .vagrant
-
+email-conf.edn
