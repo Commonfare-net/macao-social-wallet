@@ -1,17 +1,20 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-VAGRANTFILE_API_VERSION = "2"
-Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+Vagrant.configure(2) do |config|
 
-  config.vm.box = "https://files.devuan.org/devuan_jessie_beta/testing/devuan_jessie_1.0.0-beta2_amd64_vagrant.box"
+  config.vm.box = "https://files.devuan.org/devuan_jessie_rc/virtual/devuan_jessie_1.0.0-RC_amd64_vagrant.box"
+
+  config.ssh.username = "root"
+  config.ssh.password = "toor"
+  config.vm.guest = :debian
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.define "freecoin", primary: true do |fxc|
-    fxc.vm.network "private_network", ip: "192.168.50.80"
-    fxc.vm.network :forwarded_port, guest: 8000, host: 8111,
+    fxc.vm.network :forwarded_port, guest: 8000, host: 8000,
                    id: "freecoin", auto_correct: false
     fxc.vm.provider :virtualbox do |vbox|
-      vbox.customize ["modifyvm", :id, "--memory", 2046]
+      vbox.customize ["modifyvm", :id, "--memory", 2048]
     end
     fxc.vm.provision "shell", path: "freecoin_install.sh"
   end
