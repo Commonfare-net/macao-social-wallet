@@ -21,12 +21,7 @@ Furthermore, Freecoin's first social wallet pilots are informed by the research 
 
 ## Configuration
 
-Freecoin identity management is delegated to Stonecutter, the D-CENT SSO. To run Freecoin one also needs to configure integration with a running instance of Stonecutter configured to accept the Freecoin application. The configuration locations are:
-
 - Freecoin: `profiles.clj`
-- Stonecutter: `resources/client-credentials.yml`
-
-This dependency may be removed in the close future as Stonecutter has been left unmaintained.
 
 ## Running the app inside a Vagrant virtual machine
 

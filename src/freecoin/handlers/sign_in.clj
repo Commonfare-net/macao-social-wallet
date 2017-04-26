@@ -31,7 +31,6 @@
             [liberator.representation :as lr]
             [ring.util.response :as r]
             [clojure.string :as s]
-            [stonecutter-oauth.client :as soc]
             [freecoin.routes :as routes]
             [freecoin.db.wallet :as wallet]
             [freecoin.db.account :as account]

@@ -10,9 +10,11 @@
    :fields [{:name :first-name :type :text}
             {:name :last-name :type :text}
             {:name :email :type :email}
-            {:name :password :type :password}]
-   :validations [[:required [:first-name :last-name :email :password]]
-                 [:min-length 8 :password]]
+            {:name :password :type :password}
+            {:name :confirm-password :type :password}]
+   :validations [[:required [:first-name :last-name :email :password :confirm-password]]
+                 [:matches #"[0-9]{8,40}" :password "The password needs to be numeric and minimum 8 characters adn maximum 40"]
+                 [:equal [:password :confirm-password] "The conformation password has to be the same as the password"]]
    :action (routes/path :sign-up-form)
    :method "post"})
 

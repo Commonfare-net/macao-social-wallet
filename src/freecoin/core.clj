@@ -36,7 +36,6 @@
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.logger :as mw-logger]
             [scenic.routes :as scenic]
-            [stonecutter-oauth.client :as soc]
             [freecoin.db.mongo :as mongo]
             [freecoin.db.storage :as storage]
             [freecoin.blockchain :as blockchain]
@@ -55,12 +54,6 @@
 (defn not-found [request]
   {:status 404
    :body "Oops! Page not found."})
-
-(defn create-stonecutter-config [config-m]
-  (soc/configure (config/auth-url config-m)
-                 (config/client-id config-m)
-                 (config/client-secret config-m)
-                 (routes/absolute-path :sso-callback)))
 
 (defmethod lr/render-seq-generic "application/activity+json" [data _]
   (json/write-str data))
@@ -82,13 +75,9 @@
 (defn handlers [config-m stores-m blockchain]
   (let [wallet-store (storage/get-wallet-store stores-m)
         confirmation-store (storage/get-confirmation-store stores-m)
-        account-store (storage/get-account-store stores-m)
-        sso-configuration (create-stonecutter-config config-m)]
-    ;; (when (= :invalid-configuration sso-configuration)
-    ;;   (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
-    {:version                       (debug/version sso-configuration)
-     :echo                          (debug/echo    sso-configuration)
-     :qrcode                        (qrcode/qr-participant-sendto wallet-store)
+        account-store (storage/get-account-store stores-m)]
+    ;; TODO: maybe add other debug endpoints for versions etc (used to be stonecutter related)
+    {:qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store)
 
