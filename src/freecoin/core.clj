@@ -8,6 +8,7 @@
 
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
+;; Aspasia Beneti <aspra@dyne.org>
 
 ;; With contributions by
 ;; Gareth Rogers <grogers@thoughtworks.com>
@@ -72,7 +73,7 @@
    :body "Work-in-progress"
    :headers {"Content-Type" "text/html"}})
 
-(defn handlers [config-m stores-m blockchain]
+(defn handlers [config-m stores-m blockchain email-activator]
   (let [wallet-store (storage/get-wallet-store stores-m)
         confirmation-store (storage/get-confirmation-store stores-m)
         account-store (storage/get-account-store stores-m)]
@@ -84,7 +85,7 @@
      :sign-in                       sign-in/sign-in
      :sign-out                      sign-in/sign-out
      :sign-in-form                  (sign-in/log-in account-store wallet-store blockchain)
-     :sign-up-form                  (sign-in/create-account account-store)
+     :sign-up-form                  (sign-in/create-account account-store email-activator)
      :email-confirmation            sign-in/email-confirmation
      :account-activated             sign-in/account-acivated
      :activate-account              (sign-in/activate-account account-store)
@@ -129,10 +130,12 @@
     (wrapper handler)
     handler))
 
-(defn create-app [config-m stores-m blockchain]
+(defn create-app [config-m stores-m blockchain email-activator]
   (let [debug-mode (config/debug config-m)]
     ;; TODO: Get rid of scenic?
-    (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
+    (-> (scenic/scenic-handler routes/routes
+                               (handlers config-m stores-m blockchain email-activator)
+                               not-found)
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
                                                      (config/secure? config-m)))
@@ -160,7 +163,9 @@
       (let [config-m (config/create-config)
             stores-m (storage/create-mongo-stores db)
             blockchain (blockchain/new-stub stores-m)
-            server (-> (create-app config-m stores-m blockchain)
+            email-conf (clojure.edn/read-string (slurp "email-conf.edn")) 
+            email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
+            server (-> (create-app config-m stores-m blockchain email-activator)
                        (server/run-server {:port (config/port config-m)
                                            :host (config/host config-m)}))]
         (assoc app-state :server server)))))
@@ -189,12 +194,15 @@
   (swap! app-state connect-db)
   (assert (:db @app-state) "The DB is not set")
   (swap! lein-ring-handler
-                  (fn [_] (let [config-m (config/create-config)
-                                db (:db @app-state)
-                                stores-m (storage/create-mongo-stores db)
-                                blockchain (blockchain/new-stub db)]
-                            (prn "Restarting server....")
-                            (create-app config-m stores-m blockchain)))))
+         (fn [_] (let [config-m (config/create-config)
+                       ;; TODO read conf filename from config
+                       email-conf (clojure.edn/read-string (slurp "email-conf.edn"))
+                       db (:db @app-state)
+                       stores-m (storage/create-mongo-stores db)
+                       blockchain (blockchain/new-stub db)
+                       email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))]
+                   (prn "Restarting server....")
+                   (create-app config-m stores-m blockchain email-activator)))))
 
 (defn lein-ring-stop []
   (swap! app-state disconnect-db))

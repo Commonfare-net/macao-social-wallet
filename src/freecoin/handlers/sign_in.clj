@@ -44,8 +44,8 @@
             [freecoin.views.account-activated :as aa]
             [freecoin.form_helpers :as fh]
             [freecoin.context-helpers :as ch]
-            [taoensso.timbre :as log]
-            [postal.core :as postal]))
+            [freecoin.email-activation :as email-activation]
+            [taoensso.timbre :as log]))
 
 (defn error-redirect [ctx error-message]
   (-> ctx (assoc :error error-message)
@@ -108,8 +108,7 @@
                                                                                                " is not yet active.")}))])
                          [false (fh/form-problem (conj problems
                                                         {:keys [:sign-in-email] :msg "Account with for this email does not exist"}))]))
-                     (do
-                       ;; TODO needed?
+                     (do 
                        [false (fh/form-problem problems)]))))
 
   :handle-unauthorized (fn [ctx]
@@ -162,37 +161,7 @@
 
 (def content-types ["text/html" "application/x-www-form-urlencoded"])
 
-(defn- generate-activation-id []
-  (fxc.core/generate 32))
-
-(defn- activation-link [activationid email]
-  (routes/absolute-path :activate-account 
-                        :email email
-                        :activation-id activationid))
-
-(defn- send-email-message [email activation-link]
-  ;; TODO what to do with file, env?
-  (let [conf (clojure.edn/read-string (slurp "email-conf.edn"))]
-    ;; TODO with environ
-    (postal/send-message 
-     {:host (:freecoin-email-server conf)
-      :user (:freecoin-email-user conf)
-      :pass (:freecoin-email-pass conf)
-      :ssl true}
-     {:from (:freecoin-email-address conf)
-      :to [email]
-      :subject "Please activate your freecoin account"
-      :body (str "Please click to activate your account " activation-link)})))
-
-(defn email-activation-link [ctx account-store email]
-  (let [activation-id (generate-activation-id)
-        activation-url (activation-link activation-id email)]
-    (account/update-activation-id! account-store email activation-id)
-    (let [email-response (send-email-message email activation-url)]
-      (when-not (= :SUCCESS (:error email-response))
-        (error-redirect ctx "The activation email failed to send ")))))
-
-(lc/defresource create-account [account-store]
+(lc/defresource create-account [account-store email-activator]
   :allowed-methods [:post]
   :available-media-types content-types
 
@@ -218,13 +187,12 @@
   :post! (fn [ctx]
            (let [data (-> ctx :request :params)
                  email (get data :email)]
-             ;; TODO add actions if db or email failed
              (if (account/new-account! account-store (select-keys data [:first-name :last-name :email :password]))
-               (email-activation-link ctx account-store email)
+               (when-not (email-activation/email-activation! email-activator email) 
+                 (error-redirect ctx "The activation email failed to send "))
                (log/error "Something went wrong when creating a user in the DB"))))
 
-  :post-redirect? (fn [ctx]
-                    (log/info "post-redirect")                    
+  :post-redirect? (fn [ctx] 
                     (assoc ctx
                            :location (routes/absolute-path :email-confirmation))))
 
@@ -243,7 +211,6 @@
                (let [activation-code (get-in ctx [:request :params :activation-id])
                      email (get-in ctx [:request :params :email])]
                  (if-let [account (account/fetch-by-activation-id account-store activation-code)]
-                   ;; TODO is this the right way or should the email be provided?
                    (if (= (:email account) email)
                      (do (account/activate! account-store (:email account))
                          (-> (routes/absolute-path :account-activated)
