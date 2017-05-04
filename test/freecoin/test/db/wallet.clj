@@ -49,15 +49,6 @@
                          :email "test@email.com"
                          :public-key nil
                          :private-key nil
-                         :account-id anything}))
-
-         ;; TODO need to replace with some otehr test? 
-         #_(fact "can fetch wallet by sso-id"
-               (wallet/fetch-by-sso-id wallet-store "sso-id")
-               => (just {:name "name"
-                         :email "test@email.com"
-                         :public-key nil
-                         :private-key nil
                          :account-id anything}))))
 
 (defn create-wallet [wallet-store blockchain wallet-data]

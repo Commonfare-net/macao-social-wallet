@@ -108,14 +108,12 @@
                    form-post-handler
                    :status) => 401)
 
-         ;; TODO no sso authentication
-         ;; TODO clojure.lang.PersistentArrayMap cannot be cast to java.util.Map$Entry
-        #_(fact "returns 302 when participant authenticated but without cookie-data"
+        (fact "returns 302 when participant authenticated but without cookie-data"
                (-> (th/create-request :post "/post-transaction-form"
                                       {} {:signed-in-email sender-email})
                    form-post-handler
                    :status) => 302)
-
+        
          (facts "when participant is authenticated, has cookie-data, and posts a valid form"
                 (let [confirmation-store (fm/create-memory-store)
                       form-post-handler (tf/post-transaction-form wallet-store confirmation-store)
@@ -132,9 +130,8 @@
                         response => (th/check-redirects-to (absolute-path :get-confirm-transaction-form
                                                                           :confirmation-uid (:uid transaction-confirmation))))))
 
-         ;; TODO
-         ;; clojure.lang.PersistentArrayMap cannot be cast to java.util.Map$Entry
-         #_(tabular
+
+         (tabular
           (fact "redirects to the transaction form page when posted data is invalid"
                 (let [params (->> {:amount ?amount :recipient ?recipient}
                                   (filter (comp not nil? val))

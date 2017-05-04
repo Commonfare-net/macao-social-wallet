@@ -1,6 +1,8 @@
 (ns freecoin.journey.kerodon-selectors)
 
 (def landing-page-body :.func--landing-page)
+(def landing-page-error :.freecoin-error)
+(def sign-in-link :.clj--sign-in-link)
 
 (def index-page-body :.func--index-page)
 
@@ -27,3 +29,21 @@
 (def tag-details-page-body :.func--tag-page--body)
 (def tag-details-page--moved-value [:.func--tag-page--table :tbody :tr.func--tag-page--amount :td])
 (def tag-details-page--transactions [:.func--tag-page--table :tbody :tr.func--tag-page--count :td])
+
+(def auth-sign-in-body :.func--login-page--body)
+(def auth-sign-up-form-first :.func--sign-up-first)
+(def auth-sign-up-form-last :.func--sign-up-last)
+(def auth-sign-up-form-email :.func--sign-up-email)
+(def auth-sign-up-form-pswrd :.func--sign-up-pswrd)
+(def auth-sign-up-form-conf-pswrd :.func--sign-up-conf-pswrd)
+(def auth-sign-up-form-submit :.func--sign-up-submit)
+
+(def email-confirmation-body :.func--email-confirmation--body)
+
+(def auth-sign-in-form-email :.func--sign-in-email)
+(def auth-sign-in-form-pswrd :.func--sign-in-pswrd)
+(def auth-sign-in-form-submit :.func--sign-in-submit)
+
+(def auth-form-problems :.form-problems)
+
+(def account-activated-body :.func--account-activated--body)
