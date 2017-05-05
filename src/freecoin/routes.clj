@@ -39,7 +39,6 @@
                  ["/sign-in" {:get :sign-in}]
                  ["/sign-in" {:post :sign-in-form}]
                  ["/sign-up" {:post :sign-up-form}]
-                 ["/sso-callback" {:get :sso-callback}]
                  ["/sign-out" {:get :sign-out}]
                  ["/forget-secret" {:get :forget-secret}]
                  ["/email-confirmation" {:get :email-confirmation}]
