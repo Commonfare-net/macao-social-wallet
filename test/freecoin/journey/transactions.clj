@@ -222,6 +222,13 @@
                                         ;(kh/remember memory )
              (kh/remember memory :existing-tags (kh/body-selector-count [:select :option]))
 
+             ;; visit /forget-secret to explicitly scrub the PIN from the session
+             ;; TODO: this was needed as the PIN was not needed and the test failed.
+             ;; Is it because of the DB cleanup after every tests or something else?
+             (k/visit (routes/absolute-path :forget-secret))
+             (kc/check-and-follow-redirect "back to account page")
+             (kc/check-page-is :account [ks/account-page-body] :email (kh/recall memory :sender-email))
+
              ;; do two transactions with overlapping tags:
              ;; tx one:
              (k/visit (routes/absolute-path :get-transaction-form))
