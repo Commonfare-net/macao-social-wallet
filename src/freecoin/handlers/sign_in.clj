@@ -142,7 +142,8 @@
                  ;;  }))
 
                  ;; saved in context
-                 {::email (:email wallet)}))))
+                 {::email (:email wallet)
+                  ::cookie-data apikey}))))
 
   :handle-created (fn [ctx]
                    (lr/ring-response
@@ -240,3 +241,17 @@
                    (preserve-session (:request ctx))
                    (update-in [:session] dissoc :signed-in-email)
                    lr/ring-response)))
+
+(lc/defresource forget-secret
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+
+  :authorized? #(auth/is-signed-in %)
+
+  :handle-ok
+  (fn [ctx]
+    (-> (routes/absolute-path :account :email (:email ctx))
+        r/redirect
+        (preserve-session (:request ctx))
+        (update-in [:session] dissoc :cookie-data)
+        lr/ring-response)))

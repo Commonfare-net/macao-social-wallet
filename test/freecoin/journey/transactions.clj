@@ -10,39 +10,53 @@
             [freecoin.db.storage :as s]
             [freecoin.blockchain :as blockchain]
             [freecoin.routes :as routes]
-            [freecoin.config :as c]))
+            [freecoin.config :as c]
+            [taoensso.timbre :as log]
+            [freecoin.db.account :as account]
+            [freecoin.db.storage :as storage]))
 
 (ih/setup-db)
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub stores-m))
+(def emails (atom []))
 
 (def test-app (ih/build-app {:stores-m stores-m
-                             :blockchain blockchain}))
-
-(background
-  (soc/request-access-token! anything "sender") => {:user-info {:sub "sender"
-                                                                :email "sender@email.com"}}
-  (soc/request-access-token! anything "recipient") => {:user-info {:sub "recipient"
-                                                                   :email "recipient@email.com"}})
+                             :blockchain blockchain
+                             :email-activator (freecoin.email-activation/->StubActivationEmail
+                                               emails
+                                               (:account-store stores-m))}))
 
 (def sign-up jh/sign-up)
 
-(def sign-in sign-up)
+(def sign-in jh/sign-in)
+
+(def activate-account jh/activate-account)
+
+(def sender-email "sender@mail.com")
+(def recipient-email "recipient@mail.com") 
+
+
+(background (before :facts (storage/empty-db-stores! stores-m)))
 
 (defn sign-out [state]
   (k/visit state (routes/absolute-path :sign-out)))
 
-;; TODO sgn up and sign in
-#_(facts "Participant can send freecoins to another account"
+(defn get-activation-id [email]
+  (-> stores-m :account-store (account/fetch email) :activation-id))
+
+(facts "Participant can send freecoins to another account"
        (let [memory (atom {})]
          (-> (k/session test-app)
-
              (sign-up "recipient")
+             (activate-account (get-activation-id recipient-email) recipient-email)
+             (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
+             (activate-account (get-activation-id sender-email) sender-email)
+             (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
              (k/visit (routes/absolute-path :get-all-transactions))
@@ -53,7 +67,6 @@
              (kc/check-page-is :get-all-transactions ks/transactions-page-body)
              (kc/selector-matches-count ks/transactions-page--table-rows 0)
              (kc/selector-includes-content [:title] "Transaction list")
-
 
              ;; visit the transactions page and show that there is no transaction
              (k/visit (routes/absolute-path :get-user-transactions :email (kh/recall memory :sender-email)))
@@ -100,16 +113,20 @@
              (kc/selector-includes-content [:title] "Transaction list")
              (kc/selector-matches-count [:select :option] (+ 2 (kh/recall memory :existing-tags))))))
 
-;; TODO sgn up and sign in
-#_(facts "Error messages show in form on invalid input"
+
+(facts "Error messages show in form on invalid input"
        (let [memory (atom {})]
          (-> (k/session test-app)
 
              (sign-up "recipient")
+             (activate-account (get-activation-id recipient-email) recipient-email)
+             (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
+             (activate-account (get-activation-id sender-email) sender-email)
+             (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
              ;; required form fields
@@ -131,17 +148,19 @@
              (kc/check-page-is :get-transaction-form [ks/transaction-form--submit])
              (kc/selector-includes-content [ks/transaction-form--error-message] "Recipient: Not found"))))
 
-;; TODO sgn up and sign in
-#_
 (facts "Participant can send freecoins to another account by entering PIN. First, PIN is removed from session by visiting 'forget PIN' URL"
        (let [memory (atom {})]
          (-> (k/session test-app)
 
              (sign-up "recipient")
+             (activate-account (get-activation-id recipient-email) recipient-email)
+             (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
+             (activate-account (get-activation-id sender-email) sender-email)
+             (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
              (k/visit (routes/absolute-path :get-all-transactions))
@@ -183,17 +202,19 @@
              (k/visit (routes/absolute-path :get-all-transactions))
              (kc/selector-matches-count [:select :option] (kh/recall memory :existing-tags)))))
 
-;; TODO sgn up and sign in
-#_
 (facts "Participants can filter transactions by tag"
        (let [memory (atom {})]
          (-> (k/session test-app)
 
              (sign-up "recipient")
+             (activate-account (get-activation-id recipient-email) recipient-email)
+             (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
+             (activate-account (get-activation-id sender-email) sender-email)
+             (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
              ;; remember the current transaction tags count
@@ -216,7 +237,6 @@
              (kc/check-and-press ks/confirm-transaction-form--submit)
              (kc/check-and-follow-redirect "to sender's account page")
              (kc/check-page-is :account [ks/account-page-body] :email (kh/recall memory :sender-email))
-
              ;; tx two:
              (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
@@ -227,7 +247,6 @@
              (kc/check-and-press ks/confirm-transaction-form--submit)
              (kc/check-and-follow-redirect "to sender's account page")
              (kc/check-page-is :account [ks/account-page-body] :email (kh/recall memory :sender-email))
-
              ;; do a third transaction with a completely new tag
              (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-and-fill-in ks/transaction-form--recipient "recipient")

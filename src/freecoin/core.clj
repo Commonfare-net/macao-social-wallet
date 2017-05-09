@@ -90,6 +90,8 @@
      :account-activated             sign-in/account-acivated
      :activate-account              (sign-in/activate-account account-store)
 
+     :forget-secret                 sign-in/forget-secret
+     
      :account                       (participants/account      wallet-store blockchain)
      :get-participant-search-form   (participants/query-form   wallet-store)
      :participants                  (participants/participants wallet-store)
