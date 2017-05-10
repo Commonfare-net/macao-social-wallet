@@ -175,7 +175,7 @@
                       (let [email (-> ctx :request :params :email)]
                         (if (account/fetch account-store email)
                           [false (fh/form-problem (conj problems
-                                                        {:keys [:password] :msg (str "An account with email " email
+                                                        {:keys [:email] :msg (str "An account with email " email
                                                                                      " already exists.")}))]
                           ctx))
                       [false (fh/form-problem problems)])))
