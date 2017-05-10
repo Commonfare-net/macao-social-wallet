@@ -42,20 +42,17 @@
 (defn sign-out [state]
   (k/visit state (routes/absolute-path :sign-out)))
 
-(defn get-activation-id [email]
-  (-> stores-m :account-store (account/fetch email) :activation-id))
-
 (facts "Participant can send freecoins to another account"
        (let [memory (atom {})]
          (-> (k/session test-app)
              (sign-up "recipient")
-             (activate-account (get-activation-id recipient-email) recipient-email)
+             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (get-activation-id sender-email) sender-email)
+             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
@@ -119,13 +116,13 @@
          (-> (k/session test-app)
 
              (sign-up "recipient")
-             (activate-account (get-activation-id recipient-email) recipient-email)
+             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (get-activation-id sender-email) sender-email)
+             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
@@ -153,13 +150,13 @@
          (-> (k/session test-app)
 
              (sign-up "recipient")
-             (activate-account (get-activation-id recipient-email) recipient-email)
+             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (get-activation-id sender-email) sender-email)
+             (activate-account (jh/get-activation-id stores-m  sender-email) sender-email)
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
@@ -207,13 +204,13 @@
          (-> (k/session test-app)
 
              (sign-up "recipient")
-             (activate-account (get-activation-id recipient-email) recipient-email)
+             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (get-activation-id sender-email) sender-email)
+             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 

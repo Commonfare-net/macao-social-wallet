@@ -7,7 +7,8 @@
             [freecoin.routes :as routes]
             [freecoin.test-helpers.integration :as ih]
             [kerodon.core :as k]
-            [midje.sweet :refer :all]))
+            [midje.sweet :refer :all]
+            [freecoin.db.account :as account]))
 
 (def password "12345678")
 
@@ -55,3 +56,6 @@
 (defn debug [state]
   (clojure.pprint/pprint state)
   state)
+
+(defn get-activation-id [stores-m email]
+  (-> stores-m :account-store (account/fetch email) :activation-id))
