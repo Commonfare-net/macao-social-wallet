@@ -122,6 +122,15 @@
                  response => (th/check-signed-in-as user-email)
                  (test-store/entry-count wallet-store) => 1))
 
+         (fact "Cannot sign in with the wrong password"
+               (let [response (-> (th/create-request :post
+                                                     (absolute-path :sign-in-form)
+                                                     {:sign-in-email user-email
+                                                      :sign-in-password "87654321"})
+                                  sign-in-handler)]
+                 response => (th/check-redirects-to (absolute-path :sign-in-form))
+                 (-> response :flash (first) :msg) => (str "Wrong password for account " user-email)))
+         
          (fact "If trying to create an account with an existing email an error is returned"
                (let [response (-> (th/create-request :post
                                                      (absolute-path :sign-up-form)

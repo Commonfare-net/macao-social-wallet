@@ -23,20 +23,24 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.db.account
-  (:require [freecoin.db.mongo :as mongo]))
+  (:require [freecoin.db.mongo :as mongo]
+            [buddy.hashers :as hashers]))
+
+(defn- generate-hash [password]
+  (hashers/derive password {:alg :pbkdf2+sha512}))
 
 (defn new-account!
   [account-store {:keys [first-name last-name email password] :as account-map}]
-  (mongo/store! account-store :email (assoc account-map :activated false)))
+  (mongo/store! account-store :email (-> account-map
+                                         (assoc :activated false)
+                                         (update :password #(generate-hash %)))))
 
 
 (defn activate! [account-store email]
   (mongo/update! account-store email #(assoc % :activated true)))
 
 (defn fetch [account-store email]
-  (some-> (mongo/fetch account-store email)
-          ;; TODO password encr
-          ))
+  (some-> (mongo/fetch account-store email)))
 
 (defn fetch-by-activation-id [account-store activation-id]
   (first (mongo/query account-store {:activation-id activation-id})))
@@ -46,3 +50,7 @@
 
 (defn delete! [account-store email]
   (mongo/delete! account-store email))
+
+(defn correct-password? [account-store email candidate-password]
+  (hashers/check candidate-password
+   (:password (fetch account-store email))))

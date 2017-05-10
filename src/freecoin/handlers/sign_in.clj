@@ -98,8 +98,7 @@
                      (let [email (-> ctx :request :params :sign-in-email)]
                        (if-let [account (account/fetch account-store email)]
                          (if (:activated account)
-                           ;; TODO passrd encr
-                           (if (= (-> ctx :request :params :sign-in-password) (:password account))
+                           (if (account/correct-password? account-store email (-> ctx :request :params :sign-in-password))
                              {:email email}
                              [false  (fh/form-problem (conj problems
                                                             {:keys [:sign-in-password] :msg (str "Wrong password for account " email)}))])
