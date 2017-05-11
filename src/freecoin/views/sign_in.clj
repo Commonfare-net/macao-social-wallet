@@ -32,7 +32,13 @@
   {:title (t/locale [:sign-in :title])
    :heading (t/locale [:sign-in :heading])
    :body-class "func--login-page--body"
-   :body [:div {}
+   :body [:div 
           [:div (t/locale [:sing-in :heading])]
-          [:div (fh/render-form sign-in-form (:request context))]
-          [:div (fh/render-form sign-up-form (:request context))]]})
+          [:div {:class "col-xs-6"} 
+           [:div
+            [:div {:class "panel-heading"} "Sign in with an existing account"]
+            [:div (fh/render-form sign-in-form (:request context))]]]
+          [:div {:class "col-xs-6"}
+           [:div
+            [:div {:class "panel-heading"} "Create a new account!"]
+            [:div (fh/render-form sign-up-form (:request context))]]]]})

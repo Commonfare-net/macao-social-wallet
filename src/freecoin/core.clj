@@ -142,7 +142,7 @@
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
                                                      (config/secure? config-m)))
-        (mw-logger/wrap-with-logger))))
+        #_(mw-logger/wrap-with-logger))))
 
 ;; launching and halting the app
 (defonce app-state (atom {}))
