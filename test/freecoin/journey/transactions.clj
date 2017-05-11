@@ -264,3 +264,26 @@
              (k/visit (routes/absolute-path :get-all-transactions))
 
              (kc/selector-matches-count [:select :option] (+ 4 (kh/recall memory :existing-tags))))))
+
+(facts "A user tried to make a transaction to a user who's account is not yet activated"
+       (fact "The right error is returned"
+             (let [memory (atom {})]
+         (-> (k/session test-app)
+
+             (sign-up "recipient") 
+             (kh/remember memory :recipient-email kh/state-on-account-page->email) 
+
+             (sign-up "sender")
+             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
+             (sign-in "sender")
+             (kh/remember memory :sender-email kh/state-on-account-page->email)
+
+             ;; required form fields
+             (k/visit (routes/absolute-path :get-transaction-form))
+             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--amount "10.0")
+             (kc/check-and-press ks/transaction-form--submit)
+
+             (kc/check-and-follow-redirect "back to form")
+             (kc/check-page-is :get-transaction-form [ks/transaction-form--submit])
+             (kc/selector-includes-content [ks/transaction-form--error-message] "Recipient: Not found")))))
