@@ -15,7 +15,6 @@
                  [ring/ring-defaults "0.2.3"]
                  [ring.middleware.logger "0.5.0" :exclusions [org.slf4j/slf4j-api]]
                  [compojure "1.5.2"] 
-                 [org.clojars.d-cent/stonecutter-oauth "0.2.0-SNAPSHOT" :exclusions [org.slf4j/slf4j-api]]
                  [http-kit "2.2.0"]
                  [enlive "1.1.6"]
                  [formidable "0.1.10"]
@@ -36,7 +35,10 @@
                  [circleci/clj-yaml "0.5.5"]
 
                  ; fxc secret sharing protocol
-                 [org.clojars.dyne/fxc "0.2.0"]]
+                 [org.clojars.dyne/fxc "0.3.0"]
+
+                 ; email
+                 [com.draines/postal "2.0.2"]]
 
   :pedantic? :warn
 
@@ -64,7 +66,7 @@
                           :env [[:base-url "http://localhost:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
-                                [:auth-url "http://localhost:5000"]
+                                [:email-config "email-conf.edn"]
                                 [:secure "false"]]
                           :plugins [[lein-midje "3.1.3"]]}
 
@@ -72,7 +74,7 @@
              :release {:env [[:base-url "http://demo.freecoin.ch:8000"]
                              [:client-id "dyne-demo-freecoin"]
                              [:client-secret "secret"]
-                             [:auth-url "https://sso.dcentproject.eu"]
+                             [:email-config "email-conf.edn"]
                              [:secure "true"]]}
 
              :transaction-graph [:dev :user
@@ -85,7 +87,7 @@
                           :env [[:base-url "http://freecoin1prod.dyne.org:8000"]
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
-                                [:auth-url "http://freecoin1staging.dyne.org:5000"]
+                                [:email-config "email-conf.edn"]
                                 [:secure "false"]]}
              :uberjar {:dependencies [[ns-tracker ~ns-tracker-version]]
                        :source-paths ["src" "prod"]
@@ -95,7 +97,7 @@
                        :env [[:base-url "http://freecoin1staging.dyne.org:8000"]
                              [:client-id "LOCALFREECOIN"]
                              [:client-secret "FREECOINSECRET"]
-                             [:auth-url "http://freecoin1staging.dyne.org:5000"]
+                             [:email-config "email-conf.edn"]
                              [:secure "false"]]}
              }
   

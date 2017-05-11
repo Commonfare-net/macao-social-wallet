@@ -42,7 +42,8 @@
             [ring.mock.request :as rmr]
             [freecoin.blockchain :as blockchain]
             [cheshire.core :as cheshire]
-            [simple-time.core :as time]))
+            [simple-time.core :as time]
+            [taoensso.timbre :as log]))
 
 (def sender-email "sender@email.com")
 (def recipient-email "recipient@email.com")
@@ -52,10 +53,10 @@
         blockchain (fb/create-in-memory-blockchain :bk)
         sender-details (w/new-empty-wallet!
                         wallet-store blockchain 
-                        "sender-sso-id" "sender" sender-email)
+                        "sender" sender-email)
         recipient-details (w/new-empty-wallet!
                            wallet-store blockchain
-                           "recipient-sso-id" "recipient" recipient-email)]
+                           "recipient" recipient-email)]
     {:wallet-store wallet-store
      :blockchain blockchain
      :sender-wallet (:wallet sender-details)
@@ -107,12 +108,12 @@
                    form-post-handler
                    :status) => 401)
 
-         (fact "returns 302 when participant authenticated but without cookie-data"
+        (fact "returns 302 when participant authenticated but without cookie-data"
                (-> (th/create-request :post "/post-transaction-form"
                                       {} {:signed-in-email sender-email})
                    form-post-handler
                    :status) => 302)
-
+        
          (facts "when participant is authenticated, has cookie-data, and posts a valid form"
                 (let [confirmation-store (fm/create-memory-store)
                       form-post-handler (tf/post-transaction-form wallet-store confirmation-store)
@@ -128,6 +129,7 @@
                   (fact "redirects to the confirm transaction form"
                         response => (th/check-redirects-to (absolute-path :get-confirm-transaction-form
                                                                           :confirmation-uid (:uid transaction-confirmation))))))
+
 
          (tabular
           (fact "redirects to the transaction form page when posted data is invalid"

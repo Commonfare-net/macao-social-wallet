@@ -8,6 +8,7 @@
 
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
+;; Aspasia Beneti <aspra@dyne.org>
 
 ;; With contributions by
 ;; Gareth Rogers <grogers@thoughtworks.com>
@@ -36,7 +37,6 @@
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.logger :as mw-logger]
             [scenic.routes :as scenic]
-            [stonecutter-oauth.client :as soc]
             [freecoin.db.mongo :as mongo]
             [freecoin.db.storage :as storage]
             [freecoin.blockchain :as blockchain]
@@ -56,12 +56,6 @@
   {:status 404
    :body "Oops! Page not found."})
 
-(defn create-stonecutter-config [config-m]
-  (soc/configure (config/auth-url config-m)
-                 (config/client-id config-m)
-                 (config/client-secret config-m)
-                 (routes/absolute-path :sso-callback)))
-
 (defmethod lr/render-seq-generic "application/activity+json" [data _]
   (json/write-str data))
 
@@ -79,21 +73,26 @@
    :body "Work-in-progress"
    :headers {"Content-Type" "text/html"}})
 
-(defn handlers [config-m stores-m blockchain]
+(defn handlers [config-m stores-m blockchain email-activator]
   (let [wallet-store (storage/get-wallet-store stores-m)
         confirmation-store (storage/get-confirmation-store stores-m)
-        sso-configuration (create-stonecutter-config config-m)]
-    ;; (when (= :invalid-configuration sso-configuration)
-    ;;   (throw (Exception. "Invalid stonecutter configuration. Application launch aborted.")))
-    {:version                       (debug/version sso-configuration)
-     :echo                          (debug/echo    sso-configuration)
+        account-store (storage/get-account-store stores-m)]
+    {:version                       (debug/version (dissoc config-m :client-secret))
+     :echo                          (debug/echo (dissoc config-m :client-secret))
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store)
-     :sign-in                       (sign-in/sign-in sso-configuration)
-     :sso-callback                  (sign-in/sso-callback wallet-store blockchain sso-configuration)
+
+     :sign-in                       sign-in/sign-in
      :sign-out                      sign-in/sign-out
+     :sign-in-form                  (sign-in/log-in account-store wallet-store blockchain)
+     :sign-up-form                  (sign-in/create-account account-store email-activator)
+     :email-confirmation            sign-in/email-confirmation
+     :account-activated             sign-in/account-acivated
+     :activate-account              (sign-in/activate-account account-store)
+
      :forget-secret                 sign-in/forget-secret
+     
      :account                       (participants/account      wallet-store blockchain)
      :get-participant-search-form   (participants/query-form   wallet-store)
      :participants                  (participants/participants wallet-store)
@@ -134,11 +133,13 @@
     (wrapper handler)
     handler))
 
-(defn create-app [config-m stores-m blockchain]
+(defn create-app [config-m stores-m blockchain email-activator]
   (let [debug-mode (config/debug config-m)]
     ;; TODO: Get rid of scenic?
-    (-> (scenic/scenic-handler routes/routes (handlers config-m stores-m blockchain) not-found)
-        (conditionally-wrap-with #(ld/wrap-trace % :header :ui) true #_debug-mode)
+    (-> (scenic/scenic-handler routes/routes
+                               (handlers config-m stores-m blockchain email-activator)
+                               not-found)
+        (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
                                                      (config/secure? config-m)))
         #_(mw-logger/wrap-with-logger))))
@@ -165,7 +166,9 @@
       (let [config-m (config/create-config)
             stores-m (storage/create-mongo-stores db)
             blockchain (blockchain/new-stub stores-m)
-            server (-> (create-app config-m stores-m blockchain)
+            email-conf (clojure.edn/read-string (slurp "email-conf.edn")) 
+            email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
+            server (-> (create-app config-m stores-m blockchain email-activator)
                        (server/run-server {:port (config/port config-m)
                                            :host (config/host config-m)}))]
         (assoc app-state :server server)))))
@@ -194,12 +197,14 @@
   (swap! app-state connect-db)
   (assert (:db @app-state) "The DB is not set")
   (swap! lein-ring-handler
-                  (fn [_] (let [config-m (config/create-config)
-                                db (:db @app-state)
-                                stores-m (storage/create-mongo-stores db)
-                                blockchain (blockchain/new-stub db)]
-                            (prn "Restarting server....")
-                            (create-app config-m stores-m blockchain)))))
+         (fn [_] (let [config-m (config/create-config)
+                       email-conf (clojure.edn/read-string (slurp (:email-config config-m)))
+                       db (:db @app-state)
+                       stores-m (storage/create-mongo-stores db)
+                       blockchain (blockchain/new-stub db)
+                       email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))]
+                   (prn "Restarting server....")
+                   (create-app config-m stores-m blockchain email-activator)))))
 
 (defn lein-ring-stop []
   (swap! app-state disconnect-db))

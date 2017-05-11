@@ -11,6 +11,7 @@
 ;; Gareth Rogers <grogers@thoughtworks.com>
 ;; Duncan Mortimer <dmortime@thoughtworks.com>
 ;; Andrei Biasprozvanny <abiaspro@thoughtworks.com>
+;; Aspasia Beneti <aspra@dyne.org>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -35,11 +36,15 @@
 ;; TODO: better way than eval?
 (def routes ["" [["/" {:get :index}]
                  ["/landing-page" {:get :landing-page}]
-                 ["/sign-in-with-sso" {:get :sign-in}]
-                 ["/sso-callback" {:get :sso-callback}]
+                 ["/sign-in" {:get :sign-in}]
+                 ["/sign-in" {:post :sign-in-form}]
+                 ["/sign-up" {:post :sign-up-form}]
                  ["/sign-out" {:get :sign-out}]
                  ["/forget-secret" {:get :forget-secret}]
+                 ["/email-confirmation" {:get :email-confirmation}]
                  [["/account/" (eval email-reg-exp)] {:get :account}]
+                 [["/activate/"  (eval email-reg-exp) "/" :activation-id] {:get :activate-account}]
+                 ["/account-acivated" {:get :account-activated}]
                  [["/qrcode/" (eval email-reg-exp)] {:get :qrcode}]
                  [["/transactions/" (eval email-reg-exp)] {:get :get-user-transactions}]
                  ["/transactions" {:get :get-all-transactions}]

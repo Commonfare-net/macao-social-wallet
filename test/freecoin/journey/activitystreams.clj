@@ -41,8 +41,7 @@
             [environ.core :as env]
             [kerodon.core :as k]
             [midje.sweet :refer :all]
-            [simple-time.core :as time]
-            [stonecutter-oauth.client :as soc]))
+            [simple-time.core :as time]))
 
 (ih/setup-db)
 
@@ -51,13 +50,6 @@
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain}))
-
-
-(background
- (soc/request-access-token! anything "sender") => {:user-info {:sub "sender"
-                                                               :email "sender@email.com"}}
- (soc/request-access-token! anything "recipient") => {:user-info {:sub "recipient"
-                                                                  :email "recipient@email.com"}})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

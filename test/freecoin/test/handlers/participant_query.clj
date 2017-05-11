@@ -10,14 +10,13 @@
             [freecoin.handlers.participants :as fp]))
 
 (defn create-wallet [wallet-store blockchain wallet-data]
-  (let [{:keys [sso-id name email]} wallet-data]
-    (:wallet (w/new-empty-wallet! wallet-store blockchain sso-id name email))))
+  (let [{:keys [name email]} wallet-data]
+    (:wallet (w/new-empty-wallet! wallet-store blockchain name email))))
 
 (defn index->wallet-data [index]
-  (let [sso-id (str "sso-id-" index)
-        name (str "name-" index)
+  (let [name (str "name-" index)
         email (str "wallet-" index "@email.com")]
-    {:sso-id sso-id :name name :email email}))
+    {:name name :email email}))
 
 (facts "about the account page"
 
@@ -25,7 +24,7 @@
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
-                                                        "stonecutter-user-id" "name" "test@email.com"))
+                                                        "name" "test@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
                                                       (assoc :params {:email (:email wallet)})
@@ -37,9 +36,9 @@
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
-                                                           "stonecutter-user-id" "name" "test@email.com"))
+                                                           "name" "test@email.com"))
                    her-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
-                                                            "stonecutter-user-id" "alice" "alice@email.com"))
+                                                            "alice" "alice@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
                                                       (assoc :params {:email (:email her-wallet)})
@@ -51,7 +50,7 @@
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
-                                                           "stonecutter-user-id" "name" "test@email.com"))
+                                                           "name" "test@email.com"))
                    account-page-handler (fp/account wallet-store blockchain)
                    response (account-page-handler (-> (rmr/request :get "/account/")
                                                       (assoc :params {:email "test@mail.com"})
@@ -65,7 +64,7 @@
              (let [wallet-store (fm/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
-                                                        "stonecutter-user-id" "name" "test@email.com"))
+                                                        "name" "test@email.com"))
                    query-form-handler (fp/query-form wallet-store)
                    response (-> (th/create-request
                                  :get "/participants-query"
@@ -108,9 +107,9 @@
         (fact "can query by name or email"
               (let [wallet-store (fm/create-memory-store)
                     blockchain (fb/create-in-memory-blockchain :bk)
-                    wallet-data [{:name "James Jones" :email "james@jones.com" :sso-id "sso-id-1"}
-                                 {:name "James Jones" :email "jim@jones.com" :sso-id "sso-id-2"}
-                                 {:name "Sarah Lastname" :email "sarah@email.com" :sso-id "sso-id-3"}]
+                    wallet-data [{:name "James Jones" :email "james@jones.com"}
+                                 {:name "James Jones" :email "jim@jones.com"}
+                                 {:name "Sarah Lastname" :email "sarah@email.com"}]
                     wallets (doall (map (partial create-wallet wallet-store blockchain) wallet-data))
                     participants-handler (fp/participants wallet-store)
                     query-m {:field ?field :value ?value}

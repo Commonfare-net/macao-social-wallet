@@ -36,9 +36,8 @@
              blockchain (fb/create-in-memory-blockchain :bk)]
          (fact "can create a wallet"
                (let [{:keys [wallet apikey]} (wallet/new-empty-wallet! wallet-store blockchain
-                                                                       "sso-id" "name" "test@email.com")]
-                 wallet => (just {:sso-id "sso-id"
-                                  :name "name"
+                                                                       "name" "test@email.com")]
+                 wallet => (just {:name "name"
                                   :email "test@email.com"
                                   :public-key nil
                                   :private-key nil
@@ -46,30 +45,20 @@
          
          (fact "can fetch the wallet by its email"
                (wallet/fetch wallet-store "test@email.com")
-               => (just {:sso-id "sso-id"
-                         :name "name"
-                         :email "test@email.com"
-                         :public-key nil
-                         :private-key nil
-                         :account-id anything}))
-         
-         (fact "can fetch wallet by sso-id"
-               (wallet/fetch-by-sso-id wallet-store "sso-id")
-               => (just {:sso-id "sso-id"
-                         :name "name"
+               => (just {:name "name"
                          :email "test@email.com"
                          :public-key nil
                          :private-key nil
                          :account-id anything}))))
 
 (defn create-wallet [wallet-store blockchain wallet-data]
-  (let [{:keys [sso-id name email]} wallet-data]
-    (:wallet (wallet/new-empty-wallet! wallet-store blockchain sso-id name email))))
+  (let [{:keys [name email]} wallet-data]
+    (:wallet (wallet/new-empty-wallet! wallet-store blockchain name email))))
 
 (defn populate-wallet-store [wallet-store blockchain]
-  (let [wallets-data [{:name "James Jones" :email "james@jones.com" :sso-id "sso-id-1"}
-                      {:name "James Jones" :email "jim@jones.com" :sso-id "sso-id-2"}
-                      {:name "Sarah Lastname" :email "sarah@email.com" :sso-id "sso-id-3"}]]
+  (let [wallets-data [{:name "James Jones" :email "james@jones.com"}
+                      {:name "James Jones" :email "jim@jones.com"}
+                      {:name "Sarah Lastname" :email "sarah@email.com"}]]
     (doall (map (partial create-wallet wallet-store blockchain) wallets-data))))
 
 (facts "Can query wallet collection"

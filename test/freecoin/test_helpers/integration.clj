@@ -2,7 +2,8 @@
   (:require [monger.core :as monger]
             [freecoin.core :as core]
             [freecoin.blockchain :as blockchain]
-            [freecoin.db.storage :as s]))
+            [freecoin.db.storage :as s]
+            [freecoin.email-activation :as email-activation]))
 
 (def test-db-name "freecoin-test-db")
 (def test-db-uri (format "mongodb://localhost:27017/%s" test-db-name))
@@ -33,13 +34,15 @@
   (reset! db-and-conn nil))
 
 (defn default-app-config-m []
-  {:stores-m (s/create-in-memory-stores)
-   :blockchain (blockchain/create-in-memory-blockchain :bk)
-   :config-m {:secure "false"
-              :client-secret "freecoin-secret"
-              :client-id "freecoin"
-              :auth-url "stonecutter-url"}})
+  (let [stores (s/create-in-memory-stores)]
+    {:stores-m stores
+     :blockchain (blockchain/create-in-memory-blockchain :bk)
+     :config-m {:secure "false"
+                :client-secret "freecoin-secret"
+                :client-id "freecoin"
+                :email-config "email-conf.edn"}
+     :email-activator (email-activation/->StubActivationEmail (atom []) (:account-store stores))}))
 
 (defn build-app [app-config-override-m]
-  (let [{:keys [config-m stores-m blockchain]} (merge (default-app-config-m) app-config-override-m)]
-    (core/create-app config-m stores-m blockchain)))
+  (let [{:keys [config-m stores-m blockchain email-activator]} (merge (default-app-config-m) app-config-override-m)]
+    (core/create-app config-m stores-m blockchain email-activator)))

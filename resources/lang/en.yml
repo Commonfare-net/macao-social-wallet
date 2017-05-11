@@ -42,3 +42,20 @@ tag:
       value: "Value"
       created-by: "Created by"
       created: "Created"
+
+sing-in:
+  title: "Social wallet sign in"
+  heading: "Welcome to the social wallet!"
+  sign-in: "Sign in with existing account"
+  sign-up: "Create an account"
+
+email-confirmation:
+  title: "Email confirmation sent"
+  heading: "Email confirmation sent"
+  text: "A confirmation email has been sent. "
+  text2: "Please check your email and follow the link."
+
+account-activated:
+  title: "Account activated"
+  heading: "You account has been activated!"
+  text: "Your account has been succesfully activated, please log in to continue."

@@ -7,11 +7,7 @@
 ;; Copyright (C) 2015 Thoughtworks, Inc.
 
 ;; Sourcecode designed, written and maintained by
-;; Denis Roio <jaromil@dyne.org>
 ;; Aspasia Beneti <aspra@dyne.org>
-
-;; With contributions by
-;; Duncan Mortimer <dmortime@thoughtworks.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -26,18 +22,15 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ns freecoin.auth
-  (:require [freecoin.context-helpers :as ch]
-            [freecoin.db.wallet :as wallet]))
+(ns freecoin.views.account-activated
+  (:require [freecoin.translation :as t]
+            [freecoin.routes :as routes]))
 
-(defn is-signed-in [ctx]
-  (when-let [email (ch/context->signed-in-email ctx)]
-    {:email email}))
+(defn build [context]
+  {:title (t/locale [:account-activated :title])
+   :heading (t/locale [:account-activated :heading])
+   :body-class "func--account-activated--body"
+   :body [:div {}
+          [:div (t/locale [:account-activated :text])
+           [:a {:href (routes/absolute-path :sign-in)} "Sign in"]]]})
 
-(defn has-wallet [ctx wallet-store]
-  (if-let [wallet (wallet/fetch wallet-store (:email ctx))]
-    {:wallet wallet}
-    [false {:error {:status :fatal
-                    :reason "wallet not found"}}]))
-
-(defn has-api-key [ctx] true)

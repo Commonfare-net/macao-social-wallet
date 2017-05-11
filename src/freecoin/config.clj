@@ -2,7 +2,7 @@
   (:require [environ.core :as env]))
 
 (def env-vars #{:port :host :base-url :secure :debug
-                :client-id :client-secret :auth-url})
+                :client-id :client-secret :email-config})
 
 (defn create-config []
   (select-keys env/env env-vars))
@@ -29,14 +29,14 @@
 (defn client-secret [config-m]
   (get-env config-m :client-secret))
 
-(defn auth-url [config-m]
-  (get-env config-m :auth-url))
+(defn email-config [config-m]
+  (get-env config-m :email-config))
 
 (defn cookie-secret [config-m]
   (get-env config-m :cookie-secret "encryptthecookie"))
 
 (defn debug [config-m]
-  (get-env config-m :debug false))
+  (get-env config-m :debug true))
 
 (defn- get-docker-mongo-uri [config-m]
   (when-let [mongo-ip (get-env config-m :mongo-port-27017-tcp-addr)]

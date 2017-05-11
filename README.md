@@ -21,24 +21,13 @@ Furthermore, Freecoin's first social wallet pilots are informed by the research 
 
 ## Configuration
 
-Freecoin identity management is delegated to Stonecutter, the D-CENT SSO. To run Freecoin one also needs to configure integration with a running instance of Stonecutter configured to accept the Freecoin application. The configuration locations are:
-
 - Freecoin: `profiles.clj`
-- Stonecutter: `resources/client-credentials.yml`
-
-This dependency may be removed in the close future as Stonecutter has been left unmaintained.
 
 ## Running the app inside a Vagrant virtual machine
 
 Install the **latest** version of Vagrant and VirtualboxISO (be warned, most distributions have outdated packages which won't function well)
 
 Then go into the `ops/` directory in Freecoin and run `vagrant up`, this will create and provision a new virtual machine running Freecoin.
-
-Inside `ops/stonecutter` there is another setup to create and run a local Stonecutter SSO with the same command `vagrant up` given inside it. Once the Stonecutter SSO box is up and running, you should `vagrant ssh` into it and:
-
-- edit the `/home/vagrant/stonecutter/resources/client-credentials.yml` to add the Freecoin client ID and secret in your `project.clj`
-- run the application with `/home/vagrant/stonecutter/start_app_vm.sh`
-- verify that Stonecutter is up and running at `http://localhost:5000`
 
 ## Running the app locally
 
