@@ -3,6 +3,7 @@
             [monger.core :as monger]
             [freecoin.config :as config]
             [freecoin.db.mongo :as mongo]
+            [freecoin.db.storage :as storage]
             [freecoin.blockchain :as blockchain]
             [freecoin.db.wallet :as wallet]
             [freecoin.db.uuid :as uuid])
@@ -13,7 +14,7 @@
 (def ^:private wallet-counter (atom 0))
 
 (defn new-wallet! [wallet-store blockchain wallet-data-generator]
-  (let [{:keys [sso-id name email]} (wallet-data-generator)]
+  (let [{:keys [name email]} (wallet-data-generator)]
     (wallet/new-empty-wallet! wallet-store blockchain name email)))
 
 (defn new-transaction! [blockchain transaction-data-generator wallets-and-secrets]
@@ -25,8 +26,7 @@
 (defn create-wallet-generator [index-generator]
   (fn []
     (let [index (index-generator)]
-      {:sso-id (str "sso-id-" index)
-       :name (str "name" index)
+      {:name (str "name" index)
        :email (str "test-" index "@email.com")})))
 
 (defn create-transaction-generator [from-selector to-selector amount-generator]
@@ -51,8 +51,9 @@
       (swap! current-index inc))))
 
 (defn populate-db [db n-wallets n-transactions]
-  (let [wallet-store (mongo/create-wallet-store db)
-        blockchain (blockchain/new-stub db)
+  (let [stores-m (storage/create-mongo-stores db)
+        blockchain (blockchain/new-stub stores-m)
+        wallet-store (:wallet-store stores-m)
         wallet-data-generator (create-wallet-generator (create-index-generator))
         transaction-data-generator (create-transaction-generator random-selection random-selection random-amount)
         wallets-and-secrets (->> #(new-wallet! wallet-store blockchain
