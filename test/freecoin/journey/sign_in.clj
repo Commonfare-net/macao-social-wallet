@@ -1,7 +1,6 @@
 (ns freecoin.journey.sign-in
   (:require [midje.sweet :refer :all]
             [kerodon.core :as k]
-            [stonecutter-oauth.client :as soc]
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.test-helpers.integration :as ih]

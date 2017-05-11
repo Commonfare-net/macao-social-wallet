@@ -40,7 +40,7 @@
      :config-m {:secure "false"
                 :client-secret "freecoin-secret"
                 :client-id "freecoin"
-                :auth-url "stonecutter-url"}
+                :email-config "email-conf.edn"}
      :email-activator (email-activation/->StubActivationEmail (atom []) (:account-store stores))}))
 
 (defn build-app [app-config-override-m]

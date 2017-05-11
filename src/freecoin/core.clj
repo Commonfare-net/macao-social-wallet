@@ -77,8 +77,9 @@
   (let [wallet-store (storage/get-wallet-store stores-m)
         confirmation-store (storage/get-confirmation-store stores-m)
         account-store (storage/get-account-store stores-m)]
-    ;; TODO: maybe add other debug endpoints for versions etc (used to be stonecutter related)
-    {:qrcode                        (qrcode/qr-participant-sendto wallet-store)
+    {:version                       (debug/version (dissoc config-m :client-secret))
+     :echo                          (debug/echo (dissoc config-m :client-secret))
+     :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store)
 
@@ -197,8 +198,7 @@
   (assert (:db @app-state) "The DB is not set")
   (swap! lein-ring-handler
          (fn [_] (let [config-m (config/create-config)
-                       ;; TODO read conf filename from config
-                       email-conf (clojure.edn/read-string (slurp "email-conf.edn"))
+                       email-conf (clojure.edn/read-string (slurp (:email-config config-m)))
                        db (:db @app-state)
                        stores-m (storage/create-mongo-stores db)
                        blockchain (blockchain/new-stub db)

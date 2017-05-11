@@ -1,7 +1,6 @@
 (ns freecoin.journey.transactions
   (:require [midje.sweet :refer :all]
             [kerodon.core :as k]
-            [stonecutter-oauth.client :as soc]
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.journey.kerodon-helpers :as kh]
@@ -19,12 +18,11 @@
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-stub stores-m))
-(def emails (atom []))
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
                              :email-activator (freecoin.email-activation/->StubActivationEmail
-                                               emails
+                                               (atom [])
                                                (:account-store stores-m))}))
 
 (def sign-up jh/sign-up)
