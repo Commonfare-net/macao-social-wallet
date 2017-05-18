@@ -25,7 +25,7 @@
                                                (:account-store stores-m))}))
 
 (def ^:dynamic email "id-1@email.com")
-(def password "12345678")
+(def password "abcd12*!")
 
 (facts "User can access landing page"
        (-> (k/session test-app)

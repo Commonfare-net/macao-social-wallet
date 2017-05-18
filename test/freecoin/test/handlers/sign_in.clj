@@ -70,7 +70,7 @@
 
 (facts "Sign up"
        (let [user-email "user@mail.com"
-             password "12345678"
+             password "abcd12*!"
              emails (atom [])
              account-store (fm/create-memory-store)
              wallet-store (fm/create-memory-store)
@@ -126,7 +126,7 @@
                (let [response (-> (th/create-request :post
                                                      (absolute-path :sign-in-form)
                                                      {:sign-in-email user-email
-                                                      :sign-in-password "87654321"})
+                                                      :sign-in-password (clojure.string/reverse password)})
                                   sign-in-handler)]
                  response => (th/check-redirects-to (absolute-path :sign-in-form))
                  (-> response :flash (first) :msg) => (str "Wrong password for account " user-email)))
