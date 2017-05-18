@@ -166,7 +166,7 @@
       (let [config-m (config/create-config)
             stores-m (storage/create-mongo-stores db)
             blockchain (blockchain/new-stub stores-m)
-            email-conf (clojure.edn/read-string (slurp "email-conf.edn")) 
+            email-conf (clojure.edn/read-string (slurp (:email-config config-m))) 
             email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
             server (-> (create-app config-m stores-m blockchain email-activator)
                        (server/run-server {:port (config/port config-m)
