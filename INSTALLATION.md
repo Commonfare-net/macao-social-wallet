@@ -22,6 +22,17 @@ Then copy to the same directory the ws sources.
 
 The freecoin-admin tool is running on port 8990
 
+## Authentication
+
+An edn file should be added containing the email configuration
+
+{:freecoin-email-server <PLACEHOLDER>
+ :freecoin-email-user <PLACEHOLDER>
+ :freecoin-email-pass <PLACEHOLDER>
+ :freecoin-email-address <PLACEHOLDER>}
+
+The default file is email-config.edn project root but can be set with the env variable EMAIL_CONFIG
+
 ## Troubleshooting
 
 - No X11 DISPLAY variable was set
