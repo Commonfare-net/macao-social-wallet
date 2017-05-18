@@ -10,7 +10,7 @@
             [midje.sweet :refer :all]
             [freecoin.db.account :as account]))
 
-(def password "12345678")
+(def password "abcd12*!")
 
 (defn sign-up [state name]
   (let [email (str name "@mail.com")]
