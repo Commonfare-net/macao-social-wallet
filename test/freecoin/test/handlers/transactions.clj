@@ -8,6 +8,7 @@
 
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
+;; Aspasia Beneti <aspra@dyne.org>
 
 ;; With contributions by
 ;; Amy Welch <awelch@thoughtworks.com>
@@ -119,7 +120,7 @@
                       form-post-handler (tf/post-transaction-form wallet-store confirmation-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
-                                    {:amount "5.00" :recipient "recipient"}
+                                    {:amount "5.00" :recipient recipient-email}
                                     {:signed-in-email sender-email :cookie-data sender-apikey})
                                    form-post-handler)
                       transaction-confirmation (first (fm/query confirmation-store {}))]
