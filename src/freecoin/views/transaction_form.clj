@@ -12,7 +12,7 @@
              :class "func--transaction-form--amount"}
             {:name :recipient
              :label (t/locale [:transaction :recipient])
-             :type :text
+             :type :email
              :class "func--transaction-form--recipient"}
             {:name :tags
              :label (t/locale [:transaction :tags])

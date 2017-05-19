@@ -66,7 +66,7 @@
                             (ch/context->params ctx))]
       (if (= :ok status)
         (if-let [recipient-wallet
-                 (wallet/fetch-by-name wallet-store (:recipient data))]
+                 (wallet/fetch wallet-store (:recipient data))]
           {::form-data data
            ::recipient-wallet recipient-wallet}
           [false (fh/form-problem :recipient "Not found")])
