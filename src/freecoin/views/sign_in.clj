@@ -14,7 +14,7 @@
             {:name :confirm-password :type :password :class "func--sign-up-conf-pswrd"}
             {:name :submit :type :submit :class "func--sign-up-submit"}]
    :validations [[:required [:first-name :last-name :email :password :confirm-password]]
-                 [:matches #"^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$" :password "The password should be Minimum 8 characters at least 1 Alphabet, 1 Number and 1 Special Character"]
+                 [:matches #"^[^\n ]{8,}$" :password "The password should be Minimum 8 characters"]
                  [:equal [:password :confirm-password] "The conformation password has to be the same as the password"]]
    :action (routes/path :sign-up-form)
    :method "post"})
