@@ -219,6 +219,37 @@
                      (error-redirect ctx "The email and activation id do not match"))
                    (error-redirect ctx "The activation id could not be found")))))
 
+(lc/defresource resend-activation-email [account-store email-activator]
+  :allowed-methods [:post]
+  :available-media-types content-types
+  :known-content-type? #(check-content-type % content-types)
+  :processable? (fn [ctx]
+                  (let [{:keys [status data problems]}
+                        (fh/validate-form sign-in-page/resend-activation-form
+                                          (ch/context->params ctx))]
+                    (if (= :ok status)
+                      (let [email (-> ctx :request :params :activation-email)]
+                        (if-not (account/fetch account-store email)
+                          [false (fh/form-problem (conj problems
+                                                        {:keys [:email] :msg (str "The email " email " is not registered yet. Please sign up first")}))]
+                          ctx))
+                      [false (fh/form-problem problems)])))
+
+  :handle-unprocessable-entity (fn [ctx] 
+                                 (lr/ring-response (fh/flash-form-problem
+                                                    (r/redirect (routes/absolute-path :sign-in))
+                                                    ctx)))
+  :post! (fn [ctx]
+           (let [email (get-in ctx [:request :params :activation-email])
+                 account (account/fetch account-store email)]
+             (when-not (email-activation/email-activation! email-activator email)
+               (error-redirect ctx "The activation email failed to send")
+               (log/error "The activation email failed to send"))))
+
+  :post-redirect? (fn [ctx] 
+                    (assoc ctx
+                           :location (routes/absolute-path :email-confirmation))))
+
 (lc/defresource account-acivated
   :allowed-methods [:get]
   :available-media-types ["text/html"]

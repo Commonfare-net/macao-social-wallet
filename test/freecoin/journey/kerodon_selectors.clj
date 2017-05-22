@@ -46,4 +46,7 @@
 
 (def auth-form-problems :.form-problems)
 
+(def auth-resend-form-email :.func--activation-email)
+(def auth-resend-form-submit :.func--resend-email-submit)
+
 (def account-activated-body :.func--account-activated--body)

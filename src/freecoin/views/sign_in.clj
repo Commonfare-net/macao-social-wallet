@@ -28,6 +28,14 @@
    :action (routes/path :sign-in-form)
    :method "post"})
 
+(def resend-activation-form
+  {:renderer :bootstrap3-stacked
+   :fields [{:name :activation-email :type :email :class "func--activation-email"}
+            {:name :submit :type :submit :class "func--resend-email-submit"}]
+   :validations [[:required [:activation-email]]]
+   :action (routes/path :resend-activation-form)
+   :method "post"})
+
 (defn build [context]
   {:title (t/locale [:sign-in :title])
    :heading (t/locale [:sign-in :heading])
@@ -37,7 +45,10 @@
           [:div {:class "col-xs-6"} 
            [:div
             [:div {:class "panel-heading"} "Sign in with an existing account"]
-            [:div (fh/render-form sign-in-form (:request context))]]]
+            [:div (fh/render-form sign-in-form (:request context))]]
+           [:div
+            [:div {:class "panel-heading"} "Resend the activation email"]
+            [:div (fh/render-form resend-activation-form (:request context))]]]
           [:div {:class "col-xs-6"}
            [:div
             [:div {:class "panel-heading"} "Create a new account!"]
