@@ -99,6 +99,22 @@
                  (kc/check-and-follow-redirect "redirects to same page (sign-in) with an error")
                  (kc/check-page-is :sign-in [ks/auth-form-problems]))))
 
+(facts "Can resend an email invitation"
+       (fact "Can resend an email invitation for an existing account"
+             (-> (k/session test-app)
+                 (k/visit (routes/absolute-path :sign-in))
+                 (kc/check-and-fill-in ks/auth-resend-form-email email)
+                 (kc/check-and-press ks/auth-resend-form-submit)
+                 (kc/check-and-follow-redirect "redirects to the email sent page")
+                 (kc/check-page-is :email-confirmation [ks/email-confirmation-body])))
+
+       (fact "If an account with the email does not exist no email can be sent"
+             (-> (k/session test-app)
+                 (k/visit (routes/absolute-path :sign-in))
+                 (kc/check-and-fill-in ks/auth-resend-form-email "some-uknown@mail.com")
+                 (kc/check-and-press ks/auth-resend-form-submit)
+                 (kc/check-and-follow-redirect "redirects to same page (sign-in) with an error")
+                 (kc/check-page-is :sign-in [ks/auth-form-problems]))))
 
 (facts "Participant can sign out"
        (-> (k/session test-app) 

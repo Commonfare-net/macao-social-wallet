@@ -49,6 +49,9 @@
 
 (def test-email "test@email.com")
 
+(defn latest-email-sent [emails]
+  (-> @emails (last)))
+
 (facts "About the landing page"
        (fact "When not signed in, displays link to sign in"
              (let [wallet-store (fm/create-memory-store)
@@ -90,7 +93,7 @@
                      activation-url (-> @emails (first) :activation-url)
                      user-account (fm/fetch account-store user-email)]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
-                 (-> @emails (first) :email) => user-email
+                 (:email (latest-email-sent emails)) => user-email
                  (.contains activation-url (:activation-id user-account)) => truthy
                  (.contains activation-url (:email user-account)) => truthy
                  (:activated (fm/fetch account-store user-email)) => false))
@@ -162,7 +165,28 @@
                                                       :password password
                                                       :confirm-password "another-password"})
                                   create-account-handler)]
-                 (-> response :flash (first) :msg) => "The conformation password has to be the same as the password"))))
+                 (-> response :flash (first) :msg) => "The conformation password has to be the same as the password"))
+
+         (fact "The user exists and a new activation email is requested. The activation email is sent wiht the correct new activation id"
+               (let [resend-activation-handler (handler/resend-activation-email account-store email-activator)
+                     response (-> (th/create-request :post
+                                                     (absolute-path :resend-activation-form)
+                                                     {:activation-email user-email})
+                                  resend-activation-handler)
+                     activation-url (:activation-url (latest-email-sent emails))]
+                 response => (th/check-redirects-to (absolute-path :email-confirmation))
+                 (:email (latest-email-sent emails)) => user-email
+                 (.contains activation-url (:activation-id (fm/fetch account-store user-email))) => truthy
+                 (.contains activation-url (:email (fm/fetch account-store user-email))) => truthy))
+
+         (fact "If an activation email is requested for a non-existing account we get a form error"
+               (let [resend-activation-handler (handler/resend-activation-email account-store email-activator)
+                     response (-> (th/create-request :post
+                                                     (absolute-path :resend-activation-form)
+                                                     {:activation-email "uknown-user@mail.com"})
+                                  resend-activation-handler)]
+                 response => (th/check-redirects-to (absolute-path :sign-in-form))
+                 (-> response :flash (first) :msg) => "The email uknown-user@mail.com is not registered yet. Please sign up first"))))
 
 (fact "signing out redirects to the index with session reset"
       (let [response (-> (th/create-request :get "/sign-out"

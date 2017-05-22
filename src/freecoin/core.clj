@@ -91,6 +91,8 @@
      :account-activated             sign-in/account-acivated
      :activate-account              (sign-in/activate-account account-store)
 
+     :resend-activation-form        (sign-in/resend-activation-email account-store email-activator)
+
      :forget-secret                 sign-in/forget-secret
      
      :account                       (participants/account      wallet-store blockchain)
