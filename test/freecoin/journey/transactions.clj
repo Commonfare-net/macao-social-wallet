@@ -71,7 +71,7 @@
 
              ;; do a transaction
              (k/visit (routes/absolute-path :get-transaction-form))
-             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--recipient recipient-email)
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-fill-in ks/transaction-form--tags "dupe, dupe space-separated!")
              (kc/check-and-press ks/transaction-form--submit)
@@ -168,7 +168,7 @@
 
              ;; now start a transaction
              (k/visit (routes/absolute-path :get-transaction-form))
-             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--recipient recipient-email)
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)
 
@@ -186,7 +186,7 @@
              ;; verifying that the PIN entry form on the confirmation
              ;; page is not there.
              (k/visit (routes/absolute-path :get-transaction-form))
-             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--recipient recipient-email)
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)
 
@@ -228,7 +228,7 @@
              ;; tx one:
              (k/visit (routes/absolute-path :get-transaction-form))
              (kc/check-page-is :get-transaction-form ks/transactions-page-body)
-             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--recipient recipient-email)
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-fill-in ks/transaction-form--tags "tx-one tx-shared")
              (kc/check-and-press ks/transaction-form--submit)
@@ -241,7 +241,7 @@
              (kc/check-page-is :account [ks/account-page-body] :email (kh/recall memory :sender-email))
              ;; tx two:
              (k/visit (routes/absolute-path :get-transaction-form))
-             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--recipient recipient-email)
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-fill-in ks/transaction-form--tags "tx-two tx-shared")
              (kc/check-and-press ks/transaction-form--submit)
@@ -251,7 +251,7 @@
              (kc/check-page-is :account [ks/account-page-body] :email (kh/recall memory :sender-email))
              ;; do a third transaction with a completely new tag
              (k/visit (routes/absolute-path :get-transaction-form))
-             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--recipient recipient-email)
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-fill-in ks/transaction-form--tags "tx-three")
              (kc/check-and-press ks/transaction-form--submit)
@@ -280,7 +280,7 @@
 
              ;; required form fields
              (k/visit (routes/absolute-path :get-transaction-form))
-             (kc/check-and-fill-in ks/transaction-form--recipient "recipient")
+             (kc/check-and-fill-in ks/transaction-form--recipient recipient-email)
              (kc/check-and-fill-in ks/transaction-form--amount "10.0")
              (kc/check-and-press ks/transaction-form--submit)
 

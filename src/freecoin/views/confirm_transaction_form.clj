@@ -30,7 +30,7 @@
     [:span {:class "gravatar"}
      [:img {:src (clavatar/gravatar (:email recipient) :size 87 :default :mm)}]]
     [:br]
-    [:span amount " -> " (:name recipient)]]])
+    [:span amount " -> " (:email recipient)]]])
 
 (defn build [context show-pin-entry]
   (if-let [confirmation-uid (-> context :confirmation :uid)]
