@@ -34,6 +34,7 @@
 (def ^:private confirmation-collection "confirmations")
 (def ^:private transaction-collection "transactions")
 (def ^:private account-collection "accounts")
+(def ^:private tag-collection "tags")
 
 (defn get-mongo-db-and-conn [mongo-uri]
   (let [db-and-conn (mongo/connect-via-uri mongo-uri)]
@@ -135,3 +136,6 @@
 
 (defn create-account-store [db]
   (create-mongo-store db account-collection))
+
+(defn create-tag-store [db]
+  (create-mongo-store db tag-collection))

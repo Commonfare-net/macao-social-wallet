@@ -95,4 +95,10 @@
              (k/visit (routes/absolute-path :get-tag-details :name "dupe"))
              (kc/check-page-is :get-tag-details ks/tag-details-page-body :name "dupe")
              (kc/selector-includes-content ks/tag-details-page--moved-value "10")
-             (kc/selector-includes-content ks/tag-details-page--transactions "1"))))
+             (kc/selector-includes-content ks/tag-details-page--transactions "1")
+             (kc/selector-includes-content ks/tag-details-page--created-by sender-email)
+             (kc/selector-includes-content ks/tag-details-page--created "")
+
+             ;; TODO:aspa visit a specific tag, check the metadata
+             
+             )))

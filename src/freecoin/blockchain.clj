@@ -175,9 +175,17 @@ Used to identify the class type."
                        :to-id to-account-id
                        :tags tags
                        :amount (util/bigdecimal->long amount)}]
+      ;; TODO-aspa handle exceptions
+      (map #(freecoin.db.tag/create-tag! {;; the store is missing
+                                          :tag %
+                                          :created-by from-account-id
+                                          :created timestamp})
+           tags)
       ;; TODO: Keep track of accounts to verify validity of from- and
       ;; to- accounts
-      (mongo/store! (storage/get-transaction-store stores-m) :_id transaction)))
+      (mongo/store! (storage/get-transaction-store stores-m) :_id transaction)
+      ;; TODO-aspa: Maybe better to do a batch insert with monger.collection/insert-batch? More efficient
+      ))
 
   (list-tags [bk params]
     (let [by-tag [{:$unwind :$tags}]
