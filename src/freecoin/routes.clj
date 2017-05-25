@@ -58,6 +58,7 @@
                  [["/send/confirm/" :confirmation-uid] {:get :get-confirm-transaction-form}]
                  [["/send/confirm/" :confirmation-uid] {:post :post-confirm-transaction-form}]
                  ["/activities" {:get :get-activity-streams}]
+                 ["/calendar" {:get :get-show-calendar}]
                  ["/echo" {:get :echo}]
                  ["/version" {:get :version}]]])
 

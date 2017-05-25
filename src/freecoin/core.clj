@@ -50,7 +50,8 @@
             [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
-            [freecoin.handlers.qrcode :as qrcode]))
+            [freecoin.handlers.qrcode :as qrcode]
+            [freecoin.handlers.calendar :as calendar]))
 
 (defn not-found [request]
   {:status 404
@@ -111,6 +112,9 @@
      :get-all-transactions          (transactions-list/list-all-transactions wallet-store blockchain)
 
      :get-activity-streams          (transactions-list/list-all-activity-streams  wallet-store blockchain)
+
+     :get-show-calendar             calendar/show-current-month
+
      :nxt                           todo}))
 
 (defn handle-anti-forgery-error [request]
