@@ -31,7 +31,9 @@
             [taoensso.timbre :as log]
             [fxc.core :as fxc]
             [freecoin.params :as param]
-            [freecoin.db.mongo :as mongo]
+            [freecoin.db
+             [mongo :as mongo]
+             [tag :as tag]]
             [freecoin.db.storage :as storage]
             [freecoin.utils :as util]
             [simple-time.core :as time]))
@@ -50,7 +52,7 @@
   ;; transactions
   (list-transactions [bk params])
   (get-transaction   [bk account-id txid])
-  (make-transaction  [bk from-account-id amount to-account-id params])
+  (make-transaction  [bk from-account-id amount to-account-id params from-account-email])
 
   ;; tags
   (list-tags         [bk params])
@@ -165,7 +167,8 @@ Used to identify the class type."
 
   (get-transaction   [bk account-id txid] nil)
 
-  (make-transaction  [bk from-account-id amount to-account-id params]
+  ;; TODO: get rid of account-ids and replace with wallets
+  (make-transaction  [bk from-account-id amount to-account-id params from-account-email]
     (let [timestamp (time/format (if-let [time (:timestamp params)] time (time/now)))
           tags (or (:tags params) #{})
           transaction {:_id (str timestamp "-" from-account-id)
@@ -175,16 +178,16 @@ Used to identify the class type."
                        :to-id to-account-id
                        :tags tags
                        :amount (util/bigdecimal->long amount)}]
-      ;; TODO-aspa handle exceptions
-      (map #(freecoin.db.tag/create-tag! {;; the store is missing
-                                          :tag %
-                                          :created-by from-account-id
-                                          :created timestamp})
-           tags)
+
+      ;; TODO: Maybe better to do a batch insert with monger.collection/insert-batch? More efficient for a large amount of inserts
+      (doall (map #(tag/create-tag! {:tag-store (:tag-store stores-m) 
+                                     :tag %
+                                     :created-by from-account-email
+                                     :created timestamp})
+                  tags))
       ;; TODO: Keep track of accounts to verify validity of from- and
       ;; to- accounts
       (mongo/store! (storage/get-transaction-store stores-m) :_id transaction)
-      ;; TODO-aspa: Maybe better to do a batch insert with monger.collection/insert-batch? More efficient
       ))
 
   (list-tags [bk params]
@@ -197,9 +200,13 @@ Used to identify the class type."
                                               :amount {"$sum" "$amount"}}}])
           tags (mongo/aggregate (storage/get-transaction-store stores-m)  params)]
       (mapv (fn [{:keys [_id count amount]}]
-              {:tag   _id
-               :count count
-               :amount (util/long->bigdecimal amount)}) tags)))
+              (let [tag (tag/fetch (:tag-store stores-m) _id)]
+                {:tag   _id
+                 :count count
+                 :amount (util/long->bigdecimal amount)
+                 :created-by (:created-by tag)
+                 :created (:created tag)}))
+            tags)))
 
   (tag-details [bk name params]
     (first (filter #(= name (:tag %)) (list-tags bk params))))
@@ -217,7 +224,7 @@ Used to identify the class type."
   true)
 
 ;;; in-memory blockchain for testing
-(defrecord InMemoryBlockchain [blockchain-label transactions-atom accounts-atom]
+(defrecord InMemoryBlockchain [blockchain-label transactions-atom accounts-atom tags-atom]
   Blockchain
   ;; identifier
   (label [bk] blockchain-label)
@@ -252,7 +259,7 @@ Used to identify the class type."
                                        [(second list)]))))
 
   (get-transaction   [bk account-id txid] nil)
-  (make-transaction  [bk from-account-id amount to-account-id params]
+  (make-transaction  [bk from-account-id amount to-account-id params from-account-email]
     ;; to make tests possible the timestamp here is generated starting from
     ;; the 1 december 2015 plus a number of days that equals the amount
     (let [now (time/format (time/add-days (time/datetime 2015 12 1) amount))
@@ -264,15 +271,21 @@ Used to identify the class type."
                        :to-id to-account-id
                        :tags tags
                        :amount amount}]
+
+      (doall (map #(swap! tags-atom assoc {:tag %
+                                           :created-by from-account-email
+                                           :created now})
+                  tags))
+      
       (swap! transactions-atom assoc (:transaction-id transaction) transaction)
       transaction))
-
+  
   ;; vouchers
   (create-voucher [bk account-id amount expiration secret])
   (redeem-voucher [bk account-id voucher]))
 
 (defn create-in-memory-blockchain
-  ([label] (create-in-memory-blockchain label (atom {}) (atom {})))
+  ([label] (create-in-memory-blockchain label (atom {}) (atom {}) (atom {})))
 
-  ([label transactions-atom accounts-atom]
-   (InMemoryBlockchain. label transactions-atom accounts-atom)))
+  ([label transactions-atom accounts-atom tags-atom]
+   (InMemoryBlockchain. label transactions-atom accounts-atom tags-atom)))

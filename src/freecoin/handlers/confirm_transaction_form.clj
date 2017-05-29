@@ -119,7 +119,8 @@
                                    ;; TODO: Replace account-id with email
                                    (:account-id sender-wallet) amount
                                    (:account-id recipient-wallet) {:secret secret
-                                                                   :tags tags})
+                                                                   :tags tags}
+                                   (:email sender-wallet))
       (confirmation/delete!
        confirmation-store
        (-> ctx ::confirmation :uid))

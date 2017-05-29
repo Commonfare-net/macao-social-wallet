@@ -37,7 +37,9 @@
             [freecoin.blockchain :as blockchain]
             [freecoin.routes :as routes]
             [freecoin.config :as c]
-            [freecoin.db.account :as account]))
+            [freecoin.db.account :as account]
+            [simple-time.core :as time]
+            [taoensso.timbre :as log]))
 
 (ih/setup-db)
 
@@ -97,8 +99,9 @@
              (kc/selector-includes-content ks/tag-details-page--moved-value "10")
              (kc/selector-includes-content ks/tag-details-page--transactions "1")
              (kc/selector-includes-content ks/tag-details-page--created-by sender-email)
-             (kc/selector-includes-content ks/tag-details-page--created "")
-
-             ;; TODO:aspa visit a specific tag, check the metadata
-             
-             )))
+             (kc/selector-parse-and-check-content {:selector ks/tag-details-page--created
+                                                   :content (simple-time.core/now)
+                                                   :parse-fn simple-time.core/parse
+                                                   ;; Check that the tag-creation happened less than 1 sec before
+                                                   :checkers-fn (fn [actual expected]
+                                                                  (roughly (time/- actual expected) 1000))}))))

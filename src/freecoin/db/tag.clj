@@ -24,9 +24,10 @@
 (ns freecoin.db.tag
   (:require [freecoin.db.mongo :as mongo]))
 
-(defn create-tag! [{:keys [tag-store tag created created-by] :as tag-map}]
+(defn create-tag! [{:keys [tag-store tag created created-by] :as tag-map}] 
   (when-not (mongo/fetch tag-store tag)
     (mongo/store! tag-store :tag (-> tag-map
-                                     (dissoc :tag-store)
-                                     ;; update the timestamp to date and the creator id to email
-                                     ))))
+                                     (dissoc :tag-store)))))
+
+(defn fetch [tag-store tag]
+  (mongo/fetch tag-store tag))

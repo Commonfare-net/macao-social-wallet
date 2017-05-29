@@ -36,7 +36,8 @@
   {:wallet-store       (m/create-memory-store)
    :confirmation-store (m/create-memory-store)
    :transaction-store (m/create-memory-store)
-   :account-store (m/create-memory-store)})
+   :account-store (m/create-memory-store)
+   :tag-store (m/create-memory-store)})
 
 (defn get-wallet-store [stores-m]
   (:wallet-store stores-m))
