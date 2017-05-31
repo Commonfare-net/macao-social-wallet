@@ -99,6 +99,7 @@
   :authorized? #(auth/is-signed-in %)
 
   :handle-ok (fn [ctx]
-               (-> {:wallets (wallet/query wallet-store (request->wallet-query (:request ctx)))}
-                   participants-list/participants-list
-                   fv/render-page)))
+               (let [wallets (wallet/query wallet-store (request->wallet-query (:request ctx)))]
+                 (-> {:wallets (sort-by :name wallets)}
+                     participants-list/participants-list
+                     fv/render-page))))
