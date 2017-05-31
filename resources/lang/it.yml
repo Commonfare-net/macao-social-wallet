@@ -7,6 +7,8 @@ wallet:
   balance: "Bilancio"
   send: "Invia somma"
   list: "Elenco transazioni"
+  participants: "Lista partecipanti"
+  tags: "Lista tags"
 
 transaction:
   make: "Fai una transazione"

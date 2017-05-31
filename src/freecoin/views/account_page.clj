@@ -60,4 +60,8 @@
              [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
               (t/locale [:wallet :send])]
              [:a.btn.btn-default {:href (routes/path :get-user-transactions :email (:email wallet))}
-              (t/locale [:wallet :list])]]]}))
+              (t/locale [:wallet :list])]
+             [:a.btn.btn-default {:href (routes/path :participants)}
+              (t/locale [:wallet :participants])]
+             [:a.btn.btn-default {:href (routes/path :get-all-tags)}
+              (t/locale [:wallet :tags])]]]}))
