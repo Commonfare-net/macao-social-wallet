@@ -2,5 +2,5 @@
 
 (defn build []
   {:body-class "func--index-page"
-   :title "Welcome to Freecoin"
-   :body [:h2 "Welcome to freecoin..."]})
+   :title "Welcome to the Common Coin"
+   :body [:h2 "Welcome to the Common Coin..."]})
