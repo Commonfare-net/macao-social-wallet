@@ -11,6 +11,7 @@
             [freecoin.db.account :as account]))
 
 (def password "abcd12*!")
+(def admin-email "sender@mail.com")
 
 (defn sign-up [state name]
   (let [email (str name "@mail.com")]
@@ -36,7 +37,7 @@
       (kc/check-page-is :account-activated [ks/account-activated-body])))
 
 (defn sign-in [state name]
-  "Manually create the DB entries so we dont have to go through the email sending (that is tested on a separatye journey)"
+  "Manually create the DB entries so we dont have to go through the email sending (that is tested on a separate journey)"
   (let [email (str name "@mail.com")]
 (-> state
         (k/visit (routes/absolute-path :sign-in))

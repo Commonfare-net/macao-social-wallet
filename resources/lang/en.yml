@@ -1,18 +1,20 @@
 ---
 
 wallet:
-  welcome: "Welcome to Freecoin"
+  welcome: "Welcome to the Common Coin"
   name: "Name"
   email: "Email"
   balance: "Balance"
   send: "Send amount"
   list: "List transactions"
+  participants: "List participants"
+  tags: "List tags"
 
 transaction:
   make: "Make a transaction"
   send: "Send an amount"
   amount: "Amount"
-  recipient: "Recipient"
+  recipient: "To"
   tags: "Tags"
   enter-pin: "Enter your secret PIN"
   confirm-title: "Confirm transaction"

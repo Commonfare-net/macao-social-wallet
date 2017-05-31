@@ -100,7 +100,7 @@
      :participants                  (participants/participants wallet-store)
 
      :get-transaction-form          (transaction-form/get-transaction-form wallet-store)
-     :post-transaction-form         (transaction-form/post-transaction-form wallet-store confirmation-store)
+     :post-transaction-form         (transaction-form/post-transaction-form blockchain wallet-store confirmation-store)
 
      :get-all-tags                  (tags/get-tags blockchain)
      :get-tag-details               (tag/get-tag-details blockchain)

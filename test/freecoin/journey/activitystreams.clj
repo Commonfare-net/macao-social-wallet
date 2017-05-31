@@ -90,7 +90,7 @@
   (let [wallet-store (:wallet-store stores-m)
         from (wallet/fetch wallet-store from-email)
         to (wallet/fetch wallet-store to-email)]
-    (blockchain/make-transaction blockchain (:account-id from) amount (:account-id to) params))
+    (blockchain/make-transaction blockchain (:account-id from) amount (:account-id to) params from-email))
   state)
 
 

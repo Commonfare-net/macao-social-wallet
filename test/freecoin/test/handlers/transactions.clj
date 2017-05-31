@@ -46,8 +46,8 @@
             [simple-time.core :as time]
             [taoensso.timbre :as log]))
 
-(def sender-email "sender@email.com")
-(def recipient-email "recipient@email.com")
+(def sender-email "sender@mail.com")
+(def recipient-email "recipient@mail.com")
 
 (defn setup-with-sender-and-recipient []
   (let [wallet-store (fm/create-memory-store)
@@ -78,7 +78,7 @@
 
          (fact "returns 200 when participant authenticated but without cookie-data"
                (-> (th/create-request :get (absolute-path :get-transaction-form)
-                                      {} {:signed-in-email "sender@email.com"})
+                                      {} {:signed-in-email "sender@mail.com"})
                    transaction-form-handler
                    :status) => 200)
 
@@ -102,8 +102,9 @@
 
 (facts "about post requests from the transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
+             blockchain (fb/create-in-memory-blockchain :bk)
              confirmation-store ...confirmation-store...
-             form-post-handler (tf/post-transaction-form wallet-store confirmation-store)]
+             form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store)]
          (fact "returns 401 when participant not authenticated"
                (-> (th/create-request :post "/post-transaction-form" {})
                    form-post-handler
@@ -117,7 +118,7 @@
         
          (facts "when participant is authenticated, has cookie-data, and posts a valid form"
                 (let [confirmation-store (fm/create-memory-store)
-                      form-post-handler (tf/post-transaction-form wallet-store confirmation-store)
+                      form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
                                     {:amount "5.00" :recipient recipient-email}
@@ -130,6 +131,17 @@
                   (fact "redirects to the confirm transaction form"
                         response => (th/check-redirects-to (absolute-path :get-confirm-transaction-form
                                                                           :confirmation-uid (:uid transaction-confirmation))))))
+
+         (facts "when participant tries to make a transaction but doesnt have enough in his wallet"
+                (let [confirmation-store (fm/create-memory-store)
+                      form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store)
+                      response (-> (th/create-request
+                                    :post "/post-transaction-form"
+                                    {:amount "5.00" :recipient recipient-email}
+                                    {:signed-in-email "non-admin@mail.com" :cookie-data sender-apikey})
+                                   form-post-handler)]
+                  (:status response) => 302
+                  (-> response :flash (first) :msg) => "Balance is not sufficient to perform this transaction"))
 
 
          (tabular
@@ -207,7 +219,7 @@
                      confirmation-for-different-sender (c/new-transaction-confirmation! 
                                                         confirmation-store
                                                         (constantly "confirmation-for-different-sender-uid")
-                                                        "different-sender@email.com" recipient-email 10M)
+                                                        "different-sender@mail.com" recipient-email 10M)
                      form-post-handler (ctf/post-confirm-transaction-form wallet-store confirmation-store blockchain)]
                  (-> (th/create-request :post "/post-confirm-transaction-form"
                                         {:confirmation-uid "confirmation-for-different-sender-uid"}

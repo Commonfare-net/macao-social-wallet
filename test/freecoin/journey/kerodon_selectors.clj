@@ -29,6 +29,8 @@
 (def tag-details-page-body :.func--tag-page--body)
 (def tag-details-page--moved-value [:.func--tag-page--table :tbody :tr.func--tag-page--amount :td])
 (def tag-details-page--transactions [:.func--tag-page--table :tbody :tr.func--tag-page--count :td])
+(def tag-details-page--created-by [:.func--tag-page--table :tbody :tr.func--tag-page--created-by :td])
+(def tag-details-page--created [:.func--tag-page--table :tbody :tr.func--tag-page--created :td])
 
 (def auth-sign-in-body :.func--login-page--body)
 (def auth-sign-up-form-first :.func--sign-up-first)

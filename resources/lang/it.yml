@@ -1,12 +1,14 @@
 ---
 
 wallet:
-  welcome: "Benvenuti su Freecoin"
+  welcome: "Benvenut* su Commoncoin"
   name: "Nome"
   email: "Email"
   balance: "Bilancio"
   send: "Invia somma"
   list: "Elenco transazioni"
+  participants: "Lista partecipanti"
+  tags: "Lista tags"
 
 transaction:
   make: "Fai una transazione"
