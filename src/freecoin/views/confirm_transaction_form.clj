@@ -10,18 +10,9 @@
                 :type :submit
                 :class "func--confirm-transaction-form--submit"}]
     {:renderer :bootstrap3-stacked
-     :fields (if show-pin-entry
-               [{:name :secret
-                 :label (t/locale [:transaction :enter-pin])
-                 :type :password
-                 :class "func--confirm-transaction-form--secret"}
-                submit]
-               [submit])
+     :fields [submit]
      :action (routes/absolute-path :post-confirm-transaction-form
                                    :confirmation-uid confirmation-uid)
-     :validations (if show-pin-entry
-                    [ [:required [:secret] (t/locale [:transaction :enter-pin])]]
-                    [])
      :method "post"}))
 
 (defn render-recipient [recipient amount]

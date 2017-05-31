@@ -96,36 +96,30 @@
 
   :allowed?
   (fn [ctx]
-    (if-let [secret (ch/context->cookie-data ctx)]
-      ;; pre-authorized
-      {::secret secret}
-      ;; PIN entered in form
-      (let [confirmation (::confirmation ctx)
-            {:keys [status data problems]}
-            (fh/validate-form (confirm-transaction-form/confirm-transaction-form-spec (:uid confirmation) true)
-                              (ch/context->params ctx))]
-        (if (= :ok status)
-          {::secret (:secret data)}
-          [false (fh/form-problem problems)]))))
+    (let [confirmation (::confirmation ctx)
+          {:keys [status data problems]}
+          (fh/validate-form (confirm-transaction-form/confirm-transaction-form-spec (:uid confirmation) true)
+                            (ch/context->params ctx))]
+      (if (= :ok status)
+        {}
+        [false (fh/form-problem problems)])))
 
   :post!
   (fn [ctx]
     (let [{:keys [sender-email recipient-email amount tags]}
           (-> ctx ::confirmation :data)
           sender-wallet (wallet/fetch wallet-store sender-email)
-          recipient-wallet (wallet/fetch wallet-store recipient-email)
-          secret (::secret ctx)]
+          recipient-wallet (wallet/fetch wallet-store recipient-email)]
       (blockchain/make-transaction blockchain
                                    ;; TODO: Replace account-id with email
                                    (:account-id sender-wallet) amount
-                                   (:account-id recipient-wallet) {:secret secret
-                                                                   :tags tags}
+                                   (:account-id recipient-wallet) {:tags tags}
                                    (:email sender-wallet))
       (confirmation/delete!
        confirmation-store
        (-> ctx ::confirmation :uid))
 
-      {::email (:email sender-wallet) ::secret secret}))
+      {::email (:email sender-wallet)}))
 
   :post-redirect?
   (fn [ctx]
@@ -137,7 +131,6 @@
      (:location ctx)
      r/redirect
      (preserve-session (:request ctx))
-     (update-in [:session] assoc :cookie-data (::secret ctx))
      lr/ring-response))
 
   :handle-forbidden
