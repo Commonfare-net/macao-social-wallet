@@ -31,8 +31,8 @@
             [freecoin.db.confirmation :as confirmation]
             [freecoin.test-helpers.store :as test-store]))
 
-(def sender-email "sender@email.com")
-(def recipient-email "recipient@email.com")
+(def sender-email "sender@mail.com")
+(def recipient-email "recipient@mail.com")
 
 (facts "Can create and fetch a transaction confirmation"
        (let [uuid-generator (constantly "a-uuid")

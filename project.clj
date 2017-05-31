@@ -67,7 +67,8 @@
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
                                 [:email-config "email-conf.edn"]
-                                [:secure "false"]]
+                                [:secure "false"]
+                                [:admin-email "sender@mail.com"]]
                           :plugins [[lein-midje "3.1.3"]]}
 
              :rel [:release :release-local]

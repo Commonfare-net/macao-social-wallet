@@ -2,7 +2,8 @@
   (:require [environ.core :as env]))
 
 (def env-vars #{:port :host :base-url :secure :debug
-                :client-id :client-secret :email-config})
+                :client-id :client-secret :email-config
+                :admin-email})
 
 (defn create-config []
   (select-keys env/env env-vars))
@@ -49,3 +50,6 @@
 
 (defn secure? [config-m]
   (not (= "false" (get-env config-m :secure "true"))))
+
+(defn admin-email [config-m]
+  (get-env config-m :admin-email))
