@@ -28,6 +28,7 @@
 
 (ns freecoin.db.mongo
   (:require [monger.collection :as mc]
+            [monger.db :as mdb]
             [monger.core :as mongo]))
 
 (def ^:private wallet-collection "wallets")
@@ -35,6 +36,7 @@
 (def ^:private transaction-collection "transactions")
 (def ^:private account-collection "accounts")
 (def ^:private tag-collection "tags")
+(def ^:private password-recovery-collection "password-recovery")
 
 (defn get-mongo-db-and-conn [mongo-uri]
   (let [db-and-conn (mongo/connect-via-uri mongo-uri)]
@@ -77,7 +79,7 @@
           (dissoc :_id))))
 
   (query [this query]
-     (->> (mc/find-maps mongo-db coll query)
+    (->> (mc/find-maps mongo-db coll query)
          (map #(dissoc % :_id))))
 
   (delete! [this k]
@@ -139,3 +141,17 @@
 
 (defn create-tag-store [db]
   (create-mongo-store db tag-collection))
+
+(defn create-password-recovery-store [db]
+  ;; TODO-aspra pass time as parameter
+  (let [thirty-mins 1800
+        store (create-mongo-store db password-recovery-collection)]
+    ;; TODO-aspra could not start the server cause the index already existed
+    (mc/ensure-index db password-recovery-collection {:created-at 1}
+                     {:expireAfterSeconds thirty-mins})
+    store))
+
+(defn all-collection-names [db]
+  (mdb/get-collection-names db))
+
+

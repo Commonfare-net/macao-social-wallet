@@ -54,3 +54,6 @@
 (defn correct-password? [account-store email candidate-password]
   (hashers/check candidate-password
    (:password (fetch account-store email))))
+
+(defn update-password! [account-store email password]
+  (mongo/update! account-store email #(assoc % :password (generate-hash password))))

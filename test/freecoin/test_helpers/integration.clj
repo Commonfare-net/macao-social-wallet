@@ -41,8 +41,9 @@
                 :client-secret "freecoin-secret"
                 :client-id "freecoin"
                 :email-config "email-conf.edn"}
-     :email-activator (email-activation/->StubActivationEmail (atom []) (:account-store stores))}))
+     :email-activator (email-activation/->StubActivationEmail (atom []) (:account-store stores))
+     :password-recoverer (email-activation/->PasswordRecoveryEmail (atom []) (:password-recovery-store stores))}))
 
 (defn build-app [app-config-override-m]
-  (let [{:keys [config-m stores-m blockchain email-activator]} (merge (default-app-config-m) app-config-override-m)]
-    (core/create-app config-m stores-m blockchain email-activator)))
+  (let [{:keys [config-m stores-m blockchain email-activator password-recoverer]} (merge (default-app-config-m) app-config-override-m)]
+    (core/create-app config-m stores-m blockchain email-activator password-recoverer)))
