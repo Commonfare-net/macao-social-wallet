@@ -45,8 +45,8 @@
              [sign-in :as sign-in-page]
              [email-confirmation :as email-confirmation]
              [account-activated :as aa]
-             [reset-password :as reset-password]
-             [password-changed :as password-changed]] 
+             [reset-password :as reset-password-page]
+             [password-changed :as password-changed-page]] 
             [freecoin.form_helpers :as fh]
             [freecoin.context-helpers :as ch]
             [freecoin.email-activation :as email-activation]
@@ -255,7 +255,7 @@
                     (assoc ctx
                            :location (routes/absolute-path :email-confirmation))))
 
-(lc/defresource send-password-recovery-email [account-store password-recoverer]
+(lc/defresource send-password-recovery-email [account-store password-recovery-store password-recoverer]
   :allowed-methods [:post]
   :available-media-types content-types
   :known-content-type? #(check-content-type % content-types)
@@ -269,7 +269,10 @@
                           ;; TODO: It would be safer if we do not notify that the email doesnt exist but send an email anyway saying that someone attempted to change the password.
                           [false (fh/form-problem (conj problems
                                                         {:keys [:email] :msg (str "The email " email " is not registered yet. Please sign up first")}))]
-                          ctx))
+                          (if (pr/fetch password-recovery-store email)
+                            [false (fh/form-problem (conj problems
+                                                          {:keys [:email] :msg (str "A recovery email for " email " has already been sent.")}))]
+                            ctx)))
                       [false (fh/form-problem problems)])))
 
   :handle-unprocessable-entity (fn [ctx] 
@@ -323,33 +326,36 @@
         (update-in [:session] dissoc :cookie-data)
         lr/ring-response)))
 
-(lc/defresource reset-password-render-form
+(lc/defresource reset-password-render-form [password-recovery-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
-  :handle-ok (fn [ctx] 
-               (-> ctx 
-                   reset-password/build
-                   fv/render-page)))
+  :handle-ok (fn [ctx]
+               (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])]
+                 (if-let [account (pr/fetch-by-password-recovery-id password-recovery-store password-recovery-id)]
+                          (if-not (= (:email account) email)
+                            (error-redirect ctx "The email and password recovery id do not match")
+                            (-> ctx 
+                              reset-password-page/build
+                              fv/render-page)) 
+                          (error-redirect ctx "The password recovery id could not be found, maybe it has expired. Please try again.")))))
 
 (lc/defresource reset-password [account-store password-recovery-store] 
   :allowed-methods [:post]
   :available-media-types content-types
   :processable? (fn [ctx]
-                  (let [{:keys [status data problems]}
-                        (fh/validate-form sign-in-page/sign-up-form
+                  (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])
+                        {:keys [status data problems]}
+                        (fh/validate-form (reset-password-page/reset-password-form email password-recovery-id)
                                           (ch/context->params ctx))]
-                    (if (= :ok status)
-                      (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])]
-                        (if-let [account (pr/fetch-by-password-recovery-id password-recovery-store password-recovery-id)]
-                          (if-not (= (:email account) email)
-                            (error-redirect ctx "The email and password recovery id do not match"))
-                          (error-redirect ctx "The password recovery id could not be found")))
-                      [false (fh/form-problem problems)])))
+                    (if-not (= :ok status)
+                      [false (fh/form-problem problems)]
+                      ctx)))
 
   :handle-unprocessable-entity (fn [ctx] 
-                                 (lr/ring-response (fh/flash-form-problem
-                                                    (r/redirect (routes/absolute-path :reset-password))
-                                                    ctx)))
+                                 (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])]
+                                   (lr/ring-response (fh/flash-form-problem
+                                                      (r/redirect (routes/absolute-path :reset-password :email email :password-recovery-id password-recovery-id))
+                                                      ctx))))
   :post! (fn [ctx]
            (let [data (-> ctx :request :params)
                  {:keys [new-password email]} data]
@@ -367,5 +373,5 @@
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
                (-> ctx
-                   (password-changed/build)
+                   (password-changed-page/build)
                    fv/render-page)))

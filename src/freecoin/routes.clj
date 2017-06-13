@@ -48,7 +48,8 @@
                  ["/resend-email" {:post :resend-activation-form}]
                  ["/recover-password" {:post :recover-password-form}]
                  [["/reset-password/"  (eval email-reg-exp) "/" :password-recovery-id] {:get :reset-password}]
-                 ["/reset-password" {:post :reset-password}]
+                 [["/reset-password/"  (eval email-reg-exp) "/" :password-recovery-id] {:post :reset-password-form}]
+                 
                  ["/password-changed" {:get :password-changed}]
                  [["/qrcode/" (eval email-reg-exp)] {:get :qrcode}]
                  [["/transactions/" (eval email-reg-exp)] {:get :get-user-transactions}]

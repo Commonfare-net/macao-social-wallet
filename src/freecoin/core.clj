@@ -93,9 +93,9 @@
      :activate-account              (sign-in/activate-account account-store)
 
      :resend-activation-form        (sign-in/resend-activation-email account-store email-activator)
-     :recover-password-form         (sign-in/send-password-recovery-email account-store password-recoverer)
+     :recover-password-form         (sign-in/send-password-recovery-email account-store password-recovery-store password-recoverer)
 
-     :reset-password                (sign-in/reset-password account-store password-recovery-store)
+     :reset-password                (sign-in/reset-password-render-form password-recovery-store)
      :reset-password-form           (sign-in/reset-password account-store password-recovery-store)
      :password-changed              sign-in/password-changed
      

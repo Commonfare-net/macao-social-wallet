@@ -62,11 +62,11 @@ account-activated:
   heading: "You account has been activated!"
   text: "Your account has been succesfully activated, please log in to continue."
 
-:reset-password:
+reset-password:
   title: "Reset your password"
-  heading "Choose a new password"
+  heading: "Choose a new password"
 
-:password-changed
+password-changed:
   title: "Password changed"
   headers: "Your password was succesfully changed!"
   text: "Your password has been succesfully changed, please log in to continue."

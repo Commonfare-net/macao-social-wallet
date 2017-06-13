@@ -24,16 +24,20 @@
 
 (ns freecoin.db.password-recovery
   (:require [freecoin.db.mongo :as mongo]
-            [buddy.hashers :as hashers]))
+            [buddy.hashers :as hashers]
+            [taoensso.timbre :as log]))
 
 (defn new-entry!
-  [password-recovery-store email recovery-link]
+  [password-recovery-store email recovery-id]
   (mongo/store! password-recovery-store :email {:email email
                                                 :created-at (java.util.Date.)
-                                                :recovery-link recovery-link}))
+                                                :recovery-id recovery-id}))
 
 (defn fetch-by-password-recovery-id [password-recovery-store password-recovery-id]
-  (first (mongo/query password-recovery-store {:password-recovery-id password-recovery-id})))
+  (first (mongo/query password-recovery-store {:recovery-id password-recovery-id})))
+
+(defn fetch [password-recovery-store email]
+  (some-> (mongo/fetch password-recovery-store email)))
 
 (defn remove! [password-recovery-store email]
   (mongo/delete! password-recovery-store email))
