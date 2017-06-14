@@ -52,3 +52,12 @@
 (def auth-resend-form-submit :.func--resend-email-submit)
 
 (def account-activated-body :.func--account-activated--body)
+
+(def auth-password-recovery-email :.func--password-recovery-email)
+(def auth-password-recovery-submit :.func--recover-password-submit)
+
+(def change-password-new :.func--reset-pswrd-new)
+(def change-password-repeat :.func--reset-pswrd-repeat)
+(def change-password-submit :.func--reset-pswrd-submit)
+
+(def password-changed-body :.func--password-changed--body)

@@ -15,7 +15,7 @@
             {:name :submit :type :submit :class "func--sign-up-submit"}]
    :validations [[:required [:first-name :last-name :email :password :confirm-password]]
                  [:matches #"^[^\n ]{8,}$" :password "The password should be Minimum 8 characters"]
-                 [:equal [:password :confirm-password] "The conformation password has to be the same as the password"]]
+                 [:equal [:password :confirm-password] "The confirmation password has to be the same as the password"]]
    :action (routes/path :sign-up-form)
    :method "post"})
 
@@ -39,7 +39,7 @@
 
 (def password-recovery-form
   {:renderer :bootstrap3-stacked
-   :fields [{:name :email-address :type :email :class "func--password-recovery"}
+   :fields [{:name :email-address :type :email :class "func--password-recovery-email"}
             {:name :submit :type :submit :class "func--recover-password-submit"}]
    :validations [[:required [:email-address]]]
    :action (routes/path :recover-password-form)

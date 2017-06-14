@@ -165,7 +165,7 @@
                                                       :password password
                                                       :confirm-password "another-password"})
                                   create-account-handler)]
-                 (-> response :flash (first) :msg) => "The conformation password has to be the same as the password"))
+                 (-> response :flash (first) :msg) => "The confirmation password has to be the same as the password"))
 
          (fact "The user exists and a new activation email is requested. The activation email is sent wiht the correct new activation id"
                (let [resend-activation-handler (handler/resend-activation-email account-store email-activator)
@@ -186,7 +186,50 @@
                                                      {:activation-email "uknown-user@mail.com"})
                                   resend-activation-handler)]
                  response => (th/check-redirects-to (absolute-path :sign-in-form))
-                 (-> response :flash (first) :msg) => "The email uknown-user@mail.com is not registered yet. Please sign up first"))))
+                 (-> response :flash (first) :msg) => "The email uknown-user@mail.com is not registered yet. Please sign up first"))
+
+         ;; Password recovery
+         
+         (fact "The user has forgotten the password and wants to create a new one"
+               (let [new-password "87654321"
+                     old-password-hash (:password (fm/fetch account-store user-email))
+                     emails (atom [])
+                     password-recovery-store (fm/create-memory-store)
+                     password-recoverer (email-activation/->StubPasswordRecoveryEmail emails password-recovery-store)
+                     send-password-recovery-handler (handler/send-password-recovery-email account-store password-recovery-store password-recoverer)
+                     reset-password-handler (handler/reset-password account-store password-recovery-store)
+                     response (-> (th/create-request :post
+                                                     (absolute-path :recover-password-form)
+                                                     {:email-address user-email})
+                                  send-password-recovery-handler)
+                     password-recovery-url (:password-recovery-url (latest-email-sent emails))
+                     password-recovery-id (:recovery-id (fm/fetch password-recovery-store user-email))]
+                 response => (th/check-redirects-to (absolute-path :email-confirmation))
+                 (:email (latest-email-sent emails)) => user-email
+                 (.contains password-recovery-url password-recovery-id) => truthy
+                 (.contains password-recovery-url (:email (fm/fetch password-recovery-store user-email))) => truthy
+
+                 ;; the user follows the password recovery link but the confirmation password does not match
+                 (let [response (-> (rmr/request :post "/reset-password/")
+                                    (assoc :params {:email user-email
+                                                    :password-recovery-id password-recovery-id
+                                                    :new-password new-password
+                                                    :repeat-password "another-password"})
+                                 
+                                    reset-password-handler)]
+                   (-> response :flash (first) :msg) => "The confirmation password has to be the same as the password")
+
+                 ;; the user follows the password recovery link and changes the password
+                 (let [response (-> (rmr/request :post "/reset-password/")
+                                    (assoc :params {:email user-email
+                                                    :password-recovery-id password-recovery-id
+                                                    :new-password new-password
+                                                    :repeat-password new-password})
+                                 
+                                    reset-password-handler)]
+                   response => (th/check-redirects-to (absolute-path :password-changed))
+                   (= old-password-hash (:password (fm/fetch account-store user-email))) => falsey
+                   (fm/fetch password-recovery-store user-email) => falsey)))))
 
 (fact "signing out redirects to the index with session reset"
       (let [response (-> (th/create-request :get "/sign-out"

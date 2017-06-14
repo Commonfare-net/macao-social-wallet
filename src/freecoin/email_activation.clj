@@ -94,3 +94,12 @@
       (swap! emails conj {:email email :activation-url (activation-link activation-id email) :error :SUCCESS})
       (account/update-activation-id! account-store email activation-id) 
       (first @emails))))
+
+(defrecord StubPasswordRecoveryEmail [emails password-recovery-store]
+  Email
+  (email-and-update! [_ email]
+    (let [password-recovery-id (generate-id)]
+      ;; the SUCCESS is needed to imitate poster responses
+      (swap! emails conj {:email email :password-recovery-url (password-recovery-link password-recovery-id email) :error :SUCCESS})
+      (password-recovery/new-entry! password-recovery-store email password-recovery-id)
+      (first @emails))))

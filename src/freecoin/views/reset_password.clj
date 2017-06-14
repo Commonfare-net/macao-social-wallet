@@ -6,10 +6,11 @@
 (defn reset-password-form [email recovery-id]
   {:renderer :bootstrap3-stacked
    :fields [{:name :new-password :type :password :class "func--reset-pswrd-new"}
-            {:name :repeat-password :type :password :class "func--reset-pswrd-repeat"}]
+            {:name :repeat-password :type :password :class "func--reset-pswrd-repeat"}
+            {:name :submit :type :submit :class "func--reset-pswrd-submit"}]
    :validations [[:required [:new-password :repeat-password]]
                  [:matches #"^[^\n ]{8,}$" :new-password "The password should be Minimum 8 characters"]
-                 [:equal [:new-password :repeat-password] "The conformation password has to be the same as the password"]]
+                 [:equal [:new-password :repeat-password] "The confirmation password has to be the same as the password"]]
    :action (routes/absolute-path :reset-password-form :email email :password-recovery-id recovery-id)
    :method "post"})
 
