@@ -25,13 +25,16 @@
 (ns freecoin.db.storage
   (:require [freecoin.db.mongo :as m]))
 
-(defn create-mongo-stores [db]
-  {:wallet-store       (m/create-wallet-store db)
-   :confirmation-store (m/create-confirmation-store db)
-   :transaction-store  (m/create-transaction-store db)
-   :account-store (m/create-account-store db)
-   :tag-store (m/create-tag-store db)
-   :password-recovery-store (m/create-password-recovery-store db)})
+(defn create-mongo-stores
+  ([db]
+   (create-mongo-stores db 1800))
+  ([db ttl-password-recovery]
+   {:wallet-store       (m/create-wallet-store db)
+    :confirmation-store (m/create-confirmation-store db)
+    :transaction-store  (m/create-transaction-store db)
+    :account-store (m/create-account-store db)
+    :tag-store (m/create-tag-store db)
+    :password-recovery-store (m/create-password-recovery-store db ttl-password-recovery)}))
 
 (defn create-in-memory-stores []
   {:wallet-store       (m/create-memory-store)

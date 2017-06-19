@@ -68,7 +68,8 @@
                                 [:client-secret "FREECOINSECRET"]
                                 [:email-config "email-conf.edn"]
                                 [:secure "false"]
-                                [:admin-email "sender@mail.com"]]
+                                [:admin-email "sender@mail.com"]
+                                [:ttl-password-recovery "1800"]]
                           :plugins [[lein-midje "3.1.3"]]}
 
              :rel [:release :release-local]
@@ -89,7 +90,8 @@
                                 [:client-id "LOCALFREECOIN"]
                                 [:client-secret "FREECOINSECRET"]
                                 [:email-config "email-conf.edn"]
-                                [:secure "false"]]}
+                                [:secure "false"]
+                                [:ttl-password-recovery "1800"]]}
              :uberjar {:dependencies [[ns-tracker ~ns-tracker-version]]
                        :source-paths ["src" "prod"]
                        :aot :all
@@ -99,7 +101,8 @@
                              [:client-id "LOCALFREECOIN"]
                              [:client-secret "FREECOINSECRET"]
                              [:email-config "email-conf.edn"]
-                             [:secure "false"]]}
+                             [:secure "false"]
+                             [:ttl-password-recovery "1800"]]}
              }
   
   :plugins [[lein-ring "0.9.3"]
