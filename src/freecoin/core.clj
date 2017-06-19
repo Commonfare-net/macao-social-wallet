@@ -172,7 +172,7 @@
     app-state
     (if-let [db (:db app-state)]
       (let [config-m (config/create-config)
-            stores-m (storage/create-mongo-stores db (:ttl-password-recovery config-m))
+            stores-m (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
             blockchain (blockchain/new-stub stores-m)
             email-conf (clojure.edn/read-string (slurp (:email-config config-m))) 
             email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
@@ -211,7 +211,7 @@
          (fn [_] (let [config-m (config/create-config)
                        email-conf (clojure.edn/read-string (slurp (:email-config config-m)))
                        db (:db @app-state)
-                       stores-m (storage/create-mongo-stores db (:ttl-password-recovery config-m))
+                       stores-m (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
                        blockchain (blockchain/new-stub stores-m)
                        email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))]
                    (prn "Restarting server....")

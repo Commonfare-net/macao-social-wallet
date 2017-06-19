@@ -3,7 +3,7 @@
 
 (def env-vars #{:port :host :base-url :secure :debug
                 :client-id :client-secret :email-config
-                :admin-email})
+                :admin-email :ttl-password-recovery})
 
 (defn create-config []
   (select-keys env/env env-vars))
@@ -53,3 +53,6 @@
 
 (defn admin-email [config-m]
   (get-env config-m :admin-email))
+
+(defn ttl-password-recovery [config-m]
+  (clojure.edn/read-string (get-env config-m :ttl-password-recovery)))
