@@ -58,14 +58,14 @@
   Email
   (email-and-update! [_ email]
     (let [activation-id (generate-id)
-          email-response       (postal/send-message 
-                                (postal-basic-conf conf)
-                                {:from (:freecoin-email-address conf)
-                                 :to [email]
-                                 :subject "Please activate your freecoin account"
-                                 :body (str "Please click to activate your account " (activation-link activation-id email))})]
-      ;; TODO-aspa if db fails no email
-      (account/update-activation-id! account-store email activation-id)
+          email-response       (if (account/update-activation-id! account-store email activation-id)
+                                 (postal/send-message 
+                                  (postal-basic-conf conf)
+                                  {:from (:freecoin-email-address conf)
+                                   :to [email]
+                                   :subject "Please activate your freecoin account"
+                                   :body (str "Please click to activate your account " (activation-link activation-id email))})
+                                 false)]
       (if (= :SUCCESS (:error email-response))
         email-response
         false))))
@@ -74,14 +74,14 @@
   Email
   (email-and-update! [_ email]
     (let [password-recovery-id (generate-id)
-          email-response       (postal/send-message 
-                                (postal-basic-conf conf)
-                                {:from (:freecoin-email-address conf)
-                                 :to [email]
-                                 :subject "Freecoin password recovery"
-                                 :body (str "Password recovery for the freecoin software was requested for " email ". If you are the owner of this account and you want to reset your password please click " (password-recovery-link password-recovery-id email) ". The link will expire soon so be fast!")})]
-      ;; TODO-aspa if db fails no email
-      (password-recovery/new-entry! password-recovery-store email password-recovery-id)
+          email-response       (if (password-recovery/new-entry! password-recovery-store email password-recovery-id)
+                                 (postal/send-message 
+                                  (postal-basic-conf conf)
+                                  {:from (:freecoin-email-address conf)
+                                   :to [email]
+                                   :subject "Freecoin password recovery"
+                                   :body (str "Password recovery for the freecoin software was requested for " email ". If you are the owner of this account and you want to reset your password please click " (password-recovery-link password-recovery-id email) ". The link will expire soon so be fast!")})
+                                 false)]
       (if (= :SUCCESS (:error email-response))
         email-response
         false))))
