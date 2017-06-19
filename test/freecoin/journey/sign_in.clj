@@ -16,7 +16,8 @@
 
 (ih/setup-db)
 
-(def stores-m (s/create-mongo-stores (ih/get-test-db)))
+;; TTL is set to 30 seconds but mongo checks only every ~60 secs
+(def stores-m (s/create-mongo-stores (ih/get-test-db) 30))
 (def blockchain (blockchain/new-stub stores-m))
 (def emails (atom []))
 
@@ -161,7 +162,22 @@
                      (= old-password-hash (:password (account/fetch (:account-store stores-m) email))) => falsey)
 
                (fact "check that the password recovery entry has been deleted"
-                     (pr/fetch (:password-recovery-store stores-m) email) => falsey))))
+                     (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
+       
+       (fact "Check that the link cannot be used after expired"
+             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 20 seconds"
+                   (-> (k/session test-app)
+                       (k/visit (routes/absolute-path :sign-in))
+                       (kc/check-and-fill-in ks/auth-password-recovery-email email)
+                       (kc/check-and-press ks/auth-password-recovery-submit)
+                       (kc/check-and-follow-redirect "redirects to the email sent page")
+                       (kc/check-page-is :email-confirmation [ks/email-confirmation-body]))
+
+                   (pr/fetch (:password-recovery-store stores-m) email) => truthy
+
+                   (Thread/sleep 60000)
+
+                   (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
 
 (facts "Participant can sign out"
        (-> (k/session test-app) 
