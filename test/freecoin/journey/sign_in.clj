@@ -174,8 +174,8 @@
                        (kc/check-page-is :email-confirmation [ks/email-confirmation-body]))
 
                    (pr/fetch (:password-recovery-store stores-m) email) => truthy
-
-                   (Thread/sleep 60000)
+                   (clojure.pprint/pprint "I am testing the DB expiration, this will last about a minute, please bear with me...")
+                   (Thread/sleep 70000)
 
                    (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
 
