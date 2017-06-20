@@ -25,19 +25,24 @@
 (ns freecoin.db.storage
   (:require [freecoin.db.mongo :as m]))
 
-(defn create-mongo-stores [db]
-  {:wallet-store       (m/create-wallet-store db)
-   :confirmation-store (m/create-confirmation-store db)
-   :transaction-store  (m/create-transaction-store db)
-   :account-store (m/create-account-store db)
-   :tag-store (m/create-tag-store db)})
+(defn create-mongo-stores
+  ([db]
+   (create-mongo-stores db 1800))
+  ([db ttl-password-recovery]
+   {:wallet-store       (m/create-wallet-store db)
+    :confirmation-store (m/create-confirmation-store db)
+    :transaction-store  (m/create-transaction-store db)
+    :account-store (m/create-account-store db)
+    :tag-store (m/create-tag-store db)
+    :password-recovery-store (m/create-password-recovery-store db ttl-password-recovery)}))
 
 (defn create-in-memory-stores []
   {:wallet-store       (m/create-memory-store)
    :confirmation-store (m/create-memory-store)
    :transaction-store (m/create-memory-store)
    :account-store (m/create-memory-store)
-   :tag-store (m/create-memory-store)})
+   :tag-store (m/create-memory-store)
+   :password-recovery-store (m/create-memory-store)})
 
 (defn get-wallet-store [stores-m]
   (:wallet-store stores-m))
@@ -54,9 +59,13 @@
 (defn get-tag-store [stores-m]
   (:tag-store stores-m))
 
+(defn get-password-recovery-store [stores-m]
+  (:password-recovery-store stores-m))
+
 (defn empty-db-stores! [stores-m]
   (m/delete-all! (get-wallet-store stores-m))
   (m/delete-all! (get-confirmation-store stores-m))
   (m/delete-all! (get-transaction-store stores-m))
   (m/delete-all! (get-account-store stores-m))
-  (m/delete-all! (get-tag-store stores-m)))
+  (m/delete-all! (get-tag-store stores-m))
+  (m/delete-all! (get-password-recovery-store stores-m)))

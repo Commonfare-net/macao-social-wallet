@@ -10,11 +10,14 @@
             [freecoin.routes :as routes]
             [freecoin.config :as c]
             [taoensso.timbre :as log]
-            [freecoin.db.account :as account]))
+            [freecoin.db
+             [account :as account]
+             [password-recovery :as pr]]))
 
 (ih/setup-db)
 
-(def stores-m (s/create-mongo-stores (ih/get-test-db)))
+;; TTL is set to 30 seconds but mongo checks only every ~60 secs
+(def stores-m (s/create-mongo-stores (ih/get-test-db) 30))
 (def blockchain (blockchain/new-stub stores-m))
 (def emails (atom []))
 
@@ -22,10 +25,15 @@
                              :blockchain blockchain
                              :email-activator (email-activation/->StubActivationEmail
                                                emails
-                                               (:account-store stores-m))}))
+                                               (:account-store stores-m))
+                             :password-recoverer (email-activation/->StubPasswordRecoveryEmail
+                                                  emails
+                                                  (:password-recovery-store stores-m))}))
 
 (def ^:dynamic email "id-1@email.com")
 (def password "abcd12*!")
+
+(defn latest-email [] (last @emails))
 
 (facts "User can access landing page"
        (-> (k/session test-app)
@@ -49,7 +57,7 @@
 
        (fact "Email was sent"
              (-> @emails (count)) => 1
-             (-> @emails (first) :email) => email)
+             (:email (latest-email)) => email)
 
        (fact "Check that the account is not yet activated"
              (:activated (account/fetch (:account-store stores-m) email)) => false)
@@ -108,6 +116,10 @@
                  (kc/check-and-follow-redirect "redirects to the email sent page")
                  (kc/check-page-is :email-confirmation [ks/email-confirmation-body])))
 
+       (fact "Email was sent"
+             (-> @emails (count)) => 2
+             (:email (latest-email)) => email)
+       
        (fact "If an account with the email does not exist no email can be sent"
              (-> (k/session test-app)
                  (k/visit (routes/absolute-path :sign-in))
@@ -115,6 +127,57 @@
                  (kc/check-and-press ks/auth-resend-form-submit)
                  (kc/check-and-follow-redirect "redirects to same page (sign-in) with an error")
                  (kc/check-page-is :sign-in [ks/auth-form-problems]))))
+
+(facts "Use forgot tries to reset password"
+       (fact "The user requests password reset"
+             (-> (k/session test-app)
+                 (k/visit (routes/absolute-path :sign-in))
+                 (kc/check-and-fill-in ks/auth-password-recovery-email email)
+                 (kc/check-and-press ks/auth-password-recovery-submit)
+                 (kc/check-and-follow-redirect "redirects to the email sent page")
+                 (kc/check-page-is :email-confirmation [ks/email-confirmation-body])))
+
+       (fact "Email was sent"
+             (-> @emails (count)) => 3
+             (:email (latest-email)) => email)
+
+       (fact "check that the password recovery entry has been created"
+                     (pr/fetch (:password-recovery-store stores-m) email) => truthy)
+
+       (fact "Change password using link"
+             (let [old-password-hash (:password (account/fetch (:account-store stores-m) email))
+                   password-recovery-url (:password-recovery-url (latest-email))
+                   password-recovery-id (-> password-recovery-url (clojure.string/split #"/") (last))]
+               (-> (k/session test-app)
+                   (k/visit (routes/absolute-path :reset-password
+                                                  :password-recovery-id password-recovery-id
+                                                  :email email))
+                   (kc/check-and-fill-in ks/change-password-new "new-password")
+                   (kc/check-and-fill-in ks/change-password-repeat "new-password")
+                   (kc/check-and-press ks/change-password-submit)
+                   (kc/check-and-follow-redirect "redirects to password changed page")
+                   (kc/check-page-is :password-changed [ks/password-changed-body]))
+
+               (fact "check that the password has changed"
+                     (= old-password-hash (:password (account/fetch (:account-store stores-m) email))) => falsey)
+
+               (fact "check that the password recovery entry has been deleted"
+                     (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
+       
+       (fact "Check that the link cannot be used after expired"
+             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 20 seconds"
+                   (-> (k/session test-app)
+                       (k/visit (routes/absolute-path :sign-in))
+                       (kc/check-and-fill-in ks/auth-password-recovery-email email)
+                       (kc/check-and-press ks/auth-password-recovery-submit)
+                       (kc/check-and-follow-redirect "redirects to the email sent page")
+                       (kc/check-page-is :email-confirmation [ks/email-confirmation-body]))
+
+                   (pr/fetch (:password-recovery-store stores-m) email) => truthy
+                   (clojure.pprint/pprint "I am testing the DB expiration, this will last about a minute, please bear with me...")
+                   (Thread/sleep 70000)
+
+                   (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
 
 (facts "Participant can sign out"
        (-> (k/session test-app) 

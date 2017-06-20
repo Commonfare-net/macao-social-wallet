@@ -73,10 +73,11 @@
    :body "Work-in-progress"
    :headers {"Content-Type" "text/html"}})
 
-(defn handlers [config-m stores-m blockchain email-activator]
+(defn handlers [config-m stores-m blockchain email-activator password-recoverer]
   (let [wallet-store (storage/get-wallet-store stores-m)
         confirmation-store (storage/get-confirmation-store stores-m)
-        account-store (storage/get-account-store stores-m)]
+        account-store (storage/get-account-store stores-m)
+        password-recovery-store (storage/get-password-recovery-store stores-m)]
     {:version                       (debug/version (dissoc config-m :client-secret))
      :echo                          (debug/echo (dissoc config-m :client-secret))
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
@@ -88,11 +89,16 @@
      :sign-in-form                  (sign-in/log-in account-store wallet-store blockchain)
      :sign-up-form                  (sign-in/create-account account-store email-activator)
      :email-confirmation            sign-in/email-confirmation
-     :account-activated             sign-in/account-acivated
+     :account-activated             sign-in/account-activated
      :activate-account              (sign-in/activate-account account-store)
 
      :resend-activation-form        (sign-in/resend-activation-email account-store email-activator)
+     :recover-password-form         (sign-in/send-password-recovery-email account-store password-recovery-store password-recoverer)
 
+     :reset-password                (sign-in/reset-password-render-form password-recovery-store)
+     :reset-password-form           (sign-in/reset-password account-store password-recovery-store)
+     :password-changed              sign-in/password-changed
+     
      :forget-secret                 sign-in/forget-secret
      
      :account                       (participants/account      wallet-store blockchain)
@@ -135,11 +141,11 @@
     (wrapper handler)
     handler))
 
-(defn create-app [config-m stores-m blockchain email-activator]
+(defn create-app [config-m stores-m blockchain email-activator password-recoverer]
   (let [debug-mode (config/debug config-m)]
     ;; TODO: Get rid of scenic?
     (-> (scenic/scenic-handler routes/routes
-                               (handlers config-m stores-m blockchain email-activator)
+                               (handlers config-m stores-m blockchain email-activator password-recoverer)
                                not-found)
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
@@ -166,14 +172,17 @@
     app-state
     (if-let [db (:db app-state)]
       (let [config-m (config/create-config)
-            stores-m (storage/create-mongo-stores db)
+            stores-m (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
             blockchain (blockchain/new-stub stores-m)
             email-conf (clojure.edn/read-string (slurp (:email-config config-m))) 
             email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
-            server (-> (create-app config-m stores-m blockchain email-activator)
+            password-recoverer (freecoin.email-activation/->PasswordRecoveryEmail email-conf (:password-recovery-store stores-m))
+            server (-> (create-app config-m stores-m blockchain email-activator password-recoverer)
                        (server/run-server {:port (config/port config-m)
                                            :host (config/host config-m)}))]
-        (assoc app-state :server server)))))
+        (assoc app-state
+               :server server
+               :stores-m stores-m)))))
 
 (defn halt [app-state]
   (when-let [server (:server app-state)]
@@ -202,7 +211,7 @@
          (fn [_] (let [config-m (config/create-config)
                        email-conf (clojure.edn/read-string (slurp (:email-config config-m)))
                        db (:db @app-state)
-                       stores-m (storage/create-mongo-stores db)
+                       stores-m (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
                        blockchain (blockchain/new-stub stores-m)
                        email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))]
                    (prn "Restarting server....")

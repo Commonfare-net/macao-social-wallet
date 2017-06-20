@@ -25,11 +25,19 @@
 (ns freecoin.email-activation
   (:require [postal.core :as postal]
             [freecoin.routes :as routes]
-            [freecoin.db.account :as account]
-            [freecoin.db.mongo :as mongo]
+            [freecoin.db
+             [account :as account]
+             [mongo :as mongo]
+             [password-recovery :as password-recovery]]
             [taoensso.timbre :as log]))
 
-(defn- generate-activation-id []
+(defn postal-basic-conf [conf]
+  {:host (:freecoin-email-server conf)
+   :user (:freecoin-email-user conf)
+   :pass (:freecoin-email-pass conf)
+   :ssl true})
+
+(defn- generate-id []
   (fxc.core/generate 32))
 
 (defn- activation-link [activationid email]
@@ -37,33 +45,61 @@
                         :email email
                         :activation-id activationid))
 
+(defn- password-recovery-link [password-recovery-id email]
+  (routes/absolute-path :reset-password
+                        :email email
+                        :password-recovery-id password-recovery-id))
+
 (defprotocol Email
-  "Construct the activation URL, send the email and register the activation-id to the DB"
-  (email-activation! [this email]))
+  "A generic function that sends an email"
+  (email-and-update! [this email]))
 
 (defrecord ActivationEmail [conf account-store]
   Email
-  (email-activation! [_ email]
-    (let [activation-id (generate-activation-id)
-          email-response       (postal/send-message 
-                                {:host (:freecoin-email-server conf)
-                                 :user (:freecoin-email-user conf)
-                                 :pass (:freecoin-email-pass conf)
-                                 :ssl true}
-                                {:from (:freecoin-email-address conf)
-                                 :to [email]
-                                 :subject "Please activate your freecoin account"
-                                 :body (str "Please click to activate your account " (activation-link activation-id email))})]
-      (account/update-activation-id! account-store email activation-id)
+  (email-and-update! [_ email]
+    (let [activation-id (generate-id)
+          email-response       (if (account/update-activation-id! account-store email activation-id)
+                                 (postal/send-message 
+                                  (postal-basic-conf conf)
+                                  {:from (:freecoin-email-address conf)
+                                   :to [email]
+                                   :subject "Please activate your freecoin account"
+                                   :body (str "Please click to activate your account " (activation-link activation-id email))})
+                                 false)]
+      (if (= :SUCCESS (:error email-response))
+        email-response
+        false))))
+
+(defrecord PasswordRecoveryEmail [conf password-recovery-store]
+  Email
+  (email-and-update! [_ email]
+    (let [password-recovery-id (generate-id)
+          email-response       (if (password-recovery/new-entry! password-recovery-store email password-recovery-id)
+                                 (postal/send-message 
+                                  (postal-basic-conf conf)
+                                  {:from (:freecoin-email-address conf)
+                                   :to [email]
+                                   :subject "Freecoin password recovery"
+                                   :body (str "Password recovery for the freecoin software was requested for " email ". If you are the owner of this account and you want to reset your password please click " (password-recovery-link password-recovery-id email) ". The link will expire soon so be fast!")})
+                                 false)]
       (if (= :SUCCESS (:error email-response))
         email-response
         false))))
 
 (defrecord StubActivationEmail [emails account-store]
   Email
-  (email-activation! [_ email]
-    (let [activation-id (generate-activation-id)]
+  (email-and-update! [_ email]
+    (let [activation-id (generate-id)]
       ;; the SUCCESS is needed to imitate poster responses
       (swap! emails conj {:email email :activation-url (activation-link activation-id email) :error :SUCCESS})
       (account/update-activation-id! account-store email activation-id) 
+      (first @emails))))
+
+(defrecord StubPasswordRecoveryEmail [emails password-recovery-store]
+  Email
+  (email-and-update! [_ email]
+    (let [password-recovery-id (generate-id)]
+      ;; the SUCCESS is needed to imitate poster responses
+      (swap! emails conj {:email email :password-recovery-url (password-recovery-link password-recovery-id email) :error :SUCCESS})
+      (password-recovery/new-entry! password-recovery-store email password-recovery-id)
       (first @emails))))

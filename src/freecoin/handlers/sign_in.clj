@@ -32,16 +32,21 @@
             [ring.util.response :as r]
             [clojure.string :as s]
             [freecoin.routes :as routes]
-            [freecoin.db.wallet :as wallet]
-            [freecoin.db.account :as account]
-            [freecoin.db.mongo :as mongo]
+            [freecoin.db
+             [wallet :as wallet]
+             [account :as account]
+             [mongo :as mongo]
+             [password-recovery :as pr]]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
-            [freecoin.views.landing-page :as landing-page]
-            [freecoin.views.index-page :as index-page]
-            [freecoin.views.sign-in :as sign-in-page]
-            [freecoin.views.email-confirmation :as email-confirmation]
-            [freecoin.views.account-activated :as aa]
+            [freecoin.views
+             [landing-page :as landing-page]
+             [index-page :as index-page]
+             [sign-in :as sign-in-page]
+             [email-confirmation :as email-confirmation]
+             [account-activated :as aa]
+             [reset-password :as reset-password-page]
+             [password-changed :as password-changed-page]] 
             [freecoin.form_helpers :as fh]
             [freecoin.context-helpers :as ch]
             [freecoin.email-activation :as email-activation]
@@ -188,7 +193,7 @@
            (let [data (-> ctx :request :params)
                  email (get data :email)]
              (if (account/new-account! account-store (select-keys data [:first-name :last-name :email :password]))
-               (when-not (email-activation/email-activation! email-activator email) 
+               (when-not (email-activation/email-and-update! email-activator email) 
                  (error-redirect ctx "The activation email failed to send "))
                (log/error "Something went wrong when creating a user in the DB"))))
 
@@ -242,7 +247,7 @@
   :post! (fn [ctx]
            (let [email (get-in ctx [:request :params :activation-email])
                  account (account/fetch account-store email)]
-             (when-not (email-activation/email-activation! email-activator email)
+             (when-not (email-activation/email-and-update! email-activator email)
                (error-redirect ctx "The activation email failed to send")
                (log/error "The activation email failed to send"))))
 
@@ -250,7 +255,42 @@
                     (assoc ctx
                            :location (routes/absolute-path :email-confirmation))))
 
-(lc/defresource account-acivated
+(lc/defresource send-password-recovery-email [account-store password-recovery-store password-recoverer]
+  :allowed-methods [:post]
+  :available-media-types content-types
+  :known-content-type? #(check-content-type % content-types)
+  :processable? (fn [ctx]
+                  (let [{:keys [status data problems]}
+                        (fh/validate-form sign-in-page/password-recovery-form
+                                          (ch/context->params ctx))]
+                    (if (= :ok status)
+                      (let [email (-> ctx :request :params :email-address)]
+                        (if-not (account/fetch account-store email)
+                          ;; TODO: It would be safer if we do not notify that the email doesnt exist but send an email anyway saying that someone attempted to change the password.
+                          [false (fh/form-problem (conj problems
+                                                        {:keys [:email] :msg (str "The email " email " is not registered yet. Please sign up first")}))]
+                          (if (pr/fetch password-recovery-store email)
+                            [false (fh/form-problem (conj problems
+                                                          {:keys [:email] :msg (str "A recovery email for " email " has already been sent.")}))]
+                            ctx)))
+                      [false (fh/form-problem problems)])))
+
+  :handle-unprocessable-entity (fn [ctx] 
+                                 (lr/ring-response (fh/flash-form-problem
+                                                    (r/redirect (routes/absolute-path :sign-in))
+                                                    ctx)))
+  :post! (fn [ctx]
+           (let [email (get-in ctx [:request :params :email-address])]
+             (when-not (email-activation/email-and-update! password-recoverer email)
+               (error-redirect ctx "The password recovery email failed to send")
+               (log/error "The password recovery email failed to send"))))
+
+  :post-redirect? (fn [ctx] 
+                    (assoc ctx
+                           ;; TODO check text - check 502 getwaway
+                           :location (routes/absolute-path :email-confirmation))))
+
+(lc/defresource account-activated
   :allowed-methods [:get]
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
@@ -285,3 +325,53 @@
         (preserve-session (:request ctx))
         (update-in [:session] dissoc :cookie-data)
         lr/ring-response)))
+
+(lc/defresource reset-password-render-form [password-recovery-store]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx]
+               (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])]
+                 (if-let [account (pr/fetch-by-password-recovery-id password-recovery-store password-recovery-id)]
+                          (if-not (= (:email account) email)
+                            (error-redirect ctx "The email and password recovery id do not match")
+                            (-> ctx 
+                              reset-password-page/build
+                              fv/render-page)) 
+                          (error-redirect ctx "The password recovery id could not be found, maybe it has expired. Please try again.")))))
+
+(lc/defresource reset-password [account-store password-recovery-store] 
+  :allowed-methods [:post]
+  :available-media-types content-types
+  :processable? (fn [ctx]
+                  (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])
+                        {:keys [status data problems]}
+                        (fh/validate-form (reset-password-page/reset-password-form email password-recovery-id)
+                                          (ch/context->params ctx))]
+                    (if-not (= :ok status)
+                      [false (fh/form-problem problems)]
+                      ctx)))
+
+  :handle-unprocessable-entity (fn [ctx] 
+                                 (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])]
+                                   (lr/ring-response (fh/flash-form-problem
+                                                      (r/redirect (routes/absolute-path :reset-password :email email :password-recovery-id password-recovery-id))
+                                                      ctx))))
+  :post! (fn [ctx]
+           (let [data (-> ctx :request :params)
+                 {:keys [new-password email]} data]
+             ;; upadte with a new hashed password
+             (account/update-password! account-store email new-password)
+             ;; remove the password recovery data
+             (pr/remove! password-recovery-store email)))
+
+  :post-redirect? (fn [ctx] 
+                    (assoc ctx
+                           :location (routes/absolute-path :password-changed))))
+
+(lc/defresource password-changed
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :handle-ok (fn [ctx]
+               (-> ctx
+                   (password-changed-page/build)
+                   fv/render-page)))
