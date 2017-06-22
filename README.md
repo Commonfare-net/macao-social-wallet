@@ -1,6 +1,6 @@
 # Freecoin - digital social currency toolkit
 
-[![software by Dyne.org](https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png)](http://www.dyne.org)
+<a href="http://www.dyne.org"><img src="https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png" title="Software by Dyne.org" alt="Software by Dyne.org"></a>
 
 Freecoin aims to be a framework for remuneration and authentication supporting multi-sig and off-line transactions on top of multiple blockchain backends. It is open source, written in Clojure and comprising of a REST API and a clean user interface. Freecoin's main use-case is that of developing "social wallets" where balances and transactions are trasparent to entire groups of people to help participatory budgeting activities and organisational awareness.
 
