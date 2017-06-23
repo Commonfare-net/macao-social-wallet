@@ -128,7 +128,7 @@
                  (kc/check-and-follow-redirect "redirects to same page (sign-in) with an error")
                  (kc/check-page-is :sign-in [ks/auth-form-problems]))))
 
-(facts "Use forgot tries to reset password"
+(facts "User forgot password and tries to reset it"
        (fact "The user requests password reset"
              (-> (k/session test-app)
                  (k/visit (routes/absolute-path :sign-in))
@@ -175,7 +175,7 @@
 
                    (pr/fetch (:password-recovery-store stores-m) email) => truthy
                    (clojure.pprint/pprint "I am testing the DB expiration, this will last about a minute, please bear with me...")
-                   (Thread/sleep 70000)
+                   (Thread/sleep 90000)
 
                    (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
 
