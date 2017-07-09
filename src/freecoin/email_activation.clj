@@ -64,7 +64,9 @@
                                   {:from (:freecoin-email-address conf)
                                    :to [email]
                                    :subject "Please activate your freecoin account"
-                                   :body (str "Please click to activate your account " (activation-link activation-id email))})
+                                   :body (str "Please click on the link below to activate your account
+
+" (activation-link activation-id email))})
                                  false)]
       (if (= :SUCCESS (:error email-response))
         email-response
@@ -80,7 +82,14 @@
                                   {:from (:freecoin-email-address conf)
                                    :to [email]
                                    :subject "Freecoin password recovery"
-                                   :body (str "Password recovery for the freecoin software was requested for " email ". If you are the owner of this account and you want to reset your password please click " (password-recovery-link password-recovery-id email) ". The link will expire soon so be fast!")})
+                                   :body (str "Password recovery was requested for participant " email ".
+If you are the participant and want to reset your password click the link below
+
+"
+                                              (password-recovery-link password-recovery-id email)
+"
+
+The link will expire soon so be fast!")})
                                  false)]
       (if (= :SUCCESS (:error email-response))
         email-response
@@ -91,7 +100,10 @@
   (email-and-update! [_ email]
     (let [activation-id (generate-id)]
       ;; the SUCCESS is needed to imitate poster responses
-      (swap! emails conj {:email email :activation-url (activation-link activation-id email) :error :SUCCESS})
+      (swap! emails conj
+             {:email email
+              :activation-url (activation-link activation-id email)
+              :error :SUCCESS})
       (account/update-activation-id! account-store email activation-id) 
       (first @emails))))
 
@@ -100,6 +112,11 @@
   (email-and-update! [_ email]
     (let [password-recovery-id (generate-id)]
       ;; the SUCCESS is needed to imitate poster responses
-      (swap! emails conj {:email email :password-recovery-url (password-recovery-link password-recovery-id email) :error :SUCCESS})
-      (password-recovery/new-entry! password-recovery-store email password-recovery-id)
+      (swap! emails conj
+             {:email email
+              :password-recovery-url (password-recovery-link
+                                      password-recovery-id email)
+              :error :SUCCESS})
+      (password-recovery/new-entry! password-recovery-store
+                                    email password-recovery-id)
       (first @emails))))
