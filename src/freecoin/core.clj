@@ -171,15 +171,15 @@
   (if (:server app-state)
     app-state
     (if-let [db (:db app-state)]
-      (let [config-m (config/create-config)
-            stores-m (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
-            blockchain (blockchain/new-stub stores-m)
-            email-conf (clojure.edn/read-string (slurp (:email-config config-m))) 
-            email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
+      (let [config-m           (config/create-config)
+            stores-m           (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
+            blockchain         (blockchain/new-stub stores-m)
+            email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
+            email-activator    (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
             password-recoverer (freecoin.email-activation/->PasswordRecoveryEmail email-conf (:password-recovery-store stores-m))
-            server (-> (create-app config-m stores-m blockchain email-activator password-recoverer)
-                       (server/run-server {:port (config/port config-m)
-                                           :host (config/host config-m)}))]
+            server             (-> (create-app config-m stores-m blockchain email-activator password-recoverer)
+                                   (server/run-server {:port (config/port config-m)
+                                                       :host (config/host config-m)}))]
         (assoc app-state
                :server server
                :stores-m stores-m)))))
@@ -208,14 +208,15 @@
   (swap! app-state connect-db)
   (assert (:db @app-state) "The DB is not set")
   (swap! lein-ring-handler
-         (fn [_] (let [config-m (config/create-config)
-                       email-conf (clojure.edn/read-string (slurp (:email-config config-m)))
-                       db (:db @app-state)
-                       stores-m (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
-                       blockchain (blockchain/new-stub stores-m)
-                       email-activator (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))]
+         (fn [_] (let [config-m           (config/create-config)
+                       email-conf         (clojure.edn/read-string (slurp (:email-config config-m)))
+                       db                 (:db @app-state)
+                       stores-m           (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
+                       blockchain         (blockchain/new-stub stores-m)
+                       email-activator    (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
+                       password-recoverer (freecoin.email-activation/->PasswordRecoveryEmail email-conf (:password-recovery-store stores-m))]
                    (prn "Restarting server....")
-                   (create-app config-m stores-m blockchain email-activator)))))
+                   (create-app config-m stores-m blockchain email-activator password-recoverer)))))
 
 (defn lein-ring-stop []
   (swap! app-state disconnect-db))
