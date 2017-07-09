@@ -40,11 +40,11 @@
 
   :exists? #(auth/has-wallet % wallet-store)
 
+  ;; final endpoint rendered here (image served from url)
   :handle-ok
   (fn [ctx]
-    (if-let [email (:email (:wallet ctx))]
+    (if-let [email (get-in ctx [:request :params :email])]
       (qr/as-input-stream
        (qr/from (format "http://%s:%d/send/to/%s"
                         (:address param/host)
-                        (:port param/host)
-                        (:email (:wallet ctx))))))))
+                        (:port param/host) email))))))
