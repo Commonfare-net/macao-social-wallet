@@ -33,37 +33,40 @@
 
 (def email-reg-exp [#".+\@.+\..+" :email])
 
-;; TODO: better way than eval?
+;; Mapping of URL endpoints to functions in handlers/
 (def routes ["" [["/" {:get :index}]
                  ["/landing-page" {:get :landing-page}]
-                 ["/sign-in" {:get :sign-in}]
-                 ["/sign-in" {:post :sign-in-form}]
-                 ["/sign-up" {:post :sign-up-form}]
-                 ["/sign-out" {:get :sign-out}]
-                 ["/forget-secret" {:get :forget-secret}]
+                 ["/sign-in"      {:get :sign-in}]
+                 ["/sign-in"      {:post :sign-in-form}]
+                 ["/sign-up"      {:post :sign-up-form}]
+                 ["/sign-out"     {:get :sign-out}]
+                 ["/forget-secret"      {:get :forget-secret}]
                  ["/email-confirmation" {:get :email-confirmation}]
-                 [["/account/" (eval email-reg-exp)] {:get :account}]
-                 [["/activate/"  (eval email-reg-exp) "/" :activation-id] {:get :activate-account}]
+                 [["/account/"   (eval email-reg-exp)] {:get :account}]
+                 [["/activate/"  (eval email-reg-exp)
+                   "/" :activation-id] {:get :activate-account}]
                  ["/account-acivated" {:get :account-activated}]
-                 ["/resend-email" {:post :resend-activation-form}]
+                 ["/resend-email"     {:post :resend-activation-form}]
                  ["/recover-password" {:post :recover-password-form}]
-                 [["/reset-password/"  (eval email-reg-exp) "/" :password-recovery-id] {:get :reset-password}]
-                 [["/reset-password/"  (eval email-reg-exp) "/" :password-recovery-id] {:post :reset-password-form}]
-                 
+                 [["/reset-password/"  (eval email-reg-exp)
+                   "/" :password-recovery-id] {:get :reset-password}]
+                 [["/reset-password/"  (eval email-reg-exp)
+                   "/" :password-recovery-id] {:post :reset-password-form}]
+
                  ["/password-changed" {:get :password-changed}]
                  [["/qrcode/" (eval email-reg-exp)] {:get :qrcode}]
                  [["/transactions/" (eval email-reg-exp)] {:get :get-user-transactions}]
-                 ["/transactions" {:get :get-all-transactions}]
-                 ["/tags" {"" {:get :get-all-tags}
+                 ["/transactions"      {:get :get-all-transactions}]
+                 ["/tags" {""          {:get :get-all-tags}
                            ["/" :name] {:get :get-tag-details}}]
                  ["/participant-query" {:get :get-participant-search-form}]
-                 ["/participants" {:get :participants}]
-                 ["/send" {:get :get-transaction-form}]
-                 ["/send" {:post :post-transaction-form}]
+                 ["/participants"      {:get :participants}]
+                 ["/send"              {:get :get-transaction-form}]
+                 ["/send"              {:post :post-transaction-form}]
                  [["/send/confirm/" :confirmation-uid] {:get :get-confirm-transaction-form}]
                  [["/send/confirm/" :confirmation-uid] {:post :post-confirm-transaction-form}]
                  ["/activities" {:get :get-activity-streams}]
-                 ["/echo" {:get :echo}]
+                 ["/echo"    {:get :echo}]
                  ["/version" {:get :version}]]])
 
 (defn path [action & params]
