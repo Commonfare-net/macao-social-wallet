@@ -1,5 +1,6 @@
 (ns freecoin.views.transaction-form
-  (:require [freecoin.config :as config]
+  (:require [json-html.core :refer :all]
+            [freecoin.config :as config]
             [freecoin.form_helpers :as fh]
             [freecoin.routes :as routes]
             [freecoin.translation :as t]))
@@ -33,7 +34,57 @@
    :action (routes/absolute-path :post-transaction-form)
    :method "post"})
 
-(defn build [request]
-  {:title (t/locale [:transaction :make])
-   :heading (t/locale [:transaction :send])
-   :body (fh/render-form transaction-form-spec request)})
+(defn build
+  ([request] (build request transaction-form-spec))
+  ([request spec]
+   {:title (t/locale [:transaction :make])
+    :heading (t/locale [:transaction :send])
+    :body (fh/render-form spec request)}))
+
+;; build a more complex transaction form with hidden fields
+;; not using formalize here, but hiccup directly
+(defn build-transaction-to [ctx]
+  (if-let [email (get-in ctx [:params :email])]
+
+    {:title   (str (t/locale [:transaction :make]) " -> " email)
+     :heading (str (t/locale [:transaction :send]) " -> " email)
+     :body [:form {:action (routes/absolute-path :post-transaction-form)
+                   :class "form-shell"
+                   :method "POST"}
+            [:input {:name "__anti-forgery-token"
+                     :type "hidden"
+                     :value (get-in ctx [:session "__anti-forgery-token"])}]
+            [:input {:name "recipient"
+                     :type "hidden"
+                     :value email}]
+
+            ;; TODO: make this fieldset rendering into a form-helper
+            [:fieldset {:class "fieldset-amount"}
+             [:div {:class "form-group"}
+              [:label {:class "control-label"
+                       :for   "field-amount"} "Amount"]
+              [:input {:class "form-control"
+                       :id    "field-amount"
+                       :name "amount"
+                       :type "decimal"
+                       :value ""}]]
+             [:div {:class "form-group"}
+              [:label {:class "control-label"
+                       :for   "field-tags"} "Tags"]
+               [:input {:class "form-control"
+                        :id    "field-tags"
+                        :name "tags"
+                        :type "decimal"
+                        :value ""}]]
+             ]
+
+            [:fieldset {:class "fieldset-submit"}
+             [:div {:class "form-group"}
+              [:span {:class "visible-xs-inline-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"}
+               [:input {:class "form-control btn btn-primary"
+                        :id "field-submit"
+                        :name "submit"
+                        :type "submit"}]]]]
+            ]}
+
+    ))

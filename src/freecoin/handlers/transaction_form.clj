@@ -44,6 +44,15 @@
             [freecoin.views.transaction-form :as transaction-form]
             [taoensso.timbre :as log]))
 
+(lc/defresource get-transaction-to [wallet-store]
+  :allowed-methods [:get]
+  :available-media-types ["text/html"]
+  :authorized? #(auth/is-signed-in %)
+  :handle-ok (fn [ctx]
+               (if-let [email (get-in ctx [:request :params :email])]
+                 (-> (transaction-form/build-transaction-to ctx)
+                     (fv/render-page)))))
+
 (lc/defresource get-transaction-form [wallet-store]
   :allowed-methods [:get]
   :available-media-types ["text/html"]
@@ -51,9 +60,9 @@
   :authorized? #(auth/is-signed-in %)
 
   :handle-ok (fn [ctx]
-               (-> (:request ctx)
-                   transaction-form/build
-                   fv/render-page)))
+               (->> (:request ctx)
+                    transaction-form/build
+                    fv/render-page)))
 
 (lc/defresource post-transaction-form [blockchain wallet-store confirmation-store]
   :allowed-methods [:post]
@@ -75,7 +84,7 @@
                  (wallet/fetch wallet-store (:recipient data))]
           ;; Check that the balance aftter the transaction would be above 0 unless it is made by the admin
           (if (or (=  admin-email sender-email)
-                  (>= (- sender-balance amount) 0)) 
+                  (>= (- sender-balance amount) 0))
             {::form-data data
              ::recipient-wallet recipient-wallet}
             [false (fh/form-problem :amount "Balance is not sufficient to perform this transaction")])
