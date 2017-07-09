@@ -103,7 +103,8 @@ See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced t
 
 ## License
 
-This Free and Open Source research and development activity is funded by the [European Commission in the context of Collective Awareness Platforms for Sustainability and Social Innovation (CAPSSI)](https://ec.europa.eu/digital-single-market/en/collective-awareness) grants nr.610349 and nr.687922.
+
+This Free and Open Source research and development activity is funded by the European Commission in the context of Collective Awareness Platforms for Sustainability and Social Innovation (CAPSSI) grants nr.610349 and nr.687922.
 
 The Freecoin toolkit is Copyright (C) 2015-2017 by the Dyne.org Foundation, Amsterdam
 
@@ -111,7 +112,10 @@ Freecoin development is lead by Aspasia Beneti <aspra@dyne.org>
 
 Freecoin co-design is lead by Denis Roio <jaromil@dyne.org> and Marco Sachy <radium@dyne.org>
 
-With expert contributions by Carlo Sciolla, Duncan Mortimer, Arjan Scherpenisse, Amy Welch, Gareth Rogers and Joonas Pekkanen.
+With expert contributions by Carlo Sciolla, Duncan Mortimer, Arjan Scherpenisse, Amy Welch, Gareth Rogers, Joonas Pekkanen, Thomas König and Enric Duran.
+
+The Freecoin "cornucopia" logo is an artwork by Andrea Di Cesare.
+
 
 ```
 This program is free software: you can redistribute it and/or modify
