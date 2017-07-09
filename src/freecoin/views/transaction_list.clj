@@ -32,7 +32,9 @@
             [freecoin.db.wallet :as wallet]))
 
 (defn build-html [list tags wallet-store & [owner-wallet]]
-  (let [title (str "Transaction list" (when (not (nil? owner-wallet)) (str " for " (:name owner-wallet))))
+  (let [title (str "Transaction list"
+                   (when (not (nil? owner-wallet))
+                     (str " for " (:email owner-wallet))))
         all-tags (reduce into #{} (map :tags list))
         tag-filter (fn [t]
                      [:option {:value t
@@ -42,14 +44,33 @@
      :body-class "func--transactions-page--body"
      :body
      [:div
-      [:p "Filter by tags:"
-       [:form {:method "get"}
-        [:select.form-control
-         {:multiple true
-          :name "tags"
-          :size (min (count all-tags) 5)}
-         (map tag-filter all-tags)]
-        [:p [:button.form-control {:type "submit"} "Filter"]]]]
+      [:form {:method "get"
+              :class "form-shell"}
+       (when (not (nil? owner-wallet))
+         [:input {:name "email"
+                  :type "hidden"
+                  :value (:email owner-wallet)}])
+       [:fieldset {:class "fieldset--filter-by-tags"}
+        [:div {:class "form-group"}
+         [:label {:class "control-label"
+                  :for "filter-by-tags"} "Filter by tags:"]
+         [:select.form-control
+          {:id "filter-by-tags"
+           :multiple true
+           :name "tags"
+           :size (min (count all-tags) 5)}
+          (map tag-filter all-tags)]]]
+
+
+        [:fieldset {:class "fieldset-submit"}
+         [:div {:class "form-group"}
+          [:span {:class "visible-xs-inline-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"}
+           [:input {:class "form-control btn btn-primary"
+                    :id "field-submit"
+                    :name "submit"
+                    :type "submit"}]]]]
+       ]
+
       [:table.func--transactions-page--table.table.table-striped
        [:thead
         [:tr
