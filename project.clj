@@ -56,7 +56,8 @@
 
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]
-            "test-transactions" ["with-profile" "transaction-graph" "run"]}
+            "test-transactions" ["with-profile" "transaction-graph" "run"]
+            "test-basic" ["midje" ":config" "test-resources/fast-tests.config"]}
   :profiles {:dev [:dev-common :dev-local]
              :dev-common {:dependencies [[midje "1.8.3"]
                                          [peridot "0.4.4"]

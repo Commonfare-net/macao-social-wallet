@@ -92,6 +92,8 @@ user=> (start-nstracker) ;; starts the file change tracker
 
 Freecoin comes complete with test units which are run by the CI but can also be run locally.
 
+### Run all tests
+
 For the purpose we use Clojure's `midje` package, to be run with:
 
 ```
@@ -100,6 +102,23 @@ lein midje
 
 See: https://github.com/marick/Midje/wiki/A-tutorial-introduction for advanced testing features.
 
+Bare in mind that it can be time consuming as some tests are waiting in order to test the DB expiration. On travis all tests will be run by default but we recommend that you run only the fast tests during development like bellow
+
+### Run only the fast tests
+
+Some of the tests are marked as slow. If you want to avoid running them you cn either
+
+`lein midje :filter -slow`
+
+or use the alias
+
+`lein test-basic`
+
+### Autotest
+
+Autotesting can be enabled, which will run all relevant tests when source code changes. To enable that add `autotest` at the end of the lein test command. Works for the basic testing alias as well like
+
+`lein test-basic :autotest`
 
 ## License
 
