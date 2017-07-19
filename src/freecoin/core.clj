@@ -37,11 +37,11 @@
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.logger :as mw-logger]
             [scenic.routes :as scenic]
-            [freecoin.db.mongo :as mongo]
-            [freecoin.db.storage :as storage]
-            [freecoin.blockchain :as blockchain]
+            [freecoin-lib.db.mongo :as mongo]
+            [freecoin-lib.db.storage :as storage]
+            [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
-            [freecoin.config :as config]
+            [freecoin-lib.config :as config]
             [freecoin.handlers.sign-in :as sign-in]
             [freecoin.handlers.participants :as participants]
             [freecoin.handlers.transaction-form :as transaction-form]
@@ -78,7 +78,8 @@
         confirmation-store (storage/get-confirmation-store stores-m)
         account-store (storage/get-account-store stores-m)
         password-recovery-store (storage/get-password-recovery-store stores-m)]
-    {:version                       (debug/version (dissoc config-m :client-secret))
+    {
+     :version                       (debug/version (dissoc config-m :client-secret))
      :echo                          (debug/echo (dissoc config-m :client-secret))
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page

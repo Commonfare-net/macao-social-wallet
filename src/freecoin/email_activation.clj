@@ -25,7 +25,7 @@
 (ns freecoin.email-activation
   (:require [postal.core :as postal]
             [freecoin.routes :as routes]
-            [freecoin.db
+            [freecoin-lib.db
              [account :as account]
              [mongo :as mongo]
              [password-recovery :as password-recovery]]

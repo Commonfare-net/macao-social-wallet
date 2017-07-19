@@ -1,14 +1,14 @@
 (ns freecoin.journey.helpers
   (:require [taoensso.timbre :as log]
-            [freecoin.blockchain :as blockchain]
-            [freecoin.db.storage :as s]
+            [freecoin-lib.core :as blockchain]
+            [freecoin-lib.db.storage :as s]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.routes :as routes]
             [freecoin.test-helpers.integration :as ih]
             [kerodon.core :as k]
             [midje.sweet :refer :all]
-            [freecoin.db.account :as account]))
+            [freecoin-lib.db.account :as account]))
 
 (def password "abcd12*!")
 (def admin-email "sender@mail.com")

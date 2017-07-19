@@ -1,9 +1,10 @@
 (ns freecoin.test-helpers.integration
   (:require [monger.core :as monger]
             [freecoin.core :as core]
-            [freecoin.blockchain :as blockchain]
-            [freecoin.db.storage :as s]
-            [freecoin.email-activation :as email-activation]))
+            [freecoin-lib.core :as blockchain]
+            [freecoin-lib.db.storage :as s]
+            [freecoin.email-activation :as email-activation])
+  (:import [freecoin_lib.core InMemoryBlockchain]))
 
 (def test-db-name "freecoin-test-db")
 (def test-db-uri (format "mongodb://localhost:27017/%s" test-db-name))
@@ -36,7 +37,7 @@
 (defn default-app-config-m []
   (let [stores (s/create-in-memory-stores)]
     {:stores-m stores
-     :blockchain (blockchain/create-in-memory-blockchain :bk)
+     :blockchain (InMemoryBlockchain. :bk (atom {}) (atom {}) (atom {}))
      :config-m {:secure "false"
                 :client-secret "freecoin-secret"
                 :client-id "freecoin"

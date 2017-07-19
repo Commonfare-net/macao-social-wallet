@@ -29,7 +29,7 @@
 (ns freecoin.routes
   (:require [taoensso.timbre :as log]
             [bidi.bidi :as bidi]
-            [freecoin.config :as config]))
+            [freecoin-lib.config :as config]))
 
 (def email-reg-exp [#".+\@.+\..+" :email])
 

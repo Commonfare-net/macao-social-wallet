@@ -2,7 +2,7 @@
   (:require [freecoin.form_helpers :as fh]
             [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
-            [freecoin.config :as config]
+            [freecoin-lib.config :as config]
             [freecoin.translation :as t]))
 
 (defn confirm-transaction-form-spec [confirmation-uid show-pin-entry]

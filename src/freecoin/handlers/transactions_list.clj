@@ -30,9 +30,9 @@
 (ns freecoin.handlers.transactions-list
   (:require [taoensso.timbre :as log]
             [freecoin.auth :as auth]
-            [freecoin.blockchain :as blockchain]
+            [freecoin-lib.core :as blockchain]
             [freecoin.context-helpers :as ch]
-            [freecoin.db.wallet :as wallet]
+            [freecoin-lib.db.wallet :as wallet]
             [freecoin.views :as fv]
             [freecoin.views.transaction-list :as transaction-list]
             [liberator.core :as lc]))

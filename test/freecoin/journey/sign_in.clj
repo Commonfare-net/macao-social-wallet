@@ -5,16 +5,18 @@
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.test-helpers.integration :as ih]
             [freecoin.email-activation :as email-activation]
-            [freecoin.db.storage :as s]
-            [freecoin.blockchain :as blockchain]
+            [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
-            [freecoin.config :as c]
+            [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin.db
+            [freecoin-lib.db
+             [storage :as s]
              [account :as account]
-             [password-recovery :as pr]]))
+             [password-recovery :as pass]]))
 
 (ih/setup-db)
+
+(fact "setup-db is not null" ih/get-test-db => truthy)
 
 ;; TTL is set to 30 seconds but mongo checks only every ~60 secs
 (def stores-m (s/create-mongo-stores (ih/get-test-db) 30))
@@ -143,7 +145,7 @@
              (:email (latest-email)) => email)
 
        (fact "check that the password recovery entry has been created"
-                     (pr/fetch (:password-recovery-store stores-m) email) => truthy)
+                     (pass/fetch (:password-recovery-store stores-m) email) => truthy)
 
        (fact "Change password using link"
              (let [old-password-hash (:password (account/fetch (:account-store stores-m) email))
@@ -163,7 +165,7 @@
                      (= old-password-hash (:password (account/fetch (:account-store stores-m) email))) => falsey)
 
                (fact "check that the password recovery entry has been deleted"
-                     (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
+                     (pass/fetch (:password-recovery-store stores-m) email) => falsey)))
 
        ;; FIXME: workaround due to midje bug see https://github.com/marick/Midje/issues/275. With facts it wouldn't work and if not all nested facts wouldn't have the same metadata it wouldn't work either (see above)
        (fact "Check that the link cannot be used after expired" :slow
@@ -175,11 +177,11 @@
                        (kc/check-and-follow-redirect "redirects to the email sent page")
                        (kc/check-page-is :email-confirmation [ks/email-confirmation-body]))
 
-                   (pr/fetch (:password-recovery-store stores-m) email) => truthy
+                   (pass/fetch (:password-recovery-store stores-m) email) => truthy
                    (clojure.pprint/pprint "I am testing the DB expiration, this will last about a minute, please bear with me...")
                    (Thread/sleep 90000)
 
-                   (pr/fetch (:password-recovery-store stores-m) email) => falsey)))
+                   (pass/fetch (:password-recovery-store stores-m) email) => falsey)))
 
 (facts "Participant can sign out"
        (-> (k/session test-app) 

@@ -32,7 +32,7 @@
             [ring.util.response :as r]
             [clojure.string :as s]
             [freecoin.routes :as routes]
-            [freecoin.db
+            [freecoin-lib.db
              [wallet :as wallet]
              [account :as account]
              [mongo :as mongo]
