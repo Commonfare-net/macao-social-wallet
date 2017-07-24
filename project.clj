@@ -28,7 +28,11 @@
                  [simple-time "0.2.1" :exclusions [joda-time]]
                  [environ "1.1.0"]
                  [clojure-humanize "0.2.2"]
+
+                 ;; qrcode generation and scanning
                  [clj.qrgen "0.4.0"]
+                 [com.google.zxing/core "3.2.1"]
+                 
                  [clavatar "0.3.0"]
                  ;; Gossip is a lein tool to generate call-graphs for Clojure code
                  [cc.artifice/lein-gossip "0.2.1"]
