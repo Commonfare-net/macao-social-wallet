@@ -33,11 +33,11 @@
             [freecoin.journey.kerodon-helpers :as kh]
             [freecoin.test-helpers.integration :as ih]
             [freecoin.journey.helpers :as jh]
-            [freecoin.db.storage :as s]
-            [freecoin.blockchain :as blockchain]
+            [freecoin-lib.db.storage :as s]
+            [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
-            [freecoin.config :as c]
-            [freecoin.db.account :as account]
+            [freecoin-lib.config :as c]
+            [freecoin-lib.db.account :as account]
             [simple-time.core :as time]
             [taoensso.timbre :as log]))
 

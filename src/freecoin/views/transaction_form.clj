@@ -1,6 +1,6 @@
 (ns freecoin.views.transaction-form
   (:require [json-html.core :refer :all]
-            [freecoin.config :as config]
+            [freecoin-lib.config :as config]
             [freecoin.form_helpers :as fh]
             [freecoin.routes :as routes]
             [freecoin.translation :as t]))

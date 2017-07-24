@@ -1,6 +1,8 @@
 (ns freecoin.test-helpers.store
-  (:import [freecoin.db.mongo MemoryStore]
-           [freecoin.blockchain InMemoryBlockchain]))
+  (:require [freecoin-lib.db.mongo :as db]
+            [freecoin-lib.core :as bc])
+  (:import [freecoin_lib.db.mongo MemoryStore]
+           [freecoin_lib.core InMemoryBlockchain]))
 
 (defprotocol TestStore
   (entry-count [s]

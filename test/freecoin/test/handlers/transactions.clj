@@ -30,18 +30,17 @@
 (ns freecoin.test.handlers.transactions
   (:require [midje.sweet :refer :all]
             [freecoin.test.test-helper :as th]
-            [freecoin.db.mongo :as fm]
-            [freecoin.db.wallet :as w]
-            [freecoin.db.confirmation :as c]
-            [freecoin.blockchain :as fb]
+            [freecoin-lib.db.mongo :as fm]
+            [freecoin-lib.db.wallet :as w]
+            [freecoin-lib.db.confirmation :as c]
+            [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
-            [freecoin.config :as config]
+            [freecoin-lib.config :as config]
             [freecoin.handlers.transaction-form :as tf]
             [freecoin.handlers.confirm-transaction-form :as ctf]
             [freecoin.handlers.transactions-list :as tl]
             [freecoin.test-helpers.store :as test-store]
             [ring.mock.request :as rmr]
-            [freecoin.blockchain :as blockchain]
             [cheshire.core :as cheshire]
             [simple-time.core :as time]
             [taoensso.timbre :as log]))
@@ -51,7 +50,7 @@
 
 (defn setup-with-sender-and-recipient []
   (let [wallet-store (fm/create-memory-store)
-        blockchain (fb/create-in-memory-blockchain :bk)
+        blockchain (blockchain/create-in-memory-blockchain :bk)
         sender-details (w/new-empty-wallet!
                         wallet-store blockchain 
                         "sender" sender-email)
@@ -102,7 +101,7 @@
 
 (facts "about post requests from the transaction form"
        (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
-             blockchain (fb/create-in-memory-blockchain :bk)
+             blockchain (blockchain/create-in-memory-blockchain :bk)
              confirmation-store ...confirmation-store...
              form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store)]
          (fact "returns 401 when participant not authenticated"

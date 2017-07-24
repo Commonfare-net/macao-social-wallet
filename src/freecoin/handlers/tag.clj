@@ -27,7 +27,7 @@
             [freecoin.views :as fv]
             [freecoin.auth :as auth]
             [freecoin.views.tag :as tv]
-            [freecoin.blockchain :as blockchain]))
+            [freecoin-lib.core :as blockchain]))
 
 (lc/defresource get-tag-details [blockchain]
   :allowed-methods [:get]

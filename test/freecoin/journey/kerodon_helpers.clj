@@ -1,7 +1,7 @@
 (ns freecoin.journey.kerodon-helpers
   (:require [clojure.string :as string]
             [net.cgrand.enlive-html :as html]
-            [freecoin.db.mongo :as mongo]))
+            [freecoin-lib.db.mongo :as mongo]))
 
 (defn debug
   ([state & keys]

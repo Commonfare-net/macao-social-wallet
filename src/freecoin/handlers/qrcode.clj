@@ -26,7 +26,7 @@
   (:require [liberator.core :as lc]
             [freecoin.params :as param]
             [freecoin.auth :as auth]
-            [freecoin.db.wallet :as wallet]
+            [freecoin-lib.db.wallet :as wallet]
             [freecoin.context-helpers :as ch]
             [clj.qrgen :as qr]
             [taoensso.timbre :as log]))

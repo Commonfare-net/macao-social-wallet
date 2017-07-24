@@ -1,7 +1,7 @@
 (ns freecoin.views.sign-in
   (:require [freecoin.form_helpers :as fh]
             [freecoin.routes :as routes]
-            [freecoin.config :as config]
+            [freecoin-lib.config :as config]
             [freecoin.translation :as t]
             [taoensso.timbre :as log]))
 

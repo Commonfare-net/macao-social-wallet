@@ -26,7 +26,7 @@
   (:require [liberator.core :as lc]
             [freecoin.views :as fv]
             [freecoin.auth :as auth]
-            [freecoin.blockchain :as blockchain]
+            [freecoin-lib.core :as blockchain]
             [freecoin.views.tags :as tv]))
 
 (lc/defresource get-tags [blockchain]

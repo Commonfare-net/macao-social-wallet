@@ -29,7 +29,7 @@
   (:require [freecoin.routes :as routes]
             [environ.core :as env]
             [simple-time.core :as st]
-            [freecoin.db.wallet :as wallet]))
+            [freecoin-lib.db.wallet :as wallet]))
 
 (defn build-html [list tags wallet-store & [owner-wallet]]
   (let [title (str "Transaction list"

@@ -2,9 +2,9 @@
   (:require [midje.sweet :refer :all]
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
-            [freecoin.db.mongo :as fm]
-            [freecoin.db.wallet :as w]
-            [freecoin.blockchain :as fb]
+            [freecoin-lib.db.mongo :as fm]
+            [freecoin-lib.db.wallet :as w]
+            [freecoin-lib.core :as fb]
             [freecoin.translation :as t]
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.participants :as fp]))

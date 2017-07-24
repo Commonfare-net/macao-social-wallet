@@ -28,7 +28,7 @@
 
 (ns freecoin.auth
   (:require [freecoin.context-helpers :as ch]
-            [freecoin.db.wallet :as wallet]))
+            [freecoin-lib.db.wallet :as wallet]))
 
 (defn is-signed-in [ctx]
   (when-let [email (ch/context->signed-in-email ctx)]
@@ -40,4 +40,5 @@
     [false {:error {:status :fatal
                     :reason "wallet not found"}}]))
 
+;; TODO: verify this check is not used or implemented properly
 (defn has-api-key [ctx] true)
