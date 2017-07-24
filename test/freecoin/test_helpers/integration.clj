@@ -37,7 +37,7 @@
 (defn default-app-config-m []
   (let [stores (s/create-in-memory-stores)]
     {:stores-m stores
-     :blockchain (InMemoryBlockchain. :bk (atom {}) (atom {}) (atom {}))
+     :blockchain (blockchain/create-in-memory-blockchain :bk)
      :config-m {:secure "false"
                 :client-secret "freecoin-secret"
                 :client-id "freecoin"
