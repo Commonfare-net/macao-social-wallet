@@ -1,41 +1,37 @@
 (def ns-tracker-version "0.3.1")
 
-(defproject freecoin "0.2.0"
+(defproject org.dyne/freecoin "0.3.0"
   :description "Freecoin digital currency toolkit"
-  :url "http://freecoin.ch"
-  :license {:name "GNU GPL Affero v3 and "
-            :url "http://www.d-centproject.eu"}
+  :url "https://freecoin.dyne.org"
+
+  :license {:author "Dyne.org Foundation"
+            :email "foundation@dyne.org"
+            :year 2017
+            :key "gpl-3.0"}
+
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [com.taoensso/timbre "4.8.0"]
-                 [liberator "0.14.1" :exclusions [hiccup]]
-                 [clj-http "3.4.1"]
+                 [liberator "0.15.1" :exclusions [hiccup]]
+                 [clj-http "3.6.1"]
                  [scenic "0.2.5"]
-                 [ring/ring-core "1.5.1"]
-                 [ring/ring-anti-forgery "1.0.1"]
-                 [ring/ring-defaults "0.2.3"]
+                 [ring/ring-core "1.6.2"]
+                 [ring/ring-anti-forgery "1.1.0"]
+                 [ring/ring-defaults "0.3.0"]
                  [ring.middleware.logger "0.5.0" :exclusions [org.slf4j/slf4j-api]]
-                 [compojure "1.5.2"] 
+
                  [http-kit "2.2.0"]
                  [enlive "1.1.6"]
                  [formidable "0.1.10"]
-                 [cheshire "5.7.0"]
-                 [json-html "0.4.0"]
-                 [autoclave "0.1.7" :exclusions [com.google.guava/guava com.google.code.findbugs/jsr305]]
-                 [com.novemberain/monger "3.1.0"]
-                 [org.clojure/math.numeric-tower "0.0.4"]
-                 [com.tiemens/secretshare "1.4.2"]
-                 [buddy/buddy-hashers "1.2.0"]
-                 [simple-time "0.2.1" :exclusions [joda-time]]
+                 [cheshire "5.7.1"]
+                 [json-html "0.4.4"]
+
                  [environ "1.1.0"]
                  [clojure-humanize "0.2.2"]
                  [clj.qrgen "0.4.0"]
                  [clavatar "0.3.0"]
-                 ;; Gossip is a lein tool to generate call-graphs for Clojure code
-                 [cc.artifice/lein-gossip "0.2.1"]
-                 [circleci/clj-yaml "0.5.5"]
+                 [circleci/clj-yaml "0.5.6"]
 
                  ; fxc secret sharing protocol
-                 [org.clojars.dyne/fxc "0.3.0"]
+                 [org.clojars.dyne/fxc "0.5.0"]
 
                  ; freecoin core lib
                  [org.clojars.dyne/freecoin-lib "0.2.0"]

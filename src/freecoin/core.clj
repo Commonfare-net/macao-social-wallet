@@ -154,6 +154,7 @@
                                                      (config/secure? config-m)))
         #_(mw-logger/wrap-with-logger))))
 
+
 ;; launching and halting the app
 (defonce app-state (atom {}))
 
