@@ -44,8 +44,7 @@
 ;; build a more complex transaction form with hidden fields
 ;; not using formalize here, but hiccup directly
 (defn build-transaction-to [ctx]
-  (if-let [email (get-in ctx [:params :email])]
-
+  (if-let [email (get-in ctx [:request :params :email])]
     {:title   (str (t/locale [:transaction :make]) " -> " email)
      :heading (str (t/locale [:transaction :send]) " -> " email)
      :body [:form {:action (routes/absolute-path :post-transaction-form)
