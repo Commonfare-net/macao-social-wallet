@@ -52,7 +52,7 @@
                    :method "POST"}
             [:input {:name "__anti-forgery-token"
                      :type "hidden"
-                     :value (get-in ctx [:session "__anti-forgery-token"])}]
+                     :value (get-in ctx [:request :session "__anti-forgery-token"])}]
             [:input {:name "recipient"
                      :type "hidden"
                      :value email}]
