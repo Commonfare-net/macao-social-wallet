@@ -248,6 +248,6 @@
              (kc/check-and-fill-in ks/transaction-to-tags "test")
              (kc/check-and-press ks/transaction-to-submit)
 
-             (kc/check-and-follow-redirect "redirects to transaction cinfirmation page")
+             (kc/check-and-follow-redirect "redirects to transaction confirmation page")
              (kh/remember memory :confirmation-uid kh/state-on-account-page->email)
              (kc/check-page-is :get-confirm-transaction-form ks/transaction-to-body :confirmation-uid (kh/recall memory :confirmation-uid))))))
