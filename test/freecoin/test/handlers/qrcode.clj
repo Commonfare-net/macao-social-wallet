@@ -24,10 +24,10 @@
 (ns freecoin.test.handlers.qrcode
   (:require [midje.sweet :refer :all]
             [ring.mock.request :as rmr]
-            [freecoin.db
+            [freecoin-lib.db
              [mongo :as fm]
              [wallet :as w]]
-            [freecoin.blockchain :as fb]
+            [freecoin-lib.core :as fb]
             [freecoin.handlers
              [qrcode :as handler]
              [transaction-form :as transaction-handler]]

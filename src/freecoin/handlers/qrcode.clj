@@ -24,7 +24,7 @@
 
 (ns freecoin.handlers.qrcode
   (:require [liberator.core :as lc]
-            [freecoin.config :as config]
+            [freecoin-lib.config :as config]
             [freecoin.auth :as auth]
             [freecoin-lib.db.wallet :as wallet]
             [freecoin.context-helpers :as ch]
