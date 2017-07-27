@@ -36,6 +36,11 @@
             [freecoin.email-activation :as email-activation]
             [taoensso.timbre :as log]))
 
+(def client-id "CLIENT_ID")
+(def client-secret "CLIENT_SECRET")
+(def callback-uri "CALLBACK_URI")
+(def public-key "PUBLICK_KEY") ;; TODO: load this from jwk file
+
 (def absolute-path (partial routes/absolute-path))
 
 (def empty-wallet {})

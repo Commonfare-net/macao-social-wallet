@@ -225,29 +225,3 @@
              (kc/check-and-follow-redirect "back to form")
              (kc/check-page-is :get-transaction-form [ks/transaction-form--submit])
              (kc/selector-includes-content [ks/transaction-form--error-message] "To: Not found")))))
-
-(facts "Make a transaction to a user using his/her qrcode link"
-       (fact "The right error is returned"
-             (let [memory (atom {})]
-         (-> (k/session test-app)
-
-             (sign-up "recipient")
-             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
-             (sign-in "recipient")
-             (kh/remember memory :recipient-email kh/state-on-account-page->email)
-             sign-out
-
-             (sign-up "sender")
-             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
-             (sign-in "sender")
-             (kh/remember memory :sender-email kh/state-on-account-page->email)
-
-             ;; required form fields
-             (k/visit (routes/absolute-path :get-transaction-to :email recipient-email))
-             (kc/check-and-fill-in ks/transaction-to-amount "1")
-             (kc/check-and-fill-in ks/transaction-to-tags "test")
-             (kc/check-and-press ks/transaction-to-submit)
-
-             (kc/check-and-follow-redirect "redirects to transaction cinfirmation page")
-             (kh/remember memory :confirmation-uid kh/state-on-account-page->email)
-             (kc/check-page-is :get-confirm-transaction-form ks/transaction-to-body :confirmation-uid (kh/recall memory :confirmation-uid))))))

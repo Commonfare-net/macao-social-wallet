@@ -44,15 +44,16 @@
 ;; build a more complex transaction form with hidden fields
 ;; not using formalize here, but hiccup directly
 (defn build-transaction-to [ctx]
-  (if-let [email (get-in ctx [:request :params :email])]
+  (if-let [email (get-in ctx [:params :email])]
+
     {:title   (str (t/locale [:transaction :make]) " -> " email)
      :heading (str (t/locale [:transaction :send]) " -> " email)
      :body [:form {:action (routes/absolute-path :post-transaction-form)
-                   :class "func--transaction-to-body"
+                   :class "form-shell"
                    :method "POST"}
             [:input {:name "__anti-forgery-token"
                      :type "hidden"
-                     :value (get-in ctx [:request :session "__anti-forgery-token"])}]
+                     :value (get-in ctx [:session "__anti-forgery-token"])}]
             [:input {:name "recipient"
                      :type "hidden"
                      :value email}]
@@ -62,7 +63,7 @@
              [:div {:class "form-group"}
               [:label {:class "control-label"
                        :for   "field-amount"} "Amount"]
-              [:input {:class "form-control func--transaction-to-amount"
+              [:input {:class "form-control"
                        :id    "field-amount"
                        :name "amount"
                        :type "decimal"
@@ -70,17 +71,17 @@
              [:div {:class "form-group"}
               [:label {:class "control-label"
                        :for   "field-tags"} "Tags"]
-              [:input {:class "form-control func--transaction-to-tags"
-                       :id    "field-tags"
-                       :name "tags"
-                       :type "decimal"
-                       :value ""}]]
+               [:input {:class "form-control"
+                        :id    "field-tags"
+                        :name "tags"
+                        :type "decimal"
+                        :value ""}]]
              ]
 
             [:fieldset {:class "fieldset-submit"}
              [:div {:class "form-group"}
               [:span {:class "visible-xs-inline-block visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"}
-               [:input {:class "form-control btn btn-primary func--transaction-to-submit"
+               [:input {:class "form-control btn btn-primary"
                         :id "field-submit"
                         :name "submit"
                         :type "submit"}]]]]
