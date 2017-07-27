@@ -26,11 +26,7 @@
 
                  [environ "1.1.0"]
                  [clojure-humanize "0.2.2"]
-
-                 ;; qrcode generation and scanning
                  [clj.qrgen "0.4.0"]
-                 [com.google.zxing/core "3.2.1"]
-                 
                  [clavatar "0.3.0"]
                  [circleci/clj-yaml "0.5.6"]
 

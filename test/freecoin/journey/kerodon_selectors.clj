@@ -22,11 +22,6 @@
 (def transactions-page-body :.func--transactions-page--body)
 (def transactions-page--table-rows [:.func--transactions-page--table :tbody :tr])
 
-(def transaction-to-amount :.func--transaction-to-amount)
-(def transaction-to-tags :.func--transaction-to-tags)
-(def transaction-to-submit :.func--transaction-to-submit)
-(def transaction-to-body :.func--transaction-to-body)
-
 (def tags-page-body :.func--tags-page--body)
 (def tags-page--table-rows [:.func--tags-page--table :tbody :tr])
 (def tags-page--table-rows--amount [:.func--tags-page--table :tbody :*:last-child])

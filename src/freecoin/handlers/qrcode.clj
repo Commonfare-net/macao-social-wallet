@@ -3,11 +3,11 @@
 ;; part of Decentralized Citizen Engagement Technologies (D-CENT)
 ;; R&D funded by the European Commission (FP7/CAPS 610349)
 
-;; Copyright (C) 2017 Dyne.org foundation
+;; Copyright (C) 2015 Dyne.org foundation
+;; Copyright (C) 2015 Thoughtworks, Inc.
 
 ;; Sourcecode designed, written and maintained by
 ;; Denis Roio <jaromil@dyne.org>
-;; Aspasia Beneti <aspra@dyne.org>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as published by
@@ -24,16 +24,16 @@
 
 (ns freecoin.handlers.qrcode
   (:require [liberator.core :as lc]
-            [freecoin.config :as config]
+            [freecoin.params :as param]
             [freecoin.auth :as auth]
             [freecoin-lib.db.wallet :as wallet]
             [freecoin.context-helpers :as ch]
             [clj.qrgen :as qr]
             [taoensso.timbre :as log]))
 
+
 (lc/defresource qr-participant-sendto [wallet-store]
   :allowed-methods [:get]
-
   :available-media-types ["image/png"]
 
   :authorized? #(auth/is-signed-in %)
@@ -44,7 +44,7 @@
   :handle-ok
   (fn [ctx]
     (if-let [email (get-in ctx [:request :params :email])]
-      (let [base-url (-> (config/create-config) config/base-url)]
-        (qr/as-input-stream
-         (qr/from (str base-url "/send/to/" email)
-                  :charset "ISO-8859-1"))))))
+      (qr/as-input-stream
+       (qr/from (format "http://%s:%d/send/to/%s"
+                        (:address param/host)
+                        (:port param/host) email))))))

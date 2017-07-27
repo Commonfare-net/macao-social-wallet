@@ -30,6 +30,11 @@
 
 (def version "software release version" "0.2")
 
+;; TODO: perhaps already configured in ring?
+(def host
+  {:address "fork"
+   :port 8000})
+
 ;; defaults
 (def encryption
   {:version 1
