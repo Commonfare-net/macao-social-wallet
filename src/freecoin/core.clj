@@ -79,8 +79,8 @@
         account-store (storage/get-account-store stores-m)
         password-recovery-store (storage/get-password-recovery-store stores-m)]
     {
-     :version                       (debug/version (dissoc config-m :client-secret))
-     :echo                          (debug/echo (dissoc config-m :client-secret))
+     :version                       (debug/version config-m)
+     :echo                          (debug/echo (dissoc config-m :admin-email))
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store)
