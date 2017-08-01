@@ -29,7 +29,8 @@
 (ns freecoin.views.account-page
   (:require [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
-            [freecoin.translation :as t]))
+            [freecoin.translation :as t]
+            [freecoin.form_helpers :as fh]))
 
 (defn render-wallet [wallet]
   (let [email (:email wallet)]
@@ -55,7 +56,7 @@
             [:div {:class "balance"}
              (str (t/locale [:wallet :balance]) ": ")
              [:span {:class "func--account-page--balance"}
-              balance]]
+              (fh/thousant-separator balance)]]
             [:div
              [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
               (t/locale [:wallet :send])]
