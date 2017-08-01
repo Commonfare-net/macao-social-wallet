@@ -64,4 +64,10 @@
              [:a.btn.btn-default {:href (routes/path :participants)}
               (t/locale [:wallet :participants])]
              [:a.btn.btn-default {:href (routes/path :get-all-tags)}
-              (t/locale [:wallet :tags])]]]}))
+              (t/locale [:wallet :tags])]]
+            [:br]
+            [:br]
+            [:br]
+            [:div
+             [:a.btn.btn-default {:href (routes/path :sign-out)}
+              (t/locale [:sign-in :sign-out])]]]}))
