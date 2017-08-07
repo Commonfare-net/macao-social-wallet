@@ -88,7 +88,7 @@
                  [:tr
                   [:td [:a {:href (routes/path :account :email (:email from))} (:name from)]]
                   [:td [:a {:href (routes/path :account :email (:email to))} (:name to)]]
-                  [:td (fh/thousant-separator (:amount t))]
+                  [:td (fh/thousand-separator (:amount t))]
                   [:td (-> t :timestamp st/parse (st/format :medium-date-time))]
                   [:td (interpose ", " (map tag (:tags t)))]]))
              list)]]]}))

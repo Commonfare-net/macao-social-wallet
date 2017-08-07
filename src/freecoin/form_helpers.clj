@@ -58,5 +58,5 @@
              (map keyword)
              (into #{})))))
 
-(defn thousant-separator [amount]
+(defn thousand-separator [amount]
   (clojure.pprint/cl-format nil "~,,' :D" amount))

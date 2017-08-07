@@ -56,7 +56,7 @@
             [:div {:class "balance"}
              (str (t/locale [:wallet :balance]) ": ")
              [:span {:class "func--account-page--balance"}
-              (fh/thousant-separator balance)]]
+              (fh/thousand-separator balance)]]
             [:div
              [:a.btn.btn-primary {:href (routes/path :get-transaction-form)}
               (t/locale [:wallet :send])]
