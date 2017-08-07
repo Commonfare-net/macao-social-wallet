@@ -29,7 +29,8 @@
   (:require [freecoin.routes :as routes]
             [environ.core :as env]
             [simple-time.core :as st]
-            [freecoin-lib.db.wallet :as wallet]))
+            [freecoin-lib.db.wallet :as wallet]
+            [freecoin.form_helpers :as fh]))
 
 (defn build-html [list tags wallet-store & [owner-wallet]]
   (let [title (str "Transaction list"
@@ -87,7 +88,7 @@
                  [:tr
                   [:td [:a {:href (routes/path :account :email (:email from))} (:name from)]]
                   [:td [:a {:href (routes/path :account :email (:email to))} (:name to)]]
-                  [:td (:amount t)]
+                  [:td (fh/thousand-separator (:amount t))]
                   [:td (-> t :timestamp st/parse (st/format :medium-date-time))]
                   [:td (interpose ", " (map tag (:tags t)))]]))
              list)]]]}))

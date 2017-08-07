@@ -24,6 +24,7 @@
 
 (ns freecoin.views.tag
   (:require [freecoin.translation :as t]
+            [freecoin.form_helpers :as fh]
             [taoensso.timbre :as log]))
 
 (defn build-html
@@ -41,7 +42,7 @@
        [:td count]]
       [:tr.func--tag-page--amount
        [:th (t/locale [:tag :page :table :value])]
-       [:td amount]]
+       [:td (fh/thousand-separator amount)]]
       [:tr.func--tag-page--created-by
        [:th (t/locale [:tag :page :table :created-by])]
        [:td created-by]]

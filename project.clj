@@ -68,8 +68,6 @@
                                          [ns-tracker ~ns-tracker-version]]
                           :repl-options {:init-ns freecoin.core}
                           :env [[:base-url "http://localhost:8000"]
-                                [:client-id "LOCALFREECOIN"]
-                                [:client-secret "FREECOINSECRET"]
                                 [:email-config "email-conf.edn"]
                                 [:secure "false"]
                                 [:admin-email "sender@mail.com"]
@@ -78,8 +76,6 @@
 
              :rel [:release :release-local]
              :release {:env [[:base-url "http://demo.freecoin.ch:8000"]
-                             [:client-id "dyne-demo-freecoin"]
-                             [:client-secret "secret"]
                              [:email-config "email-conf.edn"]
                              [:secure "true"]]}
 
@@ -91,8 +87,6 @@
                           :main freecoin.main
                           ;; TODO replace with scipt
                           :env [[:base-url "http://freecoin1prod.dyne.org:8000"]
-                                [:client-id "LOCALFREECOIN"]
-                                [:client-secret "FREECOINSECRET"]
                                 [:email-config "email-conf.edn"]
                                 [:secure "false"]
                                 [:ttl-password-recovery "1800"]]}
@@ -102,8 +96,6 @@
                        :main freecoin.main
                        ;; TODO replace with script
                        :env [[:base-url "http://freecoin1staging.dyne.org:8000"]
-                             [:client-id "LOCALFREECOIN"]
-                             [:client-secret "FREECOINSECRET"]
                              [:email-config "email-conf.edn"]
                              [:secure "false"]
                              [:ttl-password-recovery "1800"]]}

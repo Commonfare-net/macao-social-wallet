@@ -45,11 +45,12 @@ tag:
       created-by: "Created by"
       created: "Created"
 
-sing-in:
+sign-in:
   title: "Social wallet sign in"
   heading: "Welcome to the social wallet!"
   sign-in: "Sign in with existing account"
   sign-up: "Create an account"
+  sign-out: "Sign out"
 
 email-confirmation:
   title: "Email confirmation sent"

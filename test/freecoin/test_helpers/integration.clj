@@ -39,8 +39,6 @@
     {:stores-m stores
      :blockchain (blockchain/create-in-memory-blockchain :bk)
      :config-m {:secure "false"
-                :client-secret "freecoin-secret"
-                :client-id "freecoin"
                 :email-config "email-conf.edn"}
      :email-activator (email-activation/->StubActivationEmail (atom []) (:account-store stores))
      :password-recoverer (email-activation/->PasswordRecoveryEmail (atom []) (:password-recovery-store stores))}))
