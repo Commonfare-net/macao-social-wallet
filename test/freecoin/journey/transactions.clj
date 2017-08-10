@@ -17,7 +17,7 @@
 (ih/setup-db)
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
-(def blockchain (blockchain/new-stub stores-m))
+(def blockchain (blockchain/new-mongo stores-m))
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain

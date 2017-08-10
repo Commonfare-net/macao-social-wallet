@@ -20,7 +20,7 @@
 
 ;; TTL is set to 30 seconds but mongo checks only every ~60 secs
 (def stores-m (s/create-mongo-stores (ih/get-test-db) 30))
-(def blockchain (blockchain/new-stub stores-m))
+(def blockchain (blockchain/new-mongo stores-m))
 (def emails (atom []))
 
 (def test-app (ih/build-app {:stores-m stores-m
