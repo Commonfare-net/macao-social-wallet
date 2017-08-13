@@ -111,10 +111,8 @@
           sender-wallet (wallet/fetch wallet-store sender-email)
           recipient-wallet (wallet/fetch wallet-store recipient-email)]
       (blockchain/make-transaction blockchain
-                                   ;; TODO: Replace account-id with email
-                                   (:account-id sender-wallet) amount
-                                   (:account-id recipient-wallet) {:tags tags}
-                                   (:email sender-wallet))
+                                   (:email sender-wallet) amount
+                                   (:email recipient-wallet) {:tags tags})
       (confirmation/delete!
        confirmation-store
        (-> ctx ::confirmation :uid))

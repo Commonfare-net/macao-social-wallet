@@ -77,7 +77,7 @@
                             (ch/context->params ctx))
           amount (:amount data)
           sender-email (ch/context->signed-in-email ctx)
-          sender-balance (blockchain/get-balance blockchain (:account-id (wallet/fetch wallet-store sender-email)))
+          sender-balance (blockchain/get-balance blockchain sender-email)
           admin-email (or (-> (config/create-config) config/admin-email) "")]
       (if (= :ok status)
         (if-let [recipient-wallet

@@ -87,12 +87,9 @@
   state)
 
 (defn make-transaction [state blockchain from-email amount to-email params]
-  (let [wallet-store (:wallet-store stores-m)
-        from (wallet/fetch wallet-store from-email)
-        to (wallet/fetch wallet-store to-email)]
-    (blockchain/make-transaction blockchain (:account-id from) amount (:account-id to) params from-email))
+  (let [wallet-store (:wallet-store stores-m)]
+    (blockchain/make-transaction blockchain from-email amount to-email params))
   state)
-
 
 (defn check-page-is-activity-stream [state route-action & route-params]
   (apply kc/page-route-is state route-action route-params)
