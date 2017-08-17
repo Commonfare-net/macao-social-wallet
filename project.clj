@@ -69,8 +69,7 @@
                           :repl-options {:init-ns freecoin.core}
                           :env [[:base-url "http://localhost:8000"]
                                 [:email-config "email-conf.edn"]
-                                [:secure "false"]
-                                [:admin-email "sender@mail.com"]
+                                [:secure "false"] 
                                 [:ttl-password-recovery "1800"]]
                           :plugins [[lein-midje "3.1.3"]]}
 

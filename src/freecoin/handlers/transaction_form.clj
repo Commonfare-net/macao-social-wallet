@@ -31,9 +31,11 @@
   (:require [liberator.core :as lc]
             [liberator.representation :as lr]
             [ring.util.response :as r]
-            [freecoin-lib.db.wallet :as wallet]
-            [freecoin-lib.db.confirmation :as confirmation]
-            [freecoin-lib.db.uuid :as uuid]
+            [freecoin-lib.db
+             [wallet :as wallet]
+             [account :as account]
+             [uuid :as uuid]
+             [confirmation :as confirmation]]
             [freecoin.context-helpers :as ch]
             [freecoin.routes :as routes]
             [freecoin-lib.core :as blockchain]
@@ -64,7 +66,7 @@
                     transaction-form/build
                     fv/render-page)))
 
-(lc/defresource post-transaction-form [blockchain wallet-store confirmation-store]
+(lc/defresource post-transaction-form [blockchain wallet-store confirmation-store account-store]
   :allowed-methods [:post]
   :available-media-types ["text/html"]
 
@@ -77,14 +79,14 @@
                             (ch/context->params ctx))
           amount (:amount data)
           sender-email (ch/context->signed-in-email ctx)
-          sender-balance (blockchain/get-balance blockchain sender-email)
-          admin-email (or (-> (config/create-config) config/admin-email) "")]
+          sender-balance (blockchain/get-balance blockchain sender-email)]
       (if (= :ok status)
         (if-let [recipient-wallet
                  (wallet/fetch wallet-store (:recipient data))]
           ;; Check that the balance aftter the transaction would be above 0 unless it is made by the admin
-          (if (or (=  admin-email sender-email)
-                  (>= (- sender-balance amount) 0))
+          (if (or
+               (>= (- sender-balance amount) 0)
+               (some #{:admin} (:flags (account/fetch account-store sender-email))))
             {::form-data data
              ::recipient-wallet recipient-wallet}
             [false (fh/form-problem :amount "Balance is not sufficient to perform this transaction")])

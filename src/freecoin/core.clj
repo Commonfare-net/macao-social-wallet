@@ -80,7 +80,7 @@
         password-recovery-store (storage/get-password-recovery-store stores-m)]
     {
      :version                       (debug/version config-m)
-     :echo                          (debug/echo (dissoc config-m :admin-email))
+     :echo                          (debug/echo config-m)
      :qrcode                        (qrcode/qr-participant-sendto wallet-store)
      :index                         sign-in/index-page
      :landing-page                  (sign-in/landing-page wallet-store)
@@ -108,7 +108,7 @@
 
      :get-transaction-form          (transaction-form/get-transaction-form wallet-store)
      :get-transaction-to            (transaction-form/get-transaction-to wallet-store)
-     :post-transaction-form         (transaction-form/post-transaction-form blockchain wallet-store confirmation-store)
+     :post-transaction-form         (transaction-form/post-transaction-form blockchain wallet-store confirmation-store account-store)
 
      :get-all-tags                  (tags/get-tags blockchain)
      :get-tag-details               (tag/get-tag-details blockchain)

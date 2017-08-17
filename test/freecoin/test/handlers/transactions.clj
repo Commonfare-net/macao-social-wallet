@@ -30,8 +30,10 @@
 (ns freecoin.test.handlers.transactions
   (:require [midje.sweet :refer :all]
             [freecoin.test.test-helper :as th]
-            [freecoin-lib.db.mongo :as fm]
-            [freecoin-lib.db.wallet :as w]
+            [freecoin-lib.db
+             [mongo :as fm]
+             [wallet :as w]
+             [account :as account]]
             [freecoin-lib.db.confirmation :as c]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
@@ -50,14 +52,21 @@
 
 (defn setup-with-sender-and-recipient []
   (let [wallet-store (fm/create-memory-store)
+        account-store (fm/create-memory-store)
         blockchain (blockchain/create-in-memory-blockchain :bk)
+        ;; Sender needs to be an admin otherwise there wont be enough budget to make a transaction
+        sender-account (th/create-account account-store {:email sender-email
+                                                         :active true
+                                                         :flags [:admin]})
         sender-details (w/new-empty-wallet!
-                        wallet-store blockchain 
-                        "sender" sender-email)
+                           wallet-store blockchain 
+                           "sender" sender-email)
         recipient-details (w/new-empty-wallet!
                            wallet-store blockchain
                            "recipient" recipient-email)]
+    
     {:wallet-store wallet-store
+     :account-store account-store
      :blockchain blockchain
      :sender-wallet (:wallet sender-details)
      :sender-apikey (:apikey sender-details)
@@ -100,10 +109,10 @@
        (future-facts "about redisplaying the form after validation issues"))
 
 (facts "about post requests from the transaction form"
-       (let [{:keys [wallet-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
+       (let [{:keys [wallet-store account-store sender-wallet sender-apikey]} (setup-with-sender-and-recipient)
              blockchain (blockchain/create-in-memory-blockchain :bk)
              confirmation-store ...confirmation-store...
-             form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store)]
+             form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store account-store)]
          (fact "returns 401 when participant not authenticated"
                (-> (th/create-request :post "/post-transaction-form" {})
                    form-post-handler
@@ -117,7 +126,7 @@
         
          (facts "when participant is authenticated, has cookie-data, and posts a valid form"
                 (let [confirmation-store (fm/create-memory-store)
-                      form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store)
+                      form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store account-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
                                     {:amount "5.00" :recipient recipient-email}
@@ -133,7 +142,7 @@
 
          (facts "when participant tries to make a transaction but doesnt have enough in his wallet"
                 (let [confirmation-store (fm/create-memory-store)
-                      form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store)
+                      form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store account-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
                                     {:amount "5.00" :recipient recipient-email}
