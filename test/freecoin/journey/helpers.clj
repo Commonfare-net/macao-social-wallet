@@ -1,7 +1,6 @@
 (ns freecoin.journey.helpers
   (:require [taoensso.timbre :as log]
-            [freecoin-lib.core :as blockchain]
-            [freecoin-lib.db.storage :as s]
+            [freecoin-lib.core :as blockchain] 
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.routes :as routes]
@@ -11,7 +10,10 @@
             [freecoin-lib.db.account :as account]))
 
 (def password "abcd12*!")
-(def admin-email "sender@mail.com")
+
+;; TODO: at the moment the only way to give an account a flag is by directly accessing the DB. Thats not suitable for the journey tests
+(defn make-admin [stores-m email]
+  (account/add-flag! (:account-store stores-m) email :admin))
 
 (defn sign-up [state name]
   (let [email (str name "@mail.com")]
@@ -28,7 +30,12 @@
         (kc/check-and-follow-redirect "to activation email sent page")
         (kc/check-page-is :email-confirmation [ks/email-confirmation-body]))))
 
-(defn activate-account [state activation-id email]
+(defn activate-account
+  [state {:keys [activation-id email stores-m]}]
+  "At the moment the only way to give an account a flag is by directly accessing the DB."
+  (when stores-m
+    (make-admin stores-m email))
+
   (-> state
       (k/visit (routes/absolute-path :activate-account
                                      :activation-id activation-id

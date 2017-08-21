@@ -67,7 +67,7 @@
   (fn [ctx]
     (let [tags (-> ctx :request :params :tags parse-tags)]
       (-> blockchain
-          (blockchain/list-transactions (-> {:account-id (-> ctx :wallet :account-id)}
+          (blockchain/list-transactions (-> {:account-id (-> ctx :wallet :email)}
                                             (maybe-merge :tags tags seq)))
           (transaction-list/build-html tags wallet-store (:wallet ctx))
           fv/render-page))))

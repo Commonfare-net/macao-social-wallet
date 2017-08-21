@@ -43,7 +43,7 @@
 
 (defn render-wallet [wallet blockchain]
   (-> {:wallet wallet
-       :balance (blockchain/get-balance blockchain (:account-id wallet))}
+       :balance (blockchain/get-balance blockchain (:email wallet))}
       account-page/build
       fv/render-page))
 

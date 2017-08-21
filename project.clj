@@ -38,7 +38,7 @@
                  [org.clojars.dyne/fxc "0.5.0"]
 
                  ; freecoin core lib
-                 [org.clojars.dyne/freecoin-lib "0.2.0"]
+                 [org.clojars.dyne/freecoin-lib "0.3.0"]
 
                  ; email
                  [com.draines/postal "2.0.2"]]
@@ -50,7 +50,7 @@
   :jvm-opts ["-Djava.security.egd=file:/dev/random" ;use a proper random source (install haveged)
              "-XX:-OmitStackTraceInFastThrow" ; prevent JVM exceptions without stack trace
              ]
-  :env [[:base-url "http://localhost:8000"]
+  :env [
 
         ;; translation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
@@ -69,8 +69,7 @@
                           :repl-options {:init-ns freecoin.core}
                           :env [[:base-url "http://localhost:8000"]
                                 [:email-config "email-conf.edn"]
-                                [:secure "false"]
-                                [:admin-email "sender@mail.com"]
+                                [:secure "false"] 
                                 [:ttl-password-recovery "1800"]]
                           :plugins [[lein-midje "3.1.3"]]}
 

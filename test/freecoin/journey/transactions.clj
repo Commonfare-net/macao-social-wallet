@@ -17,7 +17,7 @@
 (ih/setup-db)
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
-(def blockchain (blockchain/new-stub stores-m))
+(def blockchain (blockchain/new-mongo stores-m))
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
@@ -44,13 +44,16 @@
        (let [memory (atom {})]
          (-> (k/session test-app)
              (sign-up "recipient")
-             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m recipient-email)
+                                :email recipient-email})
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m sender-email)
+                                :email sender-email
+                                :stores-m stores-m})
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
@@ -114,13 +117,15 @@
          (-> (k/session test-app)
 
              (sign-up "recipient")
-             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m recipient-email) :email recipient-email})
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m sender-email)
+                                :email sender-email
+                                :stores-m stores-m})
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
@@ -148,13 +153,16 @@
          (-> (k/session test-app)
 
              (sign-up "recipient")
-             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m recipient-email)
+                                :email recipient-email})
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m sender-email)
+                                :email sender-email
+                                :stores-m stores-m})
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
@@ -212,7 +220,8 @@
              (kh/remember memory :recipient-email kh/state-on-account-page->email) 
 
              (sign-up "sender")
-             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m sender-email)
+                                :email sender-email})
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 
@@ -232,13 +241,16 @@
          (-> (k/session test-app)
 
              (sign-up "recipient")
-             (activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m recipient-email)
+                                :email recipient-email})
              (sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              sign-out
 
              (sign-up "sender")
-             (activate-account (jh/get-activation-id stores-m sender-email) sender-email)
+             (activate-account {:activation-id (jh/get-activation-id stores-m sender-email)
+                                :email sender-email
+                                :stores-m stores-m})
              (sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 

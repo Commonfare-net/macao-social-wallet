@@ -1,7 +1,8 @@
 (ns freecoin.test.test-helper
   (:require [midje.sweet :as midje]
             [ring.mock.request :as request]
-            [net.cgrand.enlive-html :as html]))
+            [net.cgrand.enlive-html :as html]
+            [freecoin-lib.db.account :as account]))
 
 (defn create-request
   ([method path query-m]
@@ -10,6 +11,15 @@
    (-> (request/request method path query-m)
        (assoc :params query-m)
        (assoc :session session))))
+
+(defn create-account [account-store
+                      {:keys [email active flags] :as account}]
+  (account/new-account! account-store {:first-name (str "name" (rand-int 100))
+                                       :last-name (str "surname" (rand-int 100))
+                                       :email email
+                                       :password (apply str (repeat 8 (rand 9)))
+                                       :active active
+                                       :flags flags}))
 
 (defn authenticated-session [email]
   {:signed-in-email email})

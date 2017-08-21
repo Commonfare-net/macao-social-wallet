@@ -44,7 +44,7 @@
 (ih/setup-db)
 
 (def stores-m (s/create-mongo-stores (ih/get-test-db)))
-(def blockchain (blockchain/new-stub stores-m))
+(def blockchain (blockchain/new-mongo stores-m))
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
@@ -57,15 +57,17 @@
 (facts "Tags can be listed"
        (let [memory (atom {})]
          (-> (k/session test-app)
-
              (jh/sign-up "recipient")
-             (jh/activate-account (jh/get-activation-id stores-m recipient-email) recipient-email)
+             (jh/activate-account {:activation-id (jh/get-activation-id stores-m recipient-email)
+                                   :email recipient-email}) 
              (jh/sign-in "recipient")
              (kh/remember memory :recipient-email kh/state-on-account-page->email)
              jh/sign-out
 
              (jh/sign-up "sender")
-             (jh/activate-account (jh/get-activation-id stores-m sender-email) sender-email)
+             (jh/activate-account {:activation-id (jh/get-activation-id stores-m sender-email)
+                                   :email sender-email
+                                   :stores-m stores-m})
              (jh/sign-in "sender")
              (kh/remember memory :sender-email kh/state-on-account-page->email)
 

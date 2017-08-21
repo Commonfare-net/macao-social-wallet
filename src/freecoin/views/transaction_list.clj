@@ -82,8 +82,8 @@
          [:th "Tags"]]]
        [:tbody
         (map (fn [t]
-               (let [from (wallet/fetch-by-account-id wallet-store (:from-id t))
-                     to (wallet/fetch-by-account-id wallet-store (:to-id t))
+               (let [from (wallet/fetch wallet-store (:from-id t))
+                     to (wallet/fetch wallet-store (:to-id t))
                      tag (fn [t] [:span.tag [:a {:href (routes/path :get-tag-details :name t)} t]])]
                  [:tr
                   [:td [:a {:href (routes/path :account :email (:email from))} (:name from)]]
@@ -94,8 +94,8 @@
              list)]]]}))
 
 (defn transaction->activity-stream [tx wallet-store]
-  (let [from (wallet/fetch-by-account-id wallet-store (:from-id tx))
-        to (wallet/fetch-by-account-id wallet-store (:to-id tx))]
+  (let [from (wallet/fetch wallet-store (:from-id tx))
+        to (wallet/fetch wallet-store (:to-id tx))]
     {"@context"   "https://www.w3.org/ns/activitystreams"
      "type"      "Transaction"
      "published" (str (:timestamp tx) "Z")
