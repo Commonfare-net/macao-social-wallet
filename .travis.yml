@@ -1,3 +1,5 @@
+before_install:
+- lein version
 language: clojure
 script: lein midje
 jdk:
