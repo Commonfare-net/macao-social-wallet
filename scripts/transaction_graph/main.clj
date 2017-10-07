@@ -1,12 +1,11 @@
 (ns transaction-graph.main
   (:require [clojure.test.check.generators :as gen]
             [monger.core :as monger]
-            [freecoin.config :as config]
-            [freecoin.db.mongo :as mongo]
-            [freecoin.db.storage :as storage]
-            [freecoin.blockchain :as blockchain]
-            [freecoin.db.wallet :as wallet]
-            [freecoin.db.uuid :as uuid])
+            [freecoin-lib.db.mongo :as mongo]
+            [freecoin-lib.db.storage :as storage]
+            [freecoin-lib.core :as blockchain]
+            [freecoin-lib.db.wallet :as wallet]
+            [freecoin-lib.db.uuid :as uuid])
   (:gen-class))
 
 (defn db-url [db-name] (str "mongodb://localhost:27017/" db-name))
@@ -52,7 +51,7 @@
 
 (defn populate-db [db n-wallets n-transactions]
   (let [stores-m (storage/create-mongo-stores db)
-        blockchain (blockchain/new-stub stores-m)
+        blockchain (blockchain/new-mongo stores-m)
         wallet-store (:wallet-store stores-m)
         wallet-data-generator (create-wallet-generator (create-index-generator))
         transaction-data-generator (create-transaction-generator random-selection random-selection random-amount)
