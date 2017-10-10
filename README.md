@@ -9,7 +9,8 @@ Freecoin aims to be a framework for remuneration and authentication supporting m
 [![Code Climate](https://codeclimate.com/github/PIENews/freecoin.png)](https://codeclimate.com/github/PIENews/freecoin)
 
 ## Design
-
+https://freecoin.dyne.org/images/freecoin_logo.png
+[![Freecoin Cornucopia](
 The design of Freecoin is informed by an extensive economic and user-centered research conducted by the D-CENT project and documented in deliverables that are available to the public:
 
 - [Design of Social Digital Currency (D4.4)](http://dcentproject.eu/wp-content/uploads/2015/10/design_of_social_digital_currency_publication.pdf)
