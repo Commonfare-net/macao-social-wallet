@@ -27,7 +27,6 @@
             [freecoin.routes :as routes]
             [freecoin-lib.db
              [account :as account]
-             [mongo :as mongo]
              [password-recovery :as password-recovery]]
             [taoensso.timbre :as log]))
 

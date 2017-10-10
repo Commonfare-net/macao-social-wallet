@@ -2,7 +2,7 @@
   (:require [monger.core :as monger]
             [freecoin.core :as core]
             [freecoin-lib.core :as blockchain]
-            [freecoin-lib.db.storage :as s]
+            [clj-storage.core :as s]
             [freecoin.email-activation :as email-activation])
   (:import [freecoin_lib.core InMemoryBlockchain]))
 

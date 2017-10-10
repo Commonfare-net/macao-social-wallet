@@ -33,7 +33,7 @@
             [freecoin.journey.kerodon-helpers :as kh]
             [freecoin.test-helpers.integration :as ih]
             [freecoin.journey.helpers :as jh]
-            [freecoin-lib.db.storage :as s]
+            [clj-storage.core :as s]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
