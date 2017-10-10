@@ -38,7 +38,7 @@
                  [org.clojars.dyne/fxc "0.5.0"]
 
                  ; freecoin core lib
-                 [org.clojars.dyne/freecoin-lib "0.5.0-SNAPSHOT"]
+                 [org.clojars.dyne/freecoin-lib "0.4.0"]
 
                  ; email
                  [com.draines/postal "2.0.2"]]
