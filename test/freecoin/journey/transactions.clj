@@ -6,13 +6,12 @@
             [freecoin.journey.kerodon-helpers :as kh]
             [freecoin.journey.helpers :as jh]
             [freecoin.test-helpers.integration :as ih]
-            [freecoin-lib.db.storage :as s]
+            [clj-storage.core :as s]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db.account :as account]
-            [freecoin-lib.db.storage :as storage]))
+            [freecoin-lib.db.account :as account]))
 
 (ih/setup-db)
 

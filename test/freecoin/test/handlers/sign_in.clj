@@ -28,7 +28,7 @@
             [freecoin-lib.config :as config]
             [freecoin.routes :as routes]
             [freecoin-lib.core :as fb]
-            [freecoin-lib.db.mongo :as fm]
+            [clj-storage.db.mongo :as fm]
             [freecoin-lib.db.wallet :as w]
             [freecoin.handlers.sign-in :as handler]
             [freecoin.test.test-helper :as th]

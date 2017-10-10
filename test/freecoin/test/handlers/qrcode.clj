@@ -25,8 +25,8 @@
   (:require [midje.sweet :refer :all]
             [ring.mock.request :as rmr]
             [freecoin-lib.db
-             [mongo :as fm]
              [wallet :as w]]
+            [clj-storage.db.mongo :as m]
             [freecoin-lib.core :as fb]
             [freecoin.handlers
              [qrcode :as handler]

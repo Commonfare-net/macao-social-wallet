@@ -30,7 +30,7 @@
             [taoensso.timbre :as log]
             [freecoin-lib.core :as blockchain]
             [freecoin-lib.config :as c]
-            [freecoin-lib.db.storage :as s]
+            [clj-storage.core :as s]
             [freecoin.journey.helpers :as h]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.journey.kerodon-helpers :as kh]

@@ -2,7 +2,7 @@
   (:require [midje.sweet :refer :all]
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
-            [freecoin-lib.db.mongo :as fm]
+            [clj-storage.db.mongo :as fm]
             [freecoin-lib.db.wallet :as w]
             [freecoin-lib.core :as fb]
             [freecoin.translation :as t]

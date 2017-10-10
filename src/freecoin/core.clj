@@ -37,8 +37,8 @@
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.logger :as mw-logger]
             [scenic.routes :as scenic]
-            [freecoin-lib.db.mongo :as mongo]
-            [freecoin-lib.db.storage :as storage]
+            [clj-storage.db.mongo :as mongo]
+            [clj-storage.core :as storage]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as config]
@@ -74,10 +74,10 @@
    :headers {"Content-Type" "text/html"}})
 
 (defn handlers [config-m stores-m blockchain email-activator password-recoverer]
-  (let [wallet-store (storage/get-wallet-store stores-m)
-        confirmation-store (storage/get-confirmation-store stores-m)
-        account-store (storage/get-account-store stores-m)
-        password-recovery-store (storage/get-password-recovery-store stores-m)]
+  (let [wallet-store (:wallet-store stores-m)
+        confirmation-store (:confirmation-store stores-m)
+        account-store (:account-store stores-m)
+        password-recovery-store (:password-recovery-store stores-m)]
     {
      :version                       (debug/version config-m)
      :echo                          (debug/echo config-m)

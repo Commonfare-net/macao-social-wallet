@@ -111,8 +111,8 @@
           sender-wallet (wallet/fetch wallet-store sender-email)
           recipient-wallet (wallet/fetch wallet-store recipient-email)]
       (blockchain/create-transaction blockchain
-                                     (:email sender-wallet) amount
-                                     (:email recipient-wallet) {:tags tags})
+                                   (:email sender-wallet) amount
+                                   (:email recipient-wallet) {:tags tags})
       (confirmation/delete!
        confirmation-store
        (-> ctx ::confirmation :uid))
