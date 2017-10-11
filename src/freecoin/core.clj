@@ -50,7 +50,8 @@
             [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
-            [freecoin.handlers.qrcode :as qrcode]))
+            [freecoin.handlers.qrcode :as qrcode]
+            [freecoin-lib.db.freecoin :as db]))
 
 (defn not-found [request]
   {:status 404
@@ -175,7 +176,9 @@
     app-state
     (if-let [db (:db app-state)]
       (let [config-m           (config/create-config)
-            stores-m           (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
+            stores-m           (db/create-freecoin-stores
+                                db
+                                {:ttl-password-recovery (config/ttl-password-recovery config-m)})
             blockchain         (blockchain/new-mongo stores-m)
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
             email-activator    (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
@@ -214,7 +217,9 @@
          (fn [_] (let [config-m           (config/create-config)
                        email-conf         (clojure.edn/read-string (slurp (:email-config config-m)))
                        db                 (:db @app-state)
-                       stores-m           (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
+                       stores-m           (db/create-freecoin-stores
+                                           db
+                                           {:ttl-password-recovery (config/ttl-password-recovery config-m)})
                        blockchain         (blockchain/new-mongo stores-m)
                        email-activator    (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
                        password-recoverer (freecoin.email-activation/->PasswordRecoveryEmail email-conf (:password-recovery-store stores-m))]
