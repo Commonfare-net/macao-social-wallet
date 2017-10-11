@@ -9,17 +9,17 @@
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db
-             [storage :as s]
+            [freecoin-lib.db 
              [account :as account]
-             [password-recovery :as pass]]))
+             [password-recovery :as pass]
+             [freecoin :as db]]))
 
 (ih/setup-db)
 
 (fact "setup-db is not null" ih/get-test-db => truthy)
 
 ;; TTL is set to 30 seconds but mongo checks only every ~60 secs
-(def stores-m (s/create-mongo-stores (ih/get-test-db) 30))
+(def stores-m (db/create-freecoin-stores (ih/get-test-db) {:ttl-password-recovery 30}))
 (def blockchain (blockchain/new-mongo stores-m))
 (def emails (atom []))
 

@@ -30,7 +30,7 @@
             [taoensso.timbre :as log]
             [freecoin-lib.core :as blockchain]
             [freecoin-lib.config :as c]
-            [clj-storage.core :as s]
+            [freecoin-lib.db.freecoin :as db]
             [freecoin.journey.helpers :as h]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.journey.kerodon-helpers :as kh]
@@ -45,7 +45,7 @@
 
 (ih/setup-db)
 
-(def stores-m (s/create-mongo-stores (ih/get-test-db)))
+(def stores-m (db/create-freecoin-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-mongo stores-m))
 
 (def test-app (ih/build-app {:stores-m stores-m
