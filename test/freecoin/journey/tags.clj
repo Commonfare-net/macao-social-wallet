@@ -33,7 +33,7 @@
             [freecoin.journey.kerodon-helpers :as kh]
             [freecoin.test-helpers.integration :as ih]
             [freecoin.journey.helpers :as jh]
-            [clj-storage.core :as s]
+            [freecoin-lib.db.freecoin :as db]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
@@ -43,7 +43,7 @@
 
 (ih/setup-db)
 
-(def stores-m (s/create-mongo-stores (ih/get-test-db)))
+(def stores-m (db/create-freecoin-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-mongo stores-m))
 
 (def test-app (ih/build-app {:stores-m stores-m

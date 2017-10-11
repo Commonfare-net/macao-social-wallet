@@ -28,11 +28,11 @@
             [freecoin-lib.config :as config]
             [freecoin.routes :as routes]
             [freecoin-lib.core :as fb]
-            [clj-storage.db.mongo :as fm]
+            [clj-storage.core :as storage]
             [freecoin-lib.db.wallet :as w]
             [freecoin.handlers.sign-in :as handler]
             [freecoin.test.test-helper :as th]
-            [freecoin.test-helpers.store :as test-store]
+            [freecoin-lib.test-helpers.store :as test-store]
             [freecoin.email-activation :as email-activation]
             [taoensso.timbre :as log]))
 
@@ -49,7 +49,7 @@
 
 (facts "About the landing page"
        (fact "When not signed in, displays link to sign in"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    landing-page-handler (handler/landing-page wallet-store)
                    response (landing-page-handler (rmr/request :get "/landing-page"))]
@@ -57,7 +57,7 @@
                (-> (:body response) (html/html-snippet [:body])) => (th/links-to? [:.clj--sign-in-link] "/sign-in")))
 
        (fact "When signed in and activated redirects to the account page"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                         "name" test-email))
@@ -70,8 +70,8 @@
        (let [user-email "user@mail.com"
              password "abcd12*!"
              emails (atom [])
-             account-store (fm/create-memory-store)
-             wallet-store (fm/create-memory-store)
+             account-store (storage/create-memory-store)
+             wallet-store (storage/create-memory-store)
              email-activator (email-activation/->StubActivationEmail emails account-store)
              create-account-handler (handler/create-account account-store email-activator)
              blockchain (fb/create-in-memory-blockchain :bk)
@@ -86,12 +86,12 @@
                                                       :confirm-password password})
                                   create-account-handler)
                      activation-url (-> @emails (first) :activation-url)
-                     user-account (fm/fetch account-store user-email)]
+                     user-account (storage/fetch account-store user-email)]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
                  (.contains activation-url (:activation-id user-account)) => truthy
                  (.contains activation-url (:email user-account)) => truthy
-                 (:activated (fm/fetch account-store user-email)) => false))
+                 (:activated (storage/fetch account-store user-email)) => false))
          
          (fact "Cannot sign in before the account is activated"
                (let [response (-> (th/create-request :post
@@ -103,7 +103,7 @@
                  (-> response :flash (first) :msg) => "The account for user@mail.com is not yet active."))
          
          (fact "When activation link is clicked the account is activated"
-               (let [activation-id (:activation-id (fm/fetch account-store user-email))
+               (let [activation-id (:activation-id (storage/fetch account-store user-email))
                      activation-handler (handler/activate-account account-store)
                      response (-> (rmr/request :get "/activate/")
                                   (assoc :params {:email user-email :activation-id activation-id})
@@ -171,8 +171,8 @@
                      activation-url (:activation-url (latest-email-sent emails))]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
-                 (.contains activation-url (:activation-id (fm/fetch account-store user-email))) => truthy
-                 (.contains activation-url (:email (fm/fetch account-store user-email))) => truthy))
+                 (.contains activation-url (:activation-id (storage/fetch account-store user-email))) => truthy
+                 (.contains activation-url (:email (storage/fetch account-store user-email))) => truthy))
 
          (fact "If an activation email is requested for a non-existing account we get a form error"
                (let [resend-activation-handler (handler/resend-activation-email account-store email-activator)
@@ -187,9 +187,9 @@
          
          (fact "The user has forgotten the password and wants to create a new one"
                (let [new-password "87654321"
-                     old-password-hash (:password (fm/fetch account-store user-email))
+                     old-password-hash (:password (storage/fetch account-store user-email))
                      emails (atom [])
-                     password-recovery-store (fm/create-memory-store)
+                     password-recovery-store (storage/create-memory-store)
                      password-recoverer (email-activation/->StubPasswordRecoveryEmail emails password-recovery-store)
                      send-password-recovery-handler (handler/send-password-recovery-email account-store password-recovery-store password-recoverer)
                      reset-password-handler (handler/reset-password account-store password-recovery-store)
@@ -198,11 +198,11 @@
                                                      {:email-address user-email})
                                   send-password-recovery-handler)
                      password-recovery-url (:password-recovery-url (latest-email-sent emails))
-                     password-recovery-id (:recovery-id (fm/fetch password-recovery-store user-email))]
+                     password-recovery-id (:recovery-id (storage/fetch password-recovery-store user-email))]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
                  (.contains password-recovery-url password-recovery-id) => truthy
-                 (.contains password-recovery-url (:email (fm/fetch password-recovery-store user-email))) => truthy
+                 (.contains password-recovery-url (:email (storage/fetch password-recovery-store user-email))) => truthy
 
                  ;; the user follows the password recovery link but the confirmation password does not match
                  (let [response (-> (rmr/request :post "/reset-password/")
@@ -223,8 +223,8 @@
                                  
                                     reset-password-handler)]
                    response => (th/check-redirects-to (absolute-path :password-changed))
-                   (= old-password-hash (:password (fm/fetch account-store user-email))) => falsey
-                   (fm/fetch password-recovery-store user-email) => falsey)))))
+                   (= old-password-hash (:password (storage/fetch account-store user-email))) => falsey
+                   (storage/fetch password-recovery-store user-email) => falsey)))))
 
 (fact "signing out redirects to the index with session reset"
       (let [response (-> (th/create-request :get "/sign-out"

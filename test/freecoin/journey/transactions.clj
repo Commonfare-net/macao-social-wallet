@@ -6,16 +6,18 @@
             [freecoin.journey.kerodon-helpers :as kh]
             [freecoin.journey.helpers :as jh]
             [freecoin.test-helpers.integration :as ih]
-            [clj-storage.core :as s]
+            [clj-storage.db.mongo :as mongo]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db.account :as account]))
+            [freecoin-lib.db
+             [account :as account]
+             [freecoin :as db]]))
 
 (ih/setup-db)
 
-(def stores-m (s/create-mongo-stores (ih/get-test-db)))
+(def stores-m (db/create-freecoin-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-mongo stores-m))
 
 (def test-app (ih/build-app {:stores-m stores-m
@@ -34,7 +36,7 @@
 (def recipient-email "recipient@mail.com") 
 
 
-(background (before :facts (storage/empty-db-stores! stores-m)))
+(background (before :facts (mongo/empty-db-stores! stores-m)))
 
 (defn sign-out [state]
   (k/visit state (routes/absolute-path :sign-out)))
