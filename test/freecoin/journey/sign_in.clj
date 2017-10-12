@@ -169,7 +169,7 @@
 
        ;; FIXME: workaround due to midje bug see https://github.com/marick/Midje/issues/275. With facts it wouldn't work and if not all nested facts wouldn't have the same metadata it wouldn't work either (see above)
        (fact "Check that the link cannot be used after expired" :slow
-             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 20 seconds" :slow
+             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 30 seconds" :slow
                    (-> (k/session test-app)
                        (k/visit (routes/absolute-path :sign-in))
                        (kc/check-and-fill-in ks/auth-password-recovery-email email)
