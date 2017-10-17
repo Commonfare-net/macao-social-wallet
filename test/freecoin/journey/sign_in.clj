@@ -9,17 +9,17 @@
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db
-             [storage :as s]
+            [freecoin-lib.db 
              [account :as account]
-             [password-recovery :as pass]]))
+             [password-recovery :as pass]
+             [freecoin :as db]]))
 
 (ih/setup-db)
 
 (fact "setup-db is not null" ih/get-test-db => truthy)
 
 ;; TTL is set to 30 seconds but mongo checks only every ~60 secs
-(def stores-m (s/create-mongo-stores (ih/get-test-db) 30))
+(def stores-m (db/create-freecoin-stores (ih/get-test-db) {:ttl-password-recovery 30}))
 (def blockchain (blockchain/new-mongo stores-m))
 (def emails (atom []))
 
@@ -169,7 +169,7 @@
 
        ;; FIXME: workaround due to midje bug see https://github.com/marick/Midje/issues/275. With facts it wouldn't work and if not all nested facts wouldn't have the same metadata it wouldn't work either (see above)
        (fact "Check that the link cannot be used after expired" :slow
-             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 20 seconds" :slow
+             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 30 seconds" :slow
                    (-> (k/session test-app)
                        (k/visit (routes/absolute-path :sign-in))
                        (kc/check-and-fill-in ks/auth-password-recovery-email email)

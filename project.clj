@@ -1,6 +1,6 @@
 (def ns-tracker-version "0.3.1")
 
-(defproject org.dyne/freecoin "0.3.0"
+(defproject org.dyne/freecoin "0.4.0-SNAPSHOT"
   :description "Freecoin digital currency toolkit"
   :url "https://freecoin.dyne.org"
 
@@ -38,7 +38,7 @@
                  [org.clojars.dyne/fxc "0.5.0"]
 
                  ; freecoin core lib
-                 [org.clojars.dyne/freecoin-lib "0.3.0"]
+                 [org.clojars.dyne/freecoin-lib "0.5.0-SNAPSHOT"]
 
                  ; email
                  [com.draines/postal "2.0.2"]]

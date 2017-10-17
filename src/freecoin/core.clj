@@ -37,8 +37,8 @@
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.logger :as mw-logger]
             [scenic.routes :as scenic]
-            [freecoin-lib.db.mongo :as mongo]
-            [freecoin-lib.db.storage :as storage]
+            [clj-storage.db.mongo :as mongo]
+            [clj-storage.core :as storage]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as config]
@@ -50,7 +50,8 @@
             [freecoin.handlers.confirm-transaction-form :as confirm-transaction-form]
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
-            [freecoin.handlers.qrcode :as qrcode]))
+            [freecoin.handlers.qrcode :as qrcode]
+            [freecoin-lib.db.freecoin :as db]))
 
 (defn not-found [request]
   {:status 404
@@ -74,10 +75,10 @@
    :headers {"Content-Type" "text/html"}})
 
 (defn handlers [config-m stores-m blockchain email-activator password-recoverer]
-  (let [wallet-store (storage/get-wallet-store stores-m)
-        confirmation-store (storage/get-confirmation-store stores-m)
-        account-store (storage/get-account-store stores-m)
-        password-recovery-store (storage/get-password-recovery-store stores-m)]
+  (let [wallet-store (:wallet-store stores-m)
+        confirmation-store (:confirmation-store stores-m)
+        account-store (:account-store stores-m)
+        password-recovery-store (:password-recovery-store stores-m)]
     {
      :version                       (debug/version config-m)
      :echo                          (debug/echo config-m)
@@ -175,7 +176,9 @@
     app-state
     (if-let [db (:db app-state)]
       (let [config-m           (config/create-config)
-            stores-m           (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
+            stores-m           (db/create-freecoin-stores
+                                db
+                                {:ttl-password-recovery (config/ttl-password-recovery config-m)})
             blockchain         (blockchain/new-mongo stores-m)
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
             email-activator    (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
@@ -214,7 +217,9 @@
          (fn [_] (let [config-m           (config/create-config)
                        email-conf         (clojure.edn/read-string (slurp (:email-config config-m)))
                        db                 (:db @app-state)
-                       stores-m           (storage/create-mongo-stores db (config/ttl-password-recovery config-m))
+                       stores-m           (db/create-freecoin-stores
+                                           db
+                                           {:ttl-password-recovery (config/ttl-password-recovery config-m)})
                        blockchain         (blockchain/new-mongo stores-m)
                        email-activator    (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
                        password-recoverer (freecoin.email-activation/->PasswordRecoveryEmail email-conf (:password-recovery-store stores-m))]

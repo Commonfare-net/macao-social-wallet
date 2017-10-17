@@ -30,7 +30,7 @@
             [taoensso.timbre :as log]
             [freecoin-lib.core :as blockchain]
             [freecoin-lib.config :as c]
-            [freecoin-lib.db.storage :as s]
+            [freecoin-lib.db.freecoin :as db]
             [freecoin.journey.helpers :as h]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.journey.kerodon-helpers :as kh]
@@ -45,7 +45,7 @@
 
 (ih/setup-db)
 
-(def stores-m (s/create-mongo-stores (ih/get-test-db)))
+(def stores-m (db/create-freecoin-stores (ih/get-test-db)))
 (def blockchain (blockchain/new-mongo stores-m))
 
 (def test-app (ih/build-app {:stores-m stores-m
@@ -88,7 +88,7 @@
 
 (defn make-transaction [state blockchain from-email amount to-email params]
   (let [wallet-store (:wallet-store stores-m)]
-    (blockchain/make-transaction blockchain from-email amount to-email params))
+    (blockchain/create-transaction blockchain from-email amount to-email params))
   state)
 
 (defn check-page-is-activity-stream [state route-action & route-params]

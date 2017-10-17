@@ -2,7 +2,7 @@
   (:require [midje.sweet :refer :all]
             [net.cgrand.enlive-html :as html]
             [ring.mock.request :as rmr]
-            [freecoin-lib.db.mongo :as fm]
+            [clj-storage.core :as storage]
             [freecoin-lib.db.wallet :as w]
             [freecoin-lib.core :as fb]
             [freecoin.translation :as t]
@@ -21,7 +21,7 @@
 (facts "about the account page"
 
        (fact "displays the signed-in participant's balance"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                         "name" "test@email.com"))
@@ -33,7 +33,7 @@
                (:body response) => (contains (t/locale [:wallet :balance]))))
 
        (fact "displays the balance of the participant wallet with the given email"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                            "name" "test@email.com"))
@@ -47,7 +47,7 @@
                (:body response) => (contains (t/locale [:wallet :balance]))))
 
        (fact "gives a 404 when the requested email doesn't map to an existing wallet"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    my-wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                            "name" "test@email.com"))
@@ -61,7 +61,7 @@
 
 (facts "about the participant query form"
        (fact "can be accessed by signed-in users"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain 
                                                         "name" "test@email.com"))
@@ -73,7 +73,7 @@
                (:status response) => 200))
 
        (fact "can not be accessed when user is not signed in"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    query-form-handler (fp/query-form wallet-store)
                    response (-> (th/create-request :get "/participants-query" {})
                                 query-form-handler)]
@@ -82,14 +82,14 @@
 
 (facts "about the participants query handler"
        (fact "can not be accessed when user is not signed in"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    participants-handler (fp/participants wallet-store)
                    response (-> (th/create-request :get "/participants" {})
                                 participants-handler)]
                (:status response) => 401))
 
        (fact "without any query parameters, lists all participants"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallets (doall (->> (range 5)
                                        (map index->wallet-data)
@@ -105,7 +105,7 @@
        (tabular
 
         (fact "can query by name or email"
-              (let [wallet-store (fm/create-memory-store)
+              (let [wallet-store (storage/create-memory-store)
                     blockchain (fb/create-in-memory-blockchain :bk)
                     wallet-data [{:name "James Jones" :email "james@jones.com"}
                                  {:name "James Jones" :email "jim@jones.com"}
