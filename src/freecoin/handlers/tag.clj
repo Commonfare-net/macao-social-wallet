@@ -38,6 +38,6 @@
   :handle-ok
   (fn [ctx]
     (let [name (get-in ctx [:request :params :name])
-          tag (blockchain/tag-details blockchain name {})]
+          tag (blockchain/get-tag blockchain name {})]
       (-> (tv/build-html tag)
           fv/render-page))))

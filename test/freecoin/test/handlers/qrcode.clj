@@ -25,8 +25,9 @@
   (:require [midje.sweet :refer :all]
             [ring.mock.request :as rmr]
             [freecoin-lib.db
-             [mongo :as fm]
              [wallet :as w]]
+            [clj-storage.db.mongo :as m]
+            [clj-storage.core :as storage]
             [freecoin-lib.core :as fb]
             [freecoin.handlers
              [qrcode :as handler]
@@ -52,7 +53,7 @@
 
 (facts "Read qrcode and perform a send to"
        (fact "Requests the qr code for an email address"
-             (let [wallet-store (fm/create-memory-store)
+             (let [wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                         "name" user-email))

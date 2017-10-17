@@ -35,8 +35,8 @@
             [freecoin-lib.db
              [wallet :as wallet]
              [account :as account]
-             [mongo :as mongo]
              [password-recovery :as pr]]
+            [clj-storage.db.mongo :as mongo]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views

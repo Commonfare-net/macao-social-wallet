@@ -2,7 +2,7 @@
   (:require [monger.core :as monger]
             [freecoin.core :as core]
             [freecoin-lib.core :as blockchain]
-            [freecoin-lib.db.storage :as s]
+            [freecoin-lib.db.freecoin :as db]
             [freecoin.email-activation :as email-activation])
   (:import [freecoin_lib.core InMemoryBlockchain]))
 
@@ -35,7 +35,7 @@
   (reset! db-and-conn nil))
 
 (defn default-app-config-m []
-  (let [stores (s/create-in-memory-stores)]
+  (let [stores (db/create-in-memory-stores)]
     {:stores-m stores
      :blockchain (blockchain/create-in-memory-blockchain :bk)
      :config-m {:secure "false"

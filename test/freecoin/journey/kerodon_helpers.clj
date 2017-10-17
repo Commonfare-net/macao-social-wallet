@@ -1,7 +1,7 @@
 (ns freecoin.journey.kerodon-helpers
   (:require [clojure.string :as string]
             [net.cgrand.enlive-html :as html]
-            [freecoin-lib.db.mongo :as mongo]))
+            [clj-storage.core :as storage]))
 
 (defn debug
   ([state & keys]
@@ -13,7 +13,7 @@
 
 (defn store-contents [state stores-m]
   (prn "Wallet store contents: ")
-  (clojure.pprint/pprint (mongo/query (:wallet-store stores-m) {}))
+  (clojure.pprint/pprint (storage/query (:wallet-store stores-m) {}))
   state)
 
 (defn remember [state memory-atom key state->value]
