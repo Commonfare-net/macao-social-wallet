@@ -36,7 +36,6 @@
              [wallet :as wallet]
              [account :as account]
              [password-recovery :as pr]]
-            [clj-storage.db.mongo :as mongo]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views
@@ -140,7 +139,7 @@
 
                  ;; TODO: distribute other shares to organization and auditor
                  ;; see in freecoin.db.wallet
-                 ;; {:wallet (mongo/store! wallet-store :uid wallet)
+                 ;; {:wallet (storage/store! wallet-store :uid wallet)
                  ;;  :apikey       (secret->apikey              account-secret)
                  ;;  :participant  (secret->participant-shares  account-secret)
                  ;;  :organization (secret->organization-shares account-secret)
