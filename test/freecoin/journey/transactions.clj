@@ -6,7 +6,7 @@
             [freecoin.journey.kerodon-helpers :as kh]
             [freecoin.journey.helpers :as jh]
             [freecoin.test-helpers.integration :as ih]
-            [clj-storage.db.mongo :as mongo]
+            [clj-storage.core :as storage]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
@@ -36,7 +36,7 @@
 (def recipient-email "recipient@mail.com") 
 
 
-(background (before :facts (mongo/empty-db-stores! stores-m)))
+(background (before :facts (storage/empty-db-stores! stores-m)))
 
 (defn sign-out [state]
   (k/visit state (routes/absolute-path :sign-out)))
