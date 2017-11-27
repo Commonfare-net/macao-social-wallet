@@ -33,7 +33,7 @@
             [freecoin.handlers.sign-in :as handler]
             [freecoin.test.test-helper :as th]
             [freecoin-lib.test-helpers.store :as test-store]
-            [freecoin.email-activation :as email-activation]
+            [just-auth.messaging :as messaging]
             [taoensso.timbre :as log]))
 
 (def absolute-path (partial routes/absolute-path))
@@ -66,13 +66,14 @@
                                                       (assoc :session {:signed-in-email (:email wallet)})))]
                response => (th/check-redirects-to (absolute-path :account :email (:email wallet))))))
 
+
 (facts "Sign up"
        (let [user-email "user@mail.com"
              password "abcd12*!"
              emails (atom [])
              account-store (storage/create-memory-store)
              wallet-store (storage/create-memory-store)
-             email-activator (email-activation/->StubActivationEmail emails account-store)
+             email-activator (messaging/->StubAccountActivator emails account-store)
              create-account-handler (handler/create-account account-store email-activator)
              blockchain (fb/create-in-memory-blockchain :bk)
              sign-in-handler (handler/log-in account-store wallet-store blockchain)]
@@ -85,12 +86,12 @@
                                                       :password password
                                                       :confirm-password password})
                                   create-account-handler)
-                     activation-url (-> @emails (first) :activation-url)
+                     activation-url (-> @emails (first) :activation-link)
                      user-account (storage/fetch account-store user-email)]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
-                 (.contains activation-url (:activation-id user-account)) => truthy
-                 (.contains activation-url (:email user-account)) => truthy
+                 (log/spy (= activation-url (:activation-link user-account))) => truthy
+                 (log/spy (.contains activation-url (:email user-account))) => truthy
                  (:activated (storage/fetch account-store user-email)) => false))
          
          (fact "Cannot sign in before the account is activated"
@@ -168,7 +169,7 @@
                                                      (absolute-path :resend-activation-form)
                                                      {:activation-email user-email})
                                   resend-activation-handler)
-                     activation-url (:activation-url (latest-email-sent emails))]
+                     activation-url (:activation-link (latest-email-sent emails))]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
                  (.contains activation-url (:activation-id (storage/fetch account-store user-email))) => truthy
@@ -190,7 +191,7 @@
                      old-password-hash (:password (storage/fetch account-store user-email))
                      emails (atom [])
                      password-recovery-store (storage/create-memory-store)
-                     password-recoverer (email-activation/->StubPasswordRecoveryEmail emails password-recovery-store)
+                     password-recoverer (messaging/->StubPasswordRecoverer emails password-recovery-store)
                      send-password-recovery-handler (handler/send-password-recovery-email account-store password-recovery-store password-recoverer)
                      reset-password-handler (handler/reset-password account-store password-recovery-store)
                      response (-> (th/create-request :post

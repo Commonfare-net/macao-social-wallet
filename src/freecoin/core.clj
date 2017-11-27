@@ -181,7 +181,7 @@
                                 {:ttl-password-recovery (config/ttl-password-recovery config-m)})
             blockchain         (blockchain/new-mongo stores-m)
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
-            email-activator    (freecoin.email-activation/->ActivationEmail email-conf (:account-store stores-m))
+            email-activator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
             password-recoverer (freecoin.email-activation/->PasswordRecoveryEmail email-conf (:password-recovery-store stores-m))
             server             (-> (create-app config-m stores-m blockchain email-activator password-recoverer)
                                    (server/run-server {:port (config/port config-m)

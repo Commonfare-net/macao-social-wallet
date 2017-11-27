@@ -33,9 +33,9 @@
             [ring.util.response :as r]
             [freecoin-lib.db
              [wallet :as wallet]
-             [account :as account]
              [uuid :as uuid]
              [confirmation :as confirmation]]
+            [just-auth.db.account :as account]
             [freecoin.context-helpers :as ch]
             [freecoin.routes :as routes]
             [freecoin-lib.core :as blockchain]
