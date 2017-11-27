@@ -24,6 +24,7 @@
                  [cheshire "5.7.1"]
                  [json-html "0.4.4"]
 
+                 [buddy/buddy-hashers "1.3.0"]
                  [environ "1.1.0"]
                  [clojure-humanize "0.2.2"]
 
@@ -38,10 +39,9 @@
                  [org.clojars.dyne/fxc "0.5.0"]
 
                  ; freecoin core lib
-                 [org.clojars.dyne/freecoin-lib "0.5.0"]
+                 [org.clojars.dyne/freecoin-lib "0.8.0-SNAPSHOT"]
 
-                 ; email
-                 [com.draines/postal "2.0.2"]]
+                 [org.clojars.dyne/just-auth "0.1.0-SNAPSHOT"]]
 
   :pedantic? :warn
 

@@ -2,7 +2,7 @@
   (:require [midje.sweet :as midje]
             [ring.mock.request :as request]
             [net.cgrand.enlive-html :as html]
-            [freecoin-lib.db.account :as account]))
+            [just-auth.db.account :as account]))
 
 (defn create-request
   ([method path query-m]
