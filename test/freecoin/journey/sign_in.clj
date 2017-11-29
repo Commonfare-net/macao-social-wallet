@@ -74,7 +74,7 @@
                  (kc/check-page-is :sign-in [ks/auth-form-problems])))
 
        (fact "Activate account using link"
-             (let [activation-url (-> @emails (first) :activation-url)
+             (let [activation-url (-> @emails (first) :activation-link)
                    activation-id (-> activation-url (clojure.string/split #"/") (last))]
                (-> (k/session test-app)
                    (k/visit (routes/absolute-path :activate-account
