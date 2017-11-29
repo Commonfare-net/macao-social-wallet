@@ -37,7 +37,7 @@
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
-            [freecoin-lib.db.account :as account]
+            [just-auth.db.account :as account]
             [simple-time.core :as time]
             [taoensso.timbre :as log]))
 
@@ -48,7 +48,7 @@
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
-                             :email-activator (freecoin.email-activation/->StubActivationEmail
+                             :email-activator (just-auth.messaging/->StubAccountActivator
                                                (atom [])
                                                (:account-store stores-m))}))
 (def sender-email "sender@mail.com")
