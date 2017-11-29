@@ -22,7 +22,7 @@
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
-                             :email-activator (freecoin.email-activation/->StubActivationEmail
+                             :email-activator (just-auth.messaging/->StubAccountActivator
                                                (atom [])
                                                (:account-store stores-m))}))
 

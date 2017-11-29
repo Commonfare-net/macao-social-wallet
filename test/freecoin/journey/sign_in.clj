@@ -4,15 +4,15 @@
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.test-helpers.integration :as ih]
-            [freecoin.email-activation :as email-activation]
+            [just-auth.messaging :as auth]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db 
+            [freecoin-lib.db.freecoin :as db]
+            [just-auth.db 
              [account :as account]
-             [password-recovery :as pass]
-             [freecoin :as db]]))
+             [password-recovery :as pass]]))
 
 (ih/setup-db)
 
@@ -25,10 +25,10 @@
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
-                             :email-activator (email-activation/->StubActivationEmail
+                             :email-activator (auth/->StubAccountActivator
                                                emails
                                                (:account-store stores-m))
-                             :password-recoverer (email-activation/->StubPasswordRecoveryEmail
+                             :password-recoverer (auth/->StubPasswordRecoverer
                                                   emails
                                                   (:password-recovery-store stores-m))}))
 
