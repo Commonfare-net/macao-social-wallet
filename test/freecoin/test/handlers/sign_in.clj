@@ -211,7 +211,7 @@
                  ;; the user follows the password recovery link but the confirmation password does not match
                  (let [response (-> (rmr/request :post "/reset-password/")
                                     (assoc :params {:email user-email
-                                                    :password-recovery-id password-recovery-id
+                                                    :password-recovery-id (auth-util/link->token password-recovery-link)
                                                     :new-password new-password
                                                     :repeat-password "another-password"})
                                  
@@ -221,7 +221,7 @@
                  ;; the user follows the password recovery link and changes the password
                  (let [response (-> (rmr/request :post "/reset-password/")
                                     (assoc :params {:email user-email
-                                                    :password-recovery-id password-recovery-id
+                                                    :password-recovery-id (auth-util/link->token password-recovery-link)
                                                     :new-password new-password
                                                     :repeat-password new-password})
                                  

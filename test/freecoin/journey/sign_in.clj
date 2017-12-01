@@ -4,7 +4,7 @@
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.test-helpers.integration :as ih]
-            [just-auth.messaging :as auth]
+            [just-auth.core :as auth]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
@@ -23,14 +23,14 @@
 (def blockchain (blockchain/new-mongo stores-m))
 (def emails (atom []))
 
-(def test-app (ih/build-app {:stores-m stores-m
-                             :blockchain blockchain
-                             :email-activator (auth/->StubAccountActivator
-                                               emails
-                                               (:account-store stores-m))
-                             :password-recoverer (auth/->StubPasswordRecoverer
-                                                  emails
-                                                  (:password-recovery-store stores-m))}))
+(def test-app (ih/build-app (let [account-activator
+                                  (auth/new-stub-email-based-authentication 
+                                   stores-m
+                                   emails)]
+                              {:stores-m stores-m
+                               :blockchain blockchain
+                               :email-activator account-activator 
+                               :password-recoverer account-activator})))
 
 (def ^:dynamic email "id-1@email.com")
 (def password "abcd12*!")
@@ -145,11 +145,11 @@
              (:email (latest-email)) => email)
 
        (fact "check that the password recovery entry has been created"
-                     (pass/fetch (:password-recovery-store stores-m) email) => truthy)
+             (pass/fetch (:password-recovery-store stores-m) email) => truthy)
 
        (fact "Change password using link"
              (let [old-password-hash (:password (account/fetch (:account-store stores-m) email))
-                   password-recovery-url (:password-recovery-url (latest-email))
+                   password-recovery-url (:password-recovery-link (latest-email))
                    password-recovery-id (-> password-recovery-url (clojure.string/split #"/") (last))]
                (-> (k/session test-app)
                    (k/visit (routes/absolute-path :reset-password
