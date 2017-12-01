@@ -33,7 +33,9 @@
             [freecoin.handlers.sign-in :as handler]
             [freecoin.test.test-helper :as th]
             [freecoin-lib.test-helpers.store :as test-store]
-            [just-auth.messaging :as messaging]
+            [just-auth
+             [core :as just-auth]
+             [util :as auth-util]]
             [taoensso.timbre :as log]))
 
 (def absolute-path (partial routes/absolute-path))
@@ -73,7 +75,7 @@
              emails (atom [])
              account-store (storage/create-memory-store)
              wallet-store (storage/create-memory-store)
-             email-activator (messaging/->StubAccountActivator emails account-store)
+             email-activator (just-auth/new-stub-email-based-authentication {:account-store account-store} emails)
              create-account-handler (handler/create-account account-store email-activator)
              blockchain (fb/create-in-memory-blockchain :bk)
              sign-in-handler (handler/log-in account-store wallet-store blockchain)]
@@ -90,8 +92,8 @@
                      user-account (storage/fetch account-store user-email)]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
-                 (log/spy (= activation-url (:activation-link user-account))) => truthy
-                 (log/spy (.contains activation-url (:email user-account))) => truthy
+                 (= activation-url (:activation-link user-account)) => truthy
+                 (.contains activation-url (:email user-account)) => truthy
                  (:activated (storage/fetch account-store user-email)) => false))
          
          (fact "Cannot sign in before the account is activated"
@@ -104,7 +106,8 @@
                  (-> response :flash (first) :msg) => "The account for user@mail.com is not yet active."))
          
          (fact "When activation link is clicked the account is activated"
-               (let [activation-id (:activation-id (storage/fetch account-store user-email))
+               (let [activation-id (-> account-store (storage/fetch user-email)
+                                       :activation-link auth-util/link->token)
                      activation-handler (handler/activate-account account-store)
                      response (-> (rmr/request :get "/activate/")
                                   (assoc :params {:email user-email :activation-id activation-id})
@@ -172,7 +175,7 @@
                      activation-url (:activation-link (latest-email-sent emails))]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
-                 (.contains activation-url (:activation-id (storage/fetch account-store user-email))) => truthy
+                 (.contains activation-url (:activation-link (storage/fetch account-store user-email))) => truthy
                  (.contains activation-url (:email (storage/fetch account-store user-email))) => truthy))
 
          (fact "If an activation email is requested for a non-existing account we get a form error"
@@ -191,18 +194,18 @@
                      old-password-hash (:password (storage/fetch account-store user-email))
                      emails (atom [])
                      password-recovery-store (storage/create-memory-store)
-                     password-recoverer (messaging/->StubPasswordRecoverer emails password-recovery-store)
+                     password-recoverer (just-auth/new-stub-email-based-authentication {:password-recovery-store password-recovery-store} emails)
                      send-password-recovery-handler (handler/send-password-recovery-email account-store password-recovery-store password-recoverer)
                      reset-password-handler (handler/reset-password account-store password-recovery-store)
                      response (-> (th/create-request :post
                                                      (absolute-path :recover-password-form)
                                                      {:email-address user-email})
                                   send-password-recovery-handler)
-                     password-recovery-url (:password-recovery-url (latest-email-sent emails))
-                     password-recovery-id (:recovery-id (storage/fetch password-recovery-store user-email))]
+                     password-recovery-url (:password-recovery-link (latest-email-sent emails))
+                     password-recovery-link (:recovery-link (storage/fetch password-recovery-store user-email))]
                  response => (th/check-redirects-to (absolute-path :email-confirmation))
                  (:email (latest-email-sent emails)) => user-email
-                 (.contains password-recovery-url password-recovery-id) => truthy
+                 (.contains password-recovery-url password-recovery-link) => truthy
                  (.contains password-recovery-url (:email (storage/fetch password-recovery-store user-email))) => truthy
 
                  ;; the user follows the password recovery link but the confirmation password does not match
