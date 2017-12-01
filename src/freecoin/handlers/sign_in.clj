@@ -343,7 +343,11 @@
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
                (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])]
-                 (if-let [account (pr/fetch-by-password-recovery-link password-recovery-store password-recovery-id)]
+                 (if-let [account (pr/fetch-by-password-recovery-link
+                                   password-recovery-store
+                                   (routes/absolute-path :reset-password
+                                                         :email email
+                                                         :password-recovery-id password-recovery-id))]
                           (if-not (= (:email account) email)
                             (error-redirect ctx "The email and password recovery id do not match")
                             (-> ctx 
@@ -372,7 +376,7 @@
            (let [data (-> ctx :request :params)
                  {:keys [new-password email]} data]
              ;; upadte with a new hashed password
-             (account/update-password! account-store email new-password)
+             (account/update-password! account-store email new-password hashers/derive)
              ;; remove the password recovery data
              (pr/remove! password-recovery-store email)))
 

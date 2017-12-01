@@ -48,9 +48,7 @@
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
-                             :email-activator (just-auth.messaging/->StubAccountActivator
-                                               (atom [])
-                                               (:account-store stores-m))}))
+                             :email-activator (just-auth.core/new-stub-email-based-authentication stores-m (atom []))}))
 (def sender-email "sender@mail.com")
 (def recipient-email "recipient@mail.com") 
 
