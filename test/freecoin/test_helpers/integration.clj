@@ -3,7 +3,7 @@
             [freecoin.core :as core]
             [freecoin-lib.core :as blockchain]
             [freecoin-lib.db.freecoin :as db]
-            [just-auth.messaging :as auth])
+            [just-auth.core :as auth])
   (:import [freecoin_lib.core InMemoryBlockchain]))
 
 (def test-db-name "freecoin-test-db")
@@ -40,8 +40,8 @@
      :blockchain (blockchain/create-in-memory-blockchain :bk)
      :config-m {:secure "false"
                 :email-config "email-conf.edn"}
-     :email-activator (auth/->StubAccountActivator (atom []) (:account-store stores))
-     :password-recoverer (auth/->StubPasswordRecoverer (atom []) (:password-recovery-store stores))}))
+     :email-activator (auth/->StubEmailBasedAuthentication (atom []) (:account-store stores))
+     :password-recoverer (auth/->StubEmailBasedAuthentication (atom []) (:password-recovery-store stores))}))
 
 (defn build-app [app-config-override-m]
   (let [{:keys [config-m stores-m blockchain email-activator password-recoverer]} (merge (default-app-config-m) app-config-override-m)]

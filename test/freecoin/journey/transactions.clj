@@ -11,9 +11,9 @@
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db
-             [account :as account]
-             [freecoin :as db]]))
+            [freecoin-lib.db.freecoin :as db]
+            [just-auth.db.account :as account]
+            [just-auth.core :as auth]))
 
 (ih/setup-db)
 
@@ -22,9 +22,9 @@
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
-                             :email-activator (just-auth.messaging/->StubAccountActivator
-                                               (atom [])
-                                               (:account-store stores-m))}))
+                             :email-activator (auth/new-stub-email-based-authentication
+                                               stores-m
+                                               (atom []))}))
 
 (def sign-up jh/sign-up)
 
