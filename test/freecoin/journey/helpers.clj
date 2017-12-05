@@ -66,4 +66,8 @@
   state)
 
 (defn get-activation-id [stores-m email]
-  (-> stores-m :account-store (account/fetch email) :activation-id))
+  (-> stores-m
+      :account-store
+      (account/fetch email)
+      :activation-link
+      just-auth.util/link->token))

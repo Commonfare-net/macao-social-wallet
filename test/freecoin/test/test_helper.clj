@@ -14,12 +14,11 @@
 
 (defn create-account [account-store
                       {:keys [email active flags] :as account}]
-  (account/new-account! account-store {:first-name (str "name" (rand-int 100))
-                                       :last-name (str "surname" (rand-int 100))
+  (account/new-account! account-store {:name (str "name" (rand-int 100))
                                        :email email
                                        :password (apply str (repeat 8 (rand 9)))
-                                       :active active
-                                       :flags flags}))
+                                       :activated active
+                                       :flags flags} buddy.hashers/derive))
 
 (defn authenticated-session [email]
   {:signed-in-email email})
