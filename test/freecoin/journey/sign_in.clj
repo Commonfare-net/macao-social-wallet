@@ -23,14 +23,11 @@
 (def blockchain (blockchain/new-mongo stores-m))
 (def emails (atom []))
 
-(def test-app (ih/build-app (let [account-activator
-                                  (auth/new-stub-email-based-authentication 
-                                   stores-m
-                                   emails)]
-                              {:stores-m stores-m
-                               :blockchain blockchain
-                               :email-activator account-activator 
-                               :password-recoverer account-activator})))
+(def test-app (ih/build-app {:stores-m stores-m
+                             :blockchain blockchain
+                             :email-authenticator (auth/new-stub-email-based-authentication 
+                                                   stores-m
+                                                   emails)}))
 
 (def ^:dynamic email "id-1@email.com")
 (def password "abcd12*!")

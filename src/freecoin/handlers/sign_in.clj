@@ -172,7 +172,7 @@
 
 (def content-types ["text/html" "application/x-www-form-urlencoded"])
 
-(lc/defresource create-account [account-store email-activator]
+(lc/defresource create-account [account-store email-authenticator]
   :allowed-methods [:post]
   :available-media-types content-types
 
@@ -202,7 +202,7 @@
                                        (merge (select-keys data [:email :password])
                                               {:name (str (:first-name data) " " (:last-name data))})
                                        hashers/derive)
-               (when-not (just-auth/send-activation-message email-activator email {:activation-uri (get-in ctx [:request :headers "host"])}) 
+               (when-not (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])}) 
                  (error-redirect ctx "The activation email failed to send "))
                (log/error "Something went wrong when creating a user in the DB"))))
 
@@ -236,7 +236,7 @@
                      (error-redirect ctx "The email and activation id do not match"))
                    (error-redirect ctx "The activation id could not be found")))))
 
-(lc/defresource resend-activation-email [account-store email-activator]
+(lc/defresource resend-activation-email [account-store email-authenticator]
   :allowed-methods [:post]
   :available-media-types content-types
   :known-content-type? #(check-content-type % content-types)
@@ -259,7 +259,7 @@
   :post! (fn [ctx]
            (let [email (get-in ctx [:request :params :activation-email])
                  account (account/fetch account-store email)]
-             (when-not (just-auth/send-activation-message email-activator email {:activation-uri (get-in ctx [:request :headers "host"])})
+             (when-not (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])})
                (error-redirect ctx "The activation email failed to send")
                (log/error "The activation email failed to send"))))
 

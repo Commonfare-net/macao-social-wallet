@@ -74,7 +74,7 @@
    :body "Work-in-progress"
    :headers {"Content-Type" "text/html"}})
 
-(defn handlers [config-m stores-m blockchain email-activator password-recoverer]
+(defn handlers [config-m stores-m blockchain email-authenticator]
   (let [wallet-store (:wallet-store stores-m)
         confirmation-store (:confirmation-store stores-m)
         account-store (:account-store stores-m)
@@ -89,13 +89,13 @@
      :sign-in                       sign-in/sign-in
      :sign-out                      sign-in/sign-out
      :sign-in-form                  (sign-in/log-in account-store wallet-store blockchain)
-     :sign-up-form                  (sign-in/create-account account-store email-activator)
+     :sign-up-form                  (sign-in/create-account account-store email-authenticator)
      :email-confirmation            sign-in/email-confirmation
      :account-activated             sign-in/account-activated
      :activate-account              (sign-in/activate-account account-store)
 
-     :resend-activation-form        (sign-in/resend-activation-email account-store email-activator)
-     :recover-password-form         (sign-in/send-password-recovery-email account-store password-recovery-store password-recoverer)
+     :resend-activation-form        (sign-in/resend-activation-email account-store email-authenticator)
+     :recover-password-form         (sign-in/send-password-recovery-email account-store password-recovery-store email-authenticator)
 
      :reset-password                (sign-in/reset-password-render-form password-recovery-store)
      :reset-password-form           (sign-in/reset-password account-store password-recovery-store)
@@ -144,11 +144,11 @@
     (wrapper handler)
     handler))
 
-(defn create-app [config-m stores-m blockchain email-activator password-recoverer]
+(defn create-app [config-m stores-m blockchain email-authenticator]
   (let [debug-mode (config/debug config-m)]
     ;; TODO: Get rid of scenic?
     (-> (scenic/scenic-handler routes/routes
-                               (handlers config-m stores-m blockchain email-activator password-recoverer)
+                               (handlers config-m stores-m blockchain email-authenticator)
                                not-found)
         (conditionally-wrap-with #(ld/wrap-trace % :header :ui) debug-mode)
         (ring-mw/wrap-defaults (wrap-defaults-config (cookie-store (config/cookie-secret config-m))
@@ -181,9 +181,9 @@
                                 {:ttl-password-recovery (config/ttl-password-recovery config-m)})
             blockchain         (blockchain/new-mongo stores-m)
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
-            email-activator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
-            password-recoverer (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
-            server             (-> (create-app config-m stores-m blockchain email-activator password-recoverer)
+            email-authenticator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
+            email-authenticator (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
+            server             (-> (create-app config-m stores-m blockchain email-authenticator email-authenticator)
                                    (server/run-server {:port (config/port config-m)
                                                        :host (config/host config-m)}))]
         (assoc app-state
@@ -221,10 +221,11 @@
                                            db
                                            {:ttl-password-recovery (config/ttl-password-recovery config-m)})
                        blockchain         (blockchain/new-mongo stores-m)
-                       email-activator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
-                       password-recoverer (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))]
+                       account-activator (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
+                       password-recoverer (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
+                       email-authenticator (just-auth.core/new-email-based-authentication stores-m account-activator password-recoverer {:hash-fn buddy.hashers/derive :hash-check-fn buddy.hashers/check})]
                    (prn "Restarting server....")
-                   (create-app config-m stores-m blockchain email-activator password-recoverer)))))
+                   (create-app config-m stores-m blockchain email-authenticator)))))
 
 (defn lein-ring-stop []
   (swap! app-state disconnect-db))

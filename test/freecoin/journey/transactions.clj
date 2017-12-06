@@ -22,7 +22,7 @@
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
-                             :email-activator (auth/new-stub-email-based-authentication
+                             :email-authenticator (auth/new-stub-email-based-authentication
                                                stores-m
                                                (atom []))}))
 
