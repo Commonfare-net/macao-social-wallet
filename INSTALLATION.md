@@ -26,10 +26,10 @@ The freecoin-admin tool is running on port 8990
 
 An edn file should be added containing the email configuration
 
-{:freecoin-email-server <PLACEHOLDER>
- :freecoin-email-user <PLACEHOLDER>
- :freecoin-email-pass <PLACEHOLDER>
- :freecoin-email-address <PLACEHOLDER>}
+{:email-server <PLACEHOLDER>
+ :email-user <PLACEHOLDER>
+ :email-pass <PLACEHOLDER>
+ :email-address <PLACEHOLDER>}
 
 The default file is email-config.edn project root but can be set with the env variable EMAIL_CONFIG
 
