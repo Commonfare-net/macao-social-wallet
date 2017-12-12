@@ -181,9 +181,14 @@
                                 {:ttl-password-recovery (config/ttl-password-recovery config-m)})
             blockchain         (blockchain/new-mongo stores-m)
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
-            email-authenticator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
-            email-authenticator (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
-            server             (-> (create-app config-m stores-m blockchain email-authenticator email-authenticator)
+            account-activator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
+            password-recoverer (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
+            email-authenticator (just-auth.core/new-email-based-authentication
+                                 (select-keys stores-m [:account-store :password-recovery-store])
+                                 account-activator password-recoverer
+                                 {:hash-fn buddy.hashers/derive :hash-check-fn buddy.hashers/check})
+            server             (-> (create-app (assoc config-m
+                                                      :admin-email "aspra@dyne.org") stores-m blockchain email-authenticator)
                                    (server/run-server {:port (config/port config-m)
                                                        :host (config/host config-m)}))]
         (assoc app-state
@@ -223,7 +228,10 @@
                        blockchain         (blockchain/new-mongo stores-m)
                        account-activator (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
                        password-recoverer (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
-                       email-authenticator (just-auth.core/new-email-based-authentication stores-m account-activator password-recoverer {:hash-fn buddy.hashers/derive :hash-check-fn buddy.hashers/check})]
+                       email-authenticator (just-auth.core/new-email-based-authentication
+                                            (select-keys stores-m [:account-store :password-recovery-store])
+                                            account-activator password-recoverer
+                                            {:hash-fn buddy.hashers/derive :hash-check-fn buddy.hashers/check})]
                    (prn "Restarting server....")
                    (create-app config-m stores-m blockchain email-authenticator)))))
 
