@@ -109,8 +109,7 @@
                          (if (:activated account)
                            (if (account/correct-password? account-store email (-> ctx :request :params :sign-in-password) hashers/check)
                              {:email email
-                              :first-name (:first-name account)
-                              :last-name (:last-name account)}
+                              :name (:name account)}
                              [false  (fh/form-problem (conj problems
                                                             {:keys [:sign-in-password] :msg (str "Wrong password for account " email)}))])
                            [false  (fh/form-problem (conj problems
@@ -129,7 +128,7 @@
   :post! (fn [ctx]
            ;; the wallet exists already
            (let [email (:email ctx)
-                 name (str (:first-name ctx) " " (:last-name ctx))]
+                 name (:name ctx)]
              (if-let [wallet (wallet/fetch wallet-store email)]
                (do
                  (log/trace "The wallet for email " email " already exists")
