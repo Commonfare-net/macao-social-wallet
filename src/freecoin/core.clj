@@ -187,8 +187,7 @@
                                  (select-keys stores-m [:account-store :password-recovery-store])
                                  account-activator password-recoverer
                                  {:hash-fn buddy.hashers/derive :hash-check-fn buddy.hashers/check})
-            server             (-> (create-app (assoc config-m
-                                                      :admin-email "aspra@dyne.org") stores-m blockchain email-authenticator)
+            server             (-> (create-app config-m stores-m blockchain email-authenticator)
                                    (server/run-server {:port (config/port config-m)
                                                        :host (config/host config-m)}))]
         (assoc app-state
