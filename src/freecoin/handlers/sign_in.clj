@@ -51,7 +51,8 @@
             [freecoin.context-helpers :as ch]
             [taoensso.timbre :as log]
             [just-auth.core :as just-auth]
-            [buddy.hashers :as hashers]))
+            [buddy.hashers :as hashers]
+            [failjure.core :as f]))
 
 (defn- generate-id []
   (fxc.core/generate 32))
@@ -201,8 +202,8 @@
                                        (merge (select-keys data [:email :password])
                                               {:name (str (:first-name data) " " (:last-name data))})
                                        hashers/derive)
-               (when-not (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])}) 
-                 (error-redirect ctx "The activation email failed to send "))
+               (f/when-let-failed? [sent (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])})] 
+                 (error-redirect ctx (str "The activation email failed to send: " (f/message sent))))
                (log/error "Something went wrong when creating a user in the DB"))))
 
   :post-redirect? (fn [ctx] 
@@ -258,9 +259,9 @@
   :post! (fn [ctx]
            (let [email (get-in ctx [:request :params :activation-email])
                  account (account/fetch account-store email)]
-             (when-not (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])})
-               (error-redirect ctx "The activation email failed to send")
-               (log/error "The activation email failed to send"))))
+             (f/when-let-failed? [sent (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])})]
+               (error-redirect ctx (str "The activation email failed to send: " (f/message sent)))
+               (log/error "The activation email failed to send: " (f/message sent)))))
 
   :post-redirect? (fn [ctx] 
                     (assoc ctx
@@ -292,8 +293,8 @@
                                                     ctx)))
   :post! (fn [ctx]
            (let [email (get-in ctx [:request :params :email-address])]
-             (when-not (just-auth/send-password-reset-message password-recoverer email {:reset-uri (get-in ctx [:request :headers "host"])})
-               (error-redirect ctx "The password recovery email failed to send")
+             (f/when-let-failed? [sent (just-auth/send-password-reset-message password-recoverer email {:reset-uri (get-in ctx [:request :headers "host"])})]
+               (error-redirect ctx (str "The password recovery email failed to send" (f/message sent)))
                (log/error "The password recovery email failed to send"))))
 
   :post-redirect? (fn [ctx] 

@@ -41,7 +41,11 @@
                  ; freecoin core lib
                  [org.clojars.dyne/freecoin-lib "0.8.0-SNAPSHOT"]
 
-                 [org.clojars.dyne/just-auth "0.1.0-SNAPSHOT"]]
+                 ;; 2 step authentication
+                 [org.clojars.dyne/just-auth "0.1.0-SNAPSHOT"]
+
+                 ;;error handling
+                 [failjure "1.2.0"]]
 
   :pedantic? :warn
 
