@@ -3,6 +3,7 @@
             [freecoin.core :as core]
             [freecoin-lib.core :as blockchain]
             [freecoin-lib.db.freecoin :as db]
+            [just-auth.db.just-auth :as auth-db]
             [just-auth.core :as auth]
             [taoensso.timbre :as log])
   (:import [freecoin_lib.core InMemoryBlockchain]))
@@ -37,7 +38,8 @@
 
 (defn default-app-config-m []
   (let [stores (db/create-in-memory-stores)]
-    {:stores-m stores
+    {:stores-m (merge stores
+                      (auth-db/create-in-memory-stores))
      :blockchain (blockchain/create-in-memory-blockchain :bk)
      :config-m {:secure "false"
                 :email-config "email-conf.edn"}

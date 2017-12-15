@@ -12,18 +12,21 @@
             [freecoin-lib.db.freecoin :as db]
             [just-auth.db 
              [account :as account]
-             [password-recovery :as pass]]))
+             [password-recovery :as pass]
+             [just-auth :as auth-db]]))
 
 (ih/setup-db)
 
 (fact "setup-db is not null" ih/get-test-db => truthy)
 
+(def freecoin-stores (db/create-freecoin-stores (ih/get-test-db) {}))
 ;; TTL is set to 30 seconds but mongo checks only every ~60 secs
-(def stores-m (db/create-freecoin-stores (ih/get-test-db) {:ttl-password-recovery 30}))
-(def blockchain (blockchain/new-mongo stores-m))
+(def stores-m (merge freecoin-stores
+                     (auth-db/create-auth-stores (ih/get-test-db) {:ttl-password-recovery 30})))
+(def blockchain (blockchain/new-mongo freecoin-stores))
 (def emails (atom []))
 
-(def test-app (ih/build-app {:stores-m stores-m
+(def test-app (ih/build-app {:stores-m stores-m 
                              :blockchain blockchain
                              :email-authenticator (auth/new-stub-email-based-authentication 
                                                    stores-m
