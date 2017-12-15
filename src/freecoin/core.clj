@@ -51,7 +51,8 @@
             [freecoin.handlers.transactions-list :as transactions-list]
             [freecoin.handlers.debug :as debug]
             [freecoin.handlers.qrcode :as qrcode]
-            [freecoin-lib.db.freecoin :as db]))
+            [freecoin-lib.db.freecoin :as db]
+            [just-auth.db.just-auth :as auth-db]))
 
 (defn not-found [request]
   {:status 404
@@ -176,9 +177,8 @@
     app-state
     (if-let [db (:db app-state)]
       (let [config-m           (config/create-config)
-            stores-m           (db/create-freecoin-stores
-                                db
-                                {:ttl-password-recovery (config/ttl-password-recovery config-m)})
+            stores-m           (merge (db/create-freecoin-stores db {})
+                                      (auth-db/create-auth-stores db {:ttl-password-recovery (config/ttl-password-recovery config-m)}))
             blockchain         (blockchain/new-mongo stores-m)
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
             account-activator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))

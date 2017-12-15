@@ -37,14 +37,18 @@
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
-            [just-auth.db.account :as account]
+            [just-auth.db
+             [account :as account]
+             [just-auth :as auth-db]]
             [simple-time.core :as time]
             [taoensso.timbre :as log]))
 
 (ih/setup-db)
 
-(def stores-m (db/create-freecoin-stores (ih/get-test-db)))
-(def blockchain (blockchain/new-mongo stores-m))
+(def freecoin-stores (db/create-freecoin-stores (ih/get-test-db)))
+(def stores-m (merge freecoin-stores
+                     (auth-db/create-auth-stores (ih/get-test-db))))
+(def blockchain (blockchain/new-mongo freecoin-stores))
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
