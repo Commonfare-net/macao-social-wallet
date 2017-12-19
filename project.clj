@@ -45,7 +45,10 @@
                  [org.clojars.dyne/just-auth "0.1.0-SNAPSHOT"]
 
                  ;;error handling
-                 [failjure "1.2.0"]]
+                 [failjure "1.2.0"]
+
+                 ;; config etc.
+                 [org.clojars.dyne/auxiliary "0.4.0-SNAPSHOT"]]
 
   :pedantic? :warn
 

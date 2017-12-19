@@ -23,7 +23,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views.email-confirmation
-  (:require [freecoin.translation :as t]
+  (:require [auxiliary.translation :as t]
             [taoensso.timbre :as log]))
 
 (defn build [context]

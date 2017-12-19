@@ -5,7 +5,7 @@
             [clj-storage.core :as storage]
             [freecoin-lib.db.wallet :as w]
             [freecoin-lib.core :as fb]
-            [freecoin.translation :as t]
+            [auxiliary.translation :as t]
             [freecoin.test.test-helper :as th]
             [freecoin.handlers.participants :as fp]))
 

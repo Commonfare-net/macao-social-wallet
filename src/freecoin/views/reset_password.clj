@@ -1,6 +1,6 @@
 (ns freecoin.views.reset-password
   (:require [freecoin.form_helpers :as fh]
-            [freecoin.translation :as t]
+            [auxiliary.translation :as t]
             [freecoin.routes :as routes]))
 
 (defn reset-password-form [email recovery-id]
