@@ -179,7 +179,8 @@
       (let [config-m           (config/create-config)
             stores-m           (merge (db/create-freecoin-stores db {})
                                       (auth-db/create-auth-stores db {:ttl-password-recovery (config/ttl-password-recovery config-m)}))
-            blockchain         (blockchain/new-mongo stores-m)
+            blockchain         (blockchain/new-mongo (select-keys stores-m [:transaction-store :wallet-store
+                                                                            :confirmation-store :tag-store]))
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
             account-activator    (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
             password-recoverer (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
@@ -224,7 +225,8 @@
                        stores-m           (db/create-freecoin-stores
                                            db
                                            {:ttl-password-recovery (config/ttl-password-recovery config-m)})
-                       blockchain         (blockchain/new-mongo stores-m)
+                       blockchain         (blockchain/new-mongo (select-keys stores-m [:transaction-store :wallet-store
+                                                                                       :confirmation-store :tag-store]))
                        account-activator (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))
                        password-recoverer (just-auth.messaging/->PasswordRecoverer email-conf (:password-recovery-store stores-m))
                        email-authenticator (just-auth.core/new-email-based-authentication
