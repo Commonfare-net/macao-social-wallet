@@ -62,7 +62,8 @@
         ;; translation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
         [:translation-language "lang/en.yml"]
-        [:translation-fallback "lang/en.yml"]]
+        [:translation-fallback "lang/en.yml"]
+        [:auth-translation-language "lang/auth-en.yml"]]
 
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]

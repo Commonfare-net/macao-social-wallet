@@ -52,7 +52,8 @@
             [freecoin.handlers.debug :as debug]
             [freecoin.handlers.qrcode :as qrcode]
             [freecoin-lib.db.freecoin :as db]
-            [just-auth.db.just-auth :as auth-db]))
+            [just-auth.db.just-auth :as auth-db]
+            [environ.core :as env]))
 
 (defn not-found [request]
   {:status 404
@@ -191,6 +192,9 @@
             server             (-> (create-app config-m stores-m blockchain email-authenticator)
                                    (server/run-server {:port (config/port config-m)
                                                        :host (config/host config-m)}))]
+        (prn "Initialising translations")
+        (auxiliary.translation/init (env/env :translation-fallback) (env/env :translation-language)
+                                    (env/env :auth-translation-language))
         (assoc app-state
                :server server
                :stores-m stores-m)))))
@@ -233,6 +237,9 @@
                                             (select-keys stores-m [:account-store :password-recovery-store])
                                             account-activator password-recoverer
                                             {:hash-fn buddy.hashers/derive :hash-check-fn buddy.hashers/check})]
+                   (prn "Initialising translations")
+                   (auxiliary.translation/init (env/env :translation-fallback) (env/env :translation-language)
+                                               (env/env :auth-translation-language))
                    (prn "Restarting server....")
                    (create-app config-m stores-m blockchain email-authenticator)))))
 

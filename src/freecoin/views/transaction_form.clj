@@ -5,7 +5,7 @@
             [freecoin.routes :as routes]
             [auxiliary.translation :as t]))
 
-(def transaction-form-spec
+(defn transaction-form-spec []
   {:renderer :bootstrap3-stacked
    :fields [{:name :amount
              :label (t/locale [:transaction :amount])
@@ -35,7 +35,7 @@
    :method "post"})
 
 (defn build
-  ([request] (build request transaction-form-spec))
+  ([request] (build request (transaction-form-spec)))
   ([request spec]
    {:title (t/locale [:transaction :make])
     :heading (t/locale [:transaction :send])

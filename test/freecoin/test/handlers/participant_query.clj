@@ -21,7 +21,8 @@
 (facts "about the account page"
 
        (fact "displays the signed-in participant's balance"
-             (let [wallet-store (storage/create-memory-store)
+             (let [_ (th/init-translation)
+                   wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                         "name" "test@email.com"))

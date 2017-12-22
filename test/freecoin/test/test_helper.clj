@@ -2,7 +2,11 @@
   (:require [midje.sweet :as midje]
             [ring.mock.request :as request]
             [net.cgrand.enlive-html :as html]
-            [just-auth.db.account :as account]))
+            [just-auth.db.account :as account]
+            [buddy.hashers :as hashers]
+            [auxiliary.translation :as t]
+            [environ.core :as env]
+            [taoensso.timbre :as log]))
 
 (defn create-request
   ([method path query-m]
@@ -18,7 +22,7 @@
                                        :email email
                                        :password (apply str (repeat 8 (rand 9)))
                                        :activated active
-                                       :flags flags} buddy.hashers/derive))
+                                       :flags flags} hashers/derive))
 
 (defn authenticated-session [email]
   {:signed-in-email email})
@@ -77,3 +81,7 @@
 (defn element-count [selector n]
   (fn [enlive-m]
     ((midje/n-of midje/anything n) (html/select enlive-m selector))))
+
+(defn init-translation []
+  (t/init (env/env :translation-fallback) (env/env :translation-language)
+          (env/env :auth-translation-language)))
