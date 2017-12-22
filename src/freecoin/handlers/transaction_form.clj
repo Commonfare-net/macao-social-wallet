@@ -75,7 +75,7 @@
   :allowed?
   (fn [ctx]
     (let [{:keys [status data problems]}
-          (fh/validate-form transaction-form/transaction-form-spec
+          (fh/validate-form (transaction-form/transaction-form-spec)
                             (ch/context->params ctx))
           amount (:amount data)
           sender-email (ch/context->signed-in-email ctx)

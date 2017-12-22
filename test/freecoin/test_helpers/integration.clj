@@ -5,7 +5,8 @@
             [freecoin-lib.db.freecoin :as db]
             [just-auth.db.just-auth :as auth-db]
             [just-auth.core :as auth]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [freecoin.test.test-helper :as th])
   (:import [freecoin_lib.core InMemoryBlockchain]))
 
 (def test-db-name "freecoin-test-db")
@@ -47,5 +48,6 @@
 
 (defn build-app [app-config-override-m]
   (let [{:keys [config-m stores-m blockchain email-authenticator]}
-        (merge (default-app-config-m) app-config-override-m)]
+        (merge (default-app-config-m) app-config-override-m)
+        _ (th/init-translation)]
     (core/create-app config-m stores-m blockchain email-authenticator)))
