@@ -26,7 +26,7 @@
 (ns freecoin.params
   (:require [org.httpkit.client :refer [max-body-filter]]
             [environ.core :as env]
-            [freecoin.translation :as trans]))
+            [auxiliary.translation :as trans]))
 
 (def version "software release version" "0.2")
 

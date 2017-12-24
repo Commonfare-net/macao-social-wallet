@@ -21,7 +21,7 @@
   (let [{:keys [from-account-id amount
                 to-account-id secret]} (transaction-data-generator wallets-and-secrets)]
     (Thread/sleep 10)
-    (blockchain/make-transaction blockchain from-account-id amount to-account-id {:secret secret})))
+    (blockchain/create-transaction blockchain from-account-id amount to-account-id {:secret secret})))
 
 (defn create-wallet-generator [index-generator]
   (fn []

@@ -30,9 +30,7 @@
 (ns freecoin.test.handlers.transactions
   (:require [midje.sweet :refer :all]
             [freecoin.test.test-helper :as th]
-            [freecoin-lib.db 
-             [wallet :as w]
-             [account :as account]]
+            [freecoin-lib.db.wallet :as w]
             [clj-storage.core :as storage]
             [freecoin-lib.db.confirmation :as c]
             [freecoin-lib.core :as blockchain]
@@ -45,7 +43,8 @@
             [ring.mock.request :as rmr]
             [cheshire.core :as cheshire]
             [simple-time.core :as time]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [just-auth.db.account :as account]))
 
 (def sender-email "sender@mail.com")
 (def recipient-email "recipient@mail.com")

@@ -23,7 +23,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views.tags
-  (:require [freecoin.translation :as t]
+  (:require [auxiliary.translation :as t]
             [freecoin.routes :as http]))
 
 (defn tag-link

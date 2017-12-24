@@ -1,6 +1,6 @@
 (ns freecoin.test.translation
   (:require [midje.sweet :refer :all]
-            [freecoin.translation :as trans]
+            [auxiliary.translation :as trans]
             [taoensso.timbre :as log]
   ))
 

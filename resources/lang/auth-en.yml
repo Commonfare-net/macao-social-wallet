@@ -1,0 +1,24 @@
+---
+
+email:
+  account-activator:
+    title: "Please activate your freecoin account"
+    content: "Please click on the link below to activate your account "
+  password-recoverer:
+    title: "Password recovery"
+    content1: "Password recovery was requested for participant "
+    content2: ". If you are the participant and want to reset your password click the link below "
+    content3: " The link will expire soon so be fast!"
+
+error:
+  core:
+    account-exists: "An account with this email already exists"
+    not-sent: "The email was not sent."
+    already-active: "This account is already active"
+    account-not-found: "No account found for email "
+    password-already-sent: "A password recovery request has already been sent."
+    worng-pass: "Wrong username and/or password"
+    not-active: "The account needs to be activated first"
+    not-matching-code: "The activation code does not match the email."
+    activation-not-found: "No account found for activation link "
+    activation-not-found: "Link might have expired. Please request a new one."

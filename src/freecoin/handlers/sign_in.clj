@@ -32,10 +32,11 @@
             [ring.util.response :as r]
             [clojure.string :as s]
             [freecoin.routes :as routes]
-            [freecoin-lib.db
-             [wallet :as wallet]
+            [freecoin-lib.db.wallet :as wallet]
+            [just-auth.db
              [account :as account]
              [password-recovery :as pr]]
+            [just-auth.util :as auth-util]
             [freecoin.auth :as auth]
             [freecoin.views :as fv]
             [freecoin.views
@@ -48,8 +49,13 @@
              [password-changed :as password-changed-page]] 
             [freecoin.form_helpers :as fh]
             [freecoin.context-helpers :as ch]
-            [freecoin.email-activation :as email-activation]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [just-auth.core :as just-auth]
+            [buddy.hashers :as hashers]
+            [failjure.core :as f]))
+
+(defn- generate-id []
+  (fxc.core/generate 32))
 
 (defn error-redirect [ctx error-message]
   (-> ctx (assoc :error error-message)
@@ -102,10 +108,9 @@
                      (let [email (-> ctx :request :params :sign-in-email)]
                        (if-let [account (account/fetch account-store email)]
                          (if (:activated account)
-                           (if (account/correct-password? account-store email (-> ctx :request :params :sign-in-password))
+                           (if (account/correct-password? account-store email (-> ctx :request :params :sign-in-password) hashers/check)
                              {:email email
-                              :first-name (:first-name account)
-                              :last-name (:last-name account)}
+                              :name (:name account)}
                              [false  (fh/form-problem (conj problems
                                                             {:keys [:sign-in-password] :msg (str "Wrong password for account " email)}))])
                            [false  (fh/form-problem (conj problems
@@ -124,7 +129,7 @@
   :post! (fn [ctx]
            ;; the wallet exists already
            (let [email (:email ctx)
-                 name (str (:first-name ctx) " " (:last-name ctx))]
+                 name (:name ctx)]
              (if-let [wallet (wallet/fetch wallet-store email)]
                (do
                  (log/trace "The wallet for email " email " already exists")
@@ -167,7 +172,7 @@
 
 (def content-types ["text/html" "application/x-www-form-urlencoded"])
 
-(lc/defresource create-account [account-store email-activator]
+(lc/defresource create-account [account-store email-authenticator]
   :allowed-methods [:post]
   :available-media-types content-types
 
@@ -193,9 +198,12 @@
   :post! (fn [ctx]
            (let [data (-> ctx :request :params)
                  email (get data :email)]
-             (if (account/new-account! account-store (select-keys data [:first-name :last-name :email :password]))
-               (when-not (email-activation/email-and-update! email-activator email) 
-                 (error-redirect ctx "The activation email failed to send "))
+             (if (account/new-account! account-store
+                                       (merge (select-keys data [:email :password])
+                                              {:name (str (:first-name data) " " (:last-name data))})
+                                       hashers/derive)
+               (f/when-let-failed? [sent (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])})] 
+                 (error-redirect ctx (str "The activation email failed to send: " (f/message sent))))
                (log/error "Something went wrong when creating a user in the DB"))))
 
   :post-redirect? (fn [ctx] 
@@ -215,8 +223,11 @@
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
                (let [activation-code (get-in ctx [:request :params :activation-id])
-                     email (get-in ctx [:request :params :email])]
-                 (if-let [account (account/fetch-by-activation-id account-store activation-code)]
+                     email (get-in ctx [:request :params :email])
+                     activation-link (routes/absolute-path :activate-account
+                                                           :activation-id activation-code
+                                                           :email email)]
+                 (if-let [account (account/fetch-by-activation-link account-store activation-link)]
                    (if (= (:email account) email)
                      (do (account/activate! account-store (:email account))
                          (-> (routes/absolute-path :account-activated)
@@ -225,7 +236,7 @@
                      (error-redirect ctx "The email and activation id do not match"))
                    (error-redirect ctx "The activation id could not be found")))))
 
-(lc/defresource resend-activation-email [account-store email-activator]
+(lc/defresource resend-activation-email [account-store email-authenticator]
   :allowed-methods [:post]
   :available-media-types content-types
   :known-content-type? #(check-content-type % content-types)
@@ -248,9 +259,9 @@
   :post! (fn [ctx]
            (let [email (get-in ctx [:request :params :activation-email])
                  account (account/fetch account-store email)]
-             (when-not (email-activation/email-and-update! email-activator email)
-               (error-redirect ctx "The activation email failed to send")
-               (log/error "The activation email failed to send"))))
+             (f/when-let-failed? [sent (just-auth/send-activation-message email-authenticator email {:activation-uri (get-in ctx [:request :headers "host"])})]
+               (error-redirect ctx (str "The activation email failed to send: " (f/message sent)))
+               (log/error "The activation email failed to send: " (f/message sent)))))
 
   :post-redirect? (fn [ctx] 
                     (assoc ctx
@@ -282,8 +293,8 @@
                                                     ctx)))
   :post! (fn [ctx]
            (let [email (get-in ctx [:request :params :email-address])]
-             (when-not (email-activation/email-and-update! password-recoverer email)
-               (error-redirect ctx "The password recovery email failed to send")
+             (f/when-let-failed? [sent (just-auth/send-password-reset-message password-recoverer email {:reset-uri (get-in ctx [:request :headers "host"])})]
+               (error-redirect ctx (str "The password recovery email failed to send" (f/message sent)))
                (log/error "The password recovery email failed to send"))))
 
   :post-redirect? (fn [ctx] 
@@ -332,7 +343,11 @@
   :available-media-types ["text/html"]
   :handle-ok (fn [ctx]
                (let [{:keys [password-recovery-id email]} (get-in ctx [:request :params])]
-                 (if-let [account (pr/fetch-by-password-recovery-id password-recovery-store password-recovery-id)]
+                 (if-let [account (pr/fetch-by-password-recovery-link
+                                   password-recovery-store
+                                   (routes/absolute-path :reset-password
+                                                         :email email
+                                                         :password-recovery-id password-recovery-id))]
                           (if-not (= (:email account) email)
                             (error-redirect ctx "The email and password recovery id do not match")
                             (-> ctx 
@@ -361,7 +376,7 @@
            (let [data (-> ctx :request :params)
                  {:keys [new-password email]} data]
              ;; upadte with a new hashed password
-             (account/update-password! account-store email new-password)
+             (account/update-password! account-store email new-password hashers/derive)
              ;; remove the password recovery data
              (pr/remove! password-recovery-store email)))
 
