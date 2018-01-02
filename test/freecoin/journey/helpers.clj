@@ -7,7 +7,7 @@
             [freecoin.test-helpers.integration :as ih]
             [kerodon.core :as k]
             [midje.sweet :refer :all]
-            [freecoin-lib.db.account :as account]))
+            [just-auth.db.account :as account]))
 
 (def password "abcd12*!")
 
@@ -66,4 +66,8 @@
   state)
 
 (defn get-activation-id [stores-m email]
-  (-> stores-m :account-store (account/fetch email) :activation-id))
+  (-> stores-m
+      :account-store
+      (account/fetch email)
+      :activation-link
+      just-auth.util/link->token))

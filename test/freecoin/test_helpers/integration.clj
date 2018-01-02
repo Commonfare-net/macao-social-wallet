@@ -2,8 +2,11 @@
   (:require [monger.core :as monger]
             [freecoin.core :as core]
             [freecoin-lib.core :as blockchain]
-            [freecoin-lib.db.storage :as s]
-            [freecoin.email-activation :as email-activation])
+            [freecoin-lib.db.freecoin :as db]
+            [just-auth.db.just-auth :as auth-db]
+            [just-auth.core :as auth]
+            [taoensso.timbre :as log]
+            [freecoin.test.test-helper :as th])
   (:import [freecoin_lib.core InMemoryBlockchain]))
 
 (def test-db-name "freecoin-test-db")
@@ -35,14 +38,16 @@
   (reset! db-and-conn nil))
 
 (defn default-app-config-m []
-  (let [stores (s/create-in-memory-stores)]
-    {:stores-m stores
+  (let [stores (db/create-in-memory-stores)]
+    {:stores-m (merge stores
+                      (auth-db/create-in-memory-stores))
      :blockchain (blockchain/create-in-memory-blockchain :bk)
      :config-m {:secure "false"
                 :email-config "email-conf.edn"}
-     :email-activator (email-activation/->StubActivationEmail (atom []) (:account-store stores))
-     :password-recoverer (email-activation/->PasswordRecoveryEmail (atom []) (:password-recovery-store stores))}))
+     :email-authenticator (auth/new-stub-email-based-authentication stores (atom []))}))
 
 (defn build-app [app-config-override-m]
-  (let [{:keys [config-m stores-m blockchain email-activator password-recoverer]} (merge (default-app-config-m) app-config-override-m)]
-    (core/create-app config-m stores-m blockchain email-activator password-recoverer)))
+  (let [{:keys [config-m stores-m blockchain email-authenticator]}
+        (merge (default-app-config-m) app-config-override-m)
+        _ (th/init-translation)]
+    (core/create-app config-m stores-m blockchain email-authenticator)))

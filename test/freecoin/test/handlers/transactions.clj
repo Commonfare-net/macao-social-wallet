@@ -30,10 +30,8 @@
 (ns freecoin.test.handlers.transactions
   (:require [midje.sweet :refer :all]
             [freecoin.test.test-helper :as th]
-            [freecoin-lib.db
-             [mongo :as fm]
-             [wallet :as w]
-             [account :as account]]
+            [freecoin-lib.db.wallet :as w]
+            [clj-storage.core :as storage]
             [freecoin-lib.db.confirmation :as c]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
@@ -41,18 +39,19 @@
             [freecoin.handlers.transaction-form :as tf]
             [freecoin.handlers.confirm-transaction-form :as ctf]
             [freecoin.handlers.transactions-list :as tl]
-            [freecoin.test-helpers.store :as test-store]
+            [freecoin-lib.test-helpers.store :as test-store]
             [ring.mock.request :as rmr]
             [cheshire.core :as cheshire]
             [simple-time.core :as time]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [just-auth.db.account :as account]))
 
 (def sender-email "sender@mail.com")
 (def recipient-email "recipient@mail.com")
 
 (defn setup-with-sender-and-recipient []
-  (let [wallet-store (fm/create-memory-store)
-        account-store (fm/create-memory-store)
+  (let [wallet-store (storage/create-memory-store)
+        account-store (storage/create-memory-store)
         blockchain (blockchain/create-in-memory-blockchain :bk)
         ;; Sender needs to be an admin otherwise there wont be enough budget to make a transaction
         sender-account (th/create-account account-store {:email sender-email
@@ -125,14 +124,14 @@
                    :status) => 302)
         
          (facts "when participant is authenticated, has cookie-data, and posts a valid form"
-                (let [confirmation-store (fm/create-memory-store)
+                (let [confirmation-store (storage/create-memory-store)
                       form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store account-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
                                     {:amount "5.00" :recipient recipient-email}
                                     {:signed-in-email sender-email :cookie-data sender-apikey})
                                    form-post-handler)
-                      transaction-confirmation (first (fm/query confirmation-store {}))]
+                      transaction-confirmation (first (storage/query confirmation-store {}))]
                   (fact "creates a transaction confirmation"
                         (test-store/entry-count confirmation-store) => 1)
 
@@ -141,7 +140,7 @@
                                                                           :confirmation-uid (:uid transaction-confirmation))))))
 
          (facts "when participant tries to make a transaction but doesnt have enough in his wallet"
-                (let [confirmation-store (fm/create-memory-store)
+                (let [confirmation-store (storage/create-memory-store)
                       form-post-handler (tf/post-transaction-form blockchain wallet-store confirmation-store account-store)
                       response (-> (th/create-request
                                     :post "/post-transaction-form"
@@ -173,7 +172,7 @@
 
 (facts "about the confirm transaction form"
        (let [{:keys [wallet-store]} (setup-with-sender-and-recipient)
-             confirmation-store (fm/create-memory-store)
+             confirmation-store (storage/create-memory-store)
              confirmation (c/new-transaction-confirmation! confirmation-store
                                                            (constantly "confirmation-uid")
                                                            sender-email recipient-email 10M)
@@ -208,7 +207,7 @@
 
 (facts "about post requests from the confirm transaction form"
        (let [{:keys [blockchain wallet-store sender-wallet sender-apikey recipient-wallet]} (setup-with-sender-and-recipient)
-             confirmation-store (fm/create-memory-store)
+             confirmation-store (storage/create-memory-store)
              form-post-handler (ctf/post-confirm-transaction-form wallet-store confirmation-store blockchain)]
 
          (fact "returns 401 when participant not authenticated"
@@ -223,7 +222,7 @@
                    :status) => 401)
 
          (fact "returns 401 when transaction was not created by the signed-in participant"
-               (let [confirmation-store (fm/create-memory-store)
+               (let [confirmation-store (storage/create-memory-store)
                      confirmation-for-different-sender (c/new-transaction-confirmation! 
                                                         confirmation-store
                                                         (constantly "confirmation-for-different-sender-uid")
@@ -236,7 +235,7 @@
                      :status)) => 401)
 
          (facts "when participant is authenticated and authorised, and is attempting to confirm own transaction"
-                (let [confirmation-store (fm/create-memory-store)
+                (let [confirmation-store (storage/create-memory-store)
                       confirmation (c/new-transaction-confirmation!
                                     confirmation-store (constantly "confirmation-uid")
                                     sender-email recipient-email 10M)

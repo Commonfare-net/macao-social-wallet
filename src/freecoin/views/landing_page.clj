@@ -1,5 +1,5 @@
 (ns freecoin.views.landing-page
-  (:require [freecoin.translation :as t]
+  (:require [auxiliary.translation :as t]
             [taoensso.timbre :as log]))
 
 (defn render-error [error-message]

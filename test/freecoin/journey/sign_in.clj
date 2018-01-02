@@ -4,33 +4,33 @@
             [freecoin.journey.kerodon-selectors :as ks]
             [freecoin.journey.kerodon-checkers :as kc]
             [freecoin.test-helpers.integration :as ih]
-            [freecoin.email-activation :as email-activation]
+            [just-auth.core :as auth]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db
-             [storage :as s]
+            [freecoin-lib.db.freecoin :as db]
+            [just-auth.db 
              [account :as account]
-             [password-recovery :as pass]]))
+             [password-recovery :as pass]
+             [just-auth :as auth-db]]))
 
 (ih/setup-db)
 
 (fact "setup-db is not null" ih/get-test-db => truthy)
 
+(def freecoin-stores (db/create-freecoin-stores (ih/get-test-db) {}))
 ;; TTL is set to 30 seconds but mongo checks only every ~60 secs
-(def stores-m (s/create-mongo-stores (ih/get-test-db) 30))
-(def blockchain (blockchain/new-mongo stores-m))
+(def stores-m (merge freecoin-stores
+                     (auth-db/create-auth-stores (ih/get-test-db) {:ttl-password-recovery 30})))
+(def blockchain (blockchain/new-mongo freecoin-stores))
 (def emails (atom []))
 
-(def test-app (ih/build-app {:stores-m stores-m
+(def test-app (ih/build-app {:stores-m stores-m 
                              :blockchain blockchain
-                             :email-activator (email-activation/->StubActivationEmail
-                                               emails
-                                               (:account-store stores-m))
-                             :password-recoverer (email-activation/->StubPasswordRecoveryEmail
-                                                  emails
-                                                  (:password-recovery-store stores-m))}))
+                             :email-authenticator (auth/new-stub-email-based-authentication 
+                                                   stores-m
+                                                   emails)}))
 
 (def ^:dynamic email "id-1@email.com")
 (def password "abcd12*!")
@@ -74,7 +74,7 @@
                  (kc/check-page-is :sign-in [ks/auth-form-problems])))
 
        (fact "Activate account using link"
-             (let [activation-url (-> @emails (first) :activation-url)
+             (let [activation-url (-> @emails (first) :activation-link)
                    activation-id (-> activation-url (clojure.string/split #"/") (last))]
                (-> (k/session test-app)
                    (k/visit (routes/absolute-path :activate-account
@@ -145,11 +145,11 @@
              (:email (latest-email)) => email)
 
        (fact "check that the password recovery entry has been created"
-                     (pass/fetch (:password-recovery-store stores-m) email) => truthy)
+             (pass/fetch (:password-recovery-store stores-m) email) => truthy)
 
        (fact "Change password using link"
              (let [old-password-hash (:password (account/fetch (:account-store stores-m) email))
-                   password-recovery-url (:password-recovery-url (latest-email))
+                   password-recovery-url (:password-recovery-link (latest-email))
                    password-recovery-id (-> password-recovery-url (clojure.string/split #"/") (last))]
                (-> (k/session test-app)
                    (k/visit (routes/absolute-path :reset-password
@@ -169,7 +169,7 @@
 
        ;; FIXME: workaround due to midje bug see https://github.com/marick/Midje/issues/275. With facts it wouldn't work and if not all nested facts wouldn't have the same metadata it wouldn't work either (see above)
        (fact "Check that the link cannot be used after expired" :slow
-             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 20 seconds" :slow
+             (fact "Request another password recovery link and check that it gets deleted from the DB automatically after 30 seconds" :slow
                    (-> (k/session test-app)
                        (k/visit (routes/absolute-path :sign-in))
                        (kc/check-and-fill-in ks/auth-password-recovery-email email)

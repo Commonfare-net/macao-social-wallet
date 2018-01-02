@@ -2,7 +2,11 @@
   (:require [midje.sweet :as midje]
             [ring.mock.request :as request]
             [net.cgrand.enlive-html :as html]
-            [freecoin-lib.db.account :as account]))
+            [just-auth.db.account :as account]
+            [buddy.hashers :as hashers]
+            [auxiliary.translation :as t]
+            [environ.core :as env]
+            [taoensso.timbre :as log]))
 
 (defn create-request
   ([method path query-m]
@@ -14,12 +18,11 @@
 
 (defn create-account [account-store
                       {:keys [email active flags] :as account}]
-  (account/new-account! account-store {:first-name (str "name" (rand-int 100))
-                                       :last-name (str "surname" (rand-int 100))
+  (account/new-account! account-store {:name (str "name" (rand-int 100))
                                        :email email
                                        :password (apply str (repeat 8 (rand 9)))
-                                       :active active
-                                       :flags flags}))
+                                       :activated active
+                                       :flags flags} hashers/derive))
 
 (defn authenticated-session [email]
   {:signed-in-email email})
@@ -78,3 +81,7 @@
 (defn element-count [selector n]
   (fn [enlive-m]
     ((midje/n-of midje/anything n) (html/select enlive-m selector))))
+
+(defn init-translation []
+  (t/init (env/env :translation-fallback) (env/env :translation-language)
+          (env/env :auth-translation-language)))

@@ -28,7 +28,7 @@
 (ns freecoin.views.participants-list
   (:require [freecoin.routes :as routes]
             [clavatar.core :as clavatar]
-            [freecoin.translation :as t]
+            [auxiliary.translation :as t]
             ))
 
 (defn render-participant [wallet]

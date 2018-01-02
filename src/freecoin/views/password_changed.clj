@@ -22,7 +22,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views.password-changed
-  (:require [freecoin.translation :as t]
+  (:require [auxiliary.translation :as t]
             [freecoin.routes :as routes]))
 
 (defn build [context]

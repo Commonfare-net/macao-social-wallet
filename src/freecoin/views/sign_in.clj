@@ -2,7 +2,7 @@
   (:require [freecoin.form_helpers :as fh]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as config]
-            [freecoin.translation :as t]
+            [auxiliary.translation :as t]
             [taoensso.timbre :as log]))
 
 (def sign-up-form

@@ -6,24 +6,31 @@
             [freecoin.journey.kerodon-helpers :as kh]
             [freecoin.journey.helpers :as jh]
             [freecoin.test-helpers.integration :as ih]
-            [freecoin-lib.db.storage :as s]
+            [clj-storage.core :as storage]
             [freecoin-lib.core :as blockchain]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as c]
             [taoensso.timbre :as log]
-            [freecoin-lib.db.account :as account]
-            [freecoin-lib.db.storage :as storage]))
+            [freecoin-lib.db.freecoin :as db]
+            [just-auth.db
+             [account :as account]
+             [just-auth :as auth-db]]
+            [just-auth.core :as auth]))
 
 (ih/setup-db)
 
-(def stores-m (s/create-mongo-stores (ih/get-test-db)))
-(def blockchain (blockchain/new-mongo stores-m))
+(def freecoin-stores (db/create-freecoin-stores (ih/get-test-db) {}))
+;; TTL is set to 30 seconds but mongo checks only every ~60 secs
+(def stores-m (merge freecoin-stores
+                     (auth-db/create-auth-stores (ih/get-test-db) {:ttl-password-recovery 30})))
+
+(def blockchain (blockchain/new-mongo freecoin-stores))
 
 (def test-app (ih/build-app {:stores-m stores-m
                              :blockchain blockchain
-                             :email-activator (freecoin.email-activation/->StubActivationEmail
-                                               (atom [])
-                                               (:account-store stores-m))}))
+                             :email-authenticator (auth/new-stub-email-based-authentication
+                                               stores-m
+                                               (atom []))}))
 
 (def sign-up jh/sign-up)
 

@@ -1,6 +1,6 @@
 (def ns-tracker-version "0.3.1")
 
-(defproject org.dyne/freecoin "0.3.1"
+(defproject org.dyne/freecoin "0.5.0-SNAPSHOT"
   :description "Freecoin digital currency toolkit"
   :url "https://freecoin.dyne.org"
 
@@ -24,6 +24,7 @@
                  [cheshire "5.7.1"]
                  [json-html "0.4.4"]
 
+                 [buddy/buddy-hashers "1.3.0"]
                  [environ "1.1.0"]
                  [clojure-humanize "0.2.2"]
 
@@ -38,10 +39,16 @@
                  [org.clojars.dyne/fxc "0.5.0"]
 
                  ; freecoin core lib
-                 [org.clojars.dyne/freecoin-lib "0.4.0"]
+                 [org.clojars.dyne/freecoin-lib "0.8.0"]
 
-                 ; email
-                 [com.draines/postal "2.0.2"]]
+                 ;; 2 step authentication
+                 [org.clojars.dyne/just-auth "0.1.0"]
+
+                 ;;error handling
+                 [failjure "1.2.0"]
+
+                 ;; config etc.
+                 [org.clojars.dyne/auxiliary "0.4.0"]]
 
   :pedantic? :warn
 
@@ -55,7 +62,8 @@
         ;; translation is configured here, strings are hard-coded at compile time
         ;; the last one acts as fallback if translated strings are not found
         [:translation-language "lang/en.yml"]
-        [:translation-fallback "lang/en.yml"]]
+        [:translation-fallback "lang/en.yml"]
+        [:auth-translation-language "lang/auth-en.yml"]]
 
   :aliases {"dev"  ["with-profile" "dev" "ring" "server"]
             "prod" ["with-profile" "production" "run"]

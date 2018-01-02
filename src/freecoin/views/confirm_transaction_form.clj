@@ -3,7 +3,7 @@
             [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
             [freecoin-lib.config :as config]
-            [freecoin.translation :as t]))
+            [auxiliary.translation :as t]))
 
 (defn confirm-transaction-form-spec [confirmation-uid show-pin-entry]
   (let [submit {:name :submit

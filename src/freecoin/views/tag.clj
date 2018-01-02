@@ -23,7 +23,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns freecoin.views.tag
-  (:require [freecoin.translation :as t]
+  (:require [auxiliary.translation :as t]
             [freecoin.form_helpers :as fh]
             [taoensso.timbre :as log]))
 

@@ -25,15 +25,18 @@
   (:require [midje.sweet :refer :all]
             [ring.mock.request :as rmr]
             [freecoin-lib.db
-             [mongo :as fm]
              [wallet :as w]]
+            [clj-storage.db.mongo :as m]
+            [clj-storage.core :as storage]
             [freecoin-lib.core :as fb]
             [freecoin.handlers
              [qrcode :as handler]
              [transaction-form :as transaction-handler]]
             [net.cgrand.enlive-html :as html]
             [freecoin.test.test-helper :as th]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [environ.core :as env]
+            [auxiliary.translation :as t])
   (:import [com.google.zxing BinaryBitmap
             MultiFormatReader]
            [com.google.zxing.client.j2se BufferedImageLuminanceSource]
@@ -52,7 +55,8 @@
 
 (facts "Read qrcode and perform a send to"
        (fact "Requests the qr code for an email address"
-             (let [wallet-store (fm/create-memory-store)
+             (let [_ (th/init-translation)
+                   wallet-store (storage/create-memory-store)
                    blockchain (fb/create-in-memory-blockchain :bk)
                    wallet (:wallet (w/new-empty-wallet! wallet-store blockchain
                                                         "name" user-email))

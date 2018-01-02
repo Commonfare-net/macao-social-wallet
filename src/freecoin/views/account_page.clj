@@ -29,7 +29,7 @@
 (ns freecoin.views.account-page
   (:require [clavatar.core :as clavatar]
             [freecoin.routes :as routes]
-            [freecoin.translation :as t]
+            [auxiliary.translation :as t]
             [freecoin.form_helpers :as fh]))
 
 (defn render-wallet [wallet]

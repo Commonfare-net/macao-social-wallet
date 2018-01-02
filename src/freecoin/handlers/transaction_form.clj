@@ -33,9 +33,9 @@
             [ring.util.response :as r]
             [freecoin-lib.db
              [wallet :as wallet]
-             [account :as account]
              [uuid :as uuid]
              [confirmation :as confirmation]]
+            [just-auth.db.account :as account]
             [freecoin.context-helpers :as ch]
             [freecoin.routes :as routes]
             [freecoin-lib.core :as blockchain]
@@ -75,7 +75,7 @@
   :allowed?
   (fn [ctx]
     (let [{:keys [status data problems]}
-          (fh/validate-form transaction-form/transaction-form-spec
+          (fh/validate-form (transaction-form/transaction-form-spec)
                             (ch/context->params ctx))
           amount (:amount data)
           sender-email (ch/context->signed-in-email ctx)
