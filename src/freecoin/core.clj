@@ -53,6 +53,7 @@
             [freecoin.handlers.qrcode :as qrcode]
             [freecoin-lib.db.freecoin :as db]
             [just-auth.db.just-auth :as auth-db]
+            [just-auth.config :as auth-conf]
             [environ.core :as env]))
 
 (defn not-found [request]
@@ -177,9 +178,10 @@
   (if (:server app-state)
     app-state
     (if-let [db (:db app-state)]
-      (let [config-m           (config/create-config)
+      (let [config-m           (merge (config/create-config)
+                                      (auth-conf/create-config))
             stores-m           (merge (db/create-freecoin-stores db {})
-                                      (auth-db/create-auth-stores db {:ttl-password-recovery (config/ttl-password-recovery config-m)}))
+                                      (auth-db/create-auth-stores db {:ttl-password-recovery (auth-conf/ttl-password-recovery config-m)}))
             blockchain         (blockchain/new-mongo (select-keys stores-m [:transaction-store :wallet-store
                                                                             :confirmation-store :tag-store]))
             email-conf         (clojure.edn/read-string (slurp (:email-config config-m))) 
@@ -223,12 +225,12 @@
   (swap! app-state connect-db)
   (assert (:db @app-state) "The DB is not set")
   (swap! lein-ring-handler
-         (fn [_] (let [config-m           (config/create-config)
+         (fn [_] (let [config-m           (merge (config/create-config)
+                                                 (auth-conf/create-config))
                        email-conf         (clojure.edn/read-string (slurp (:email-config config-m)))
                        db                 (:db @app-state)
-                       stores-m           (db/create-freecoin-stores
-                                           db
-                                           {:ttl-password-recovery (config/ttl-password-recovery config-m)})
+                       stores-m           (merge (db/create-freecoin-stores db {})
+                                                 (auth-db/create-auth-stores db {:ttl-password-recovery (auth-conf/ttl-password-recovery config-m)}))
                        blockchain         (blockchain/new-mongo (select-keys stores-m [:transaction-store :wallet-store
                                                                                        :confirmation-store :tag-store]))
                        account-activator (just-auth.messaging/->AccountActivator email-conf (:account-store stores-m))

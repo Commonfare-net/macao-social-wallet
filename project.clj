@@ -39,16 +39,16 @@
                  [org.clojars.dyne/fxc "0.5.0"]
 
                  ; freecoin core lib
-                 [org.clojars.dyne/freecoin-lib "0.8.0-SNAPSHOT"]
+                 [org.clojars.dyne/freecoin-lib "0.8.0"]
 
                  ;; 2 step authentication
-                 [org.clojars.dyne/just-auth "0.1.0-SNAPSHOT"]
+                 [org.clojars.dyne/just-auth "0.1.0"]
 
                  ;;error handling
                  [failjure "1.2.0"]
 
                  ;; config etc.
-                 [org.clojars.dyne/auxiliary "0.4.0-SNAPSHOT"]]
+                 [org.clojars.dyne/auxiliary "0.4.0"]]
 
   :pedantic? :warn
 
