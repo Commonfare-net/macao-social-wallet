@@ -4,9 +4,9 @@
 
 Freecoin aims to be a framework for remuneration and authentication supporting multi-sig and off-line transactions on top of multiple blockchain backends. It is open source, written in Clojure and comprising of a REST API and a clean user interface. Freecoin's main use-case is that of developing "social wallets" where balances and transactions are trasparent to entire groups of people to help participatory budgeting activities and organisational awareness.
 
-[![Build Status](https://travis-ci.org/commonfare-net/macao-social-wallet.svg?branch=master)](https://travis-ci.org/commonfare-net/macao-social-wallet)
+[![Build Status](https://travis-ci.org/Commonfare-net/macao-social-wallet.svg?branch=master)](https://travis-ci.org/Commonfare-net/macao-social-wallet)
 
-[![Code Climate](https://codeclimate.com/github/commonfare-net/macao-social-wallet.png)](https://codeclimate.com/github/commonfare-net/macao-social-wallet)
+[![Code Climate](https://codeclimate.com/github/Commonfare-net/macao-social-wallet.png)](https://codeclimate.com/github/Commonfare-net/macao-social-wallet)
 
 ## Design
 https://freecoin.dyne.org/images/freecoin_logo.png
@@ -22,7 +22,12 @@ Furthermore, Freecoin's first social wallet pilots are informed by the research 
 
 ## Configuration
 
-- Freecoin: `profiles.clj`
+- The conf can be found in project.clj
+- Add an email-conf.edn file and point to it through the conf in project.clj under profiles. It is needed for the system ti be able to send emails when needed (eg. when a user signs up). The file should be of the form:
+`{:email-server "" 
+  :email-user "" 
+  :email-pass "" 
+  :email-address ""}`
 
 ## Running the app inside a Vagrant virtual machine
 
