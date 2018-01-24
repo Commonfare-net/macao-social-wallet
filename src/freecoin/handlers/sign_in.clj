@@ -96,6 +96,11 @@
                    sign-in-page/build
                    fv/render-page)))
 
+(defn get-client-ip [req]
+  (if-let [ips (get-in req [:headers "x-forwarded-for"])]
+    (-> ips (clojure.string/split #",") first)
+    (:remote-addr req)))
+
 (lc/defresource log-in [account-store wallet-store blockchain]
   :allowed-methods [:post]
   :available-media-types ["text/html"]
@@ -105,7 +110,8 @@
                        (fh/validate-form sign-in-page/sign-in-form
                                          (ch/context->params ctx))]
                    (if (= :ok status)
-                     (let [email (-> ctx :request :params :sign-in-email)]
+                     (let [email (-> ctx :request :params :sign-in-email)
+                           ip-address (get-client) (:request ctx)]
                        (if-let [account (account/fetch account-store email)]
                          (if (:activated account)
                            (if (account/correct-password? account-store email (-> ctx :request :params :sign-in-password) hashers/check)
