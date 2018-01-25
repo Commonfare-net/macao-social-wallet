@@ -111,7 +111,7 @@
                                          (ch/context->params ctx))]
                    (if (= :ok status)
                      (let [email (-> ctx :request :params :sign-in-email)
-                           ip-address (get-client) (:request ctx)]
+                           ip-address (get-client (:request ctx))]
                        (if-let [account (account/fetch account-store email)]
                          (if (:activated account)
                            (if (account/correct-password? account-store email (-> ctx :request :params :sign-in-password) hashers/check)
