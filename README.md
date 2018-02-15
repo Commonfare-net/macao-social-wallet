@@ -4,7 +4,7 @@
 
 Freecoin aims to be a framework for remuneration and authentication supporting multi-sig and off-line transactions on top of multiple blockchain backends. It is open source, written in Clojure and comprising of a REST API and a clean user interface. Freecoin's main use-case is that of developing "social wallets" where balances and transactions are trasparent to entire groups of people to help participatory budgeting activities and organisational awareness.
 
-[![Build Status](https://travis-ci.org/PIENews/freecoin.svg?branch=master)](https://travis-ci.org/PIENews/freecoin)
+[![Build Status](https://travis-ci.org/Commonfare-net/macao-social-wallet.svg?branch=master)](https://travis-ci.org/Commonfare-net/macao-social-wallet)
 
 [![Code Climate](https://codeclimate.com/github/PIENews/freecoin.png)](https://codeclimate.com/github/PIENews/freecoin)
 
