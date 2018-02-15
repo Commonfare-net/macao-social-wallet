@@ -62,8 +62,14 @@ This command will open a browser on localhost port 8000
 
 ### Running the app using the uberjar
 
-- For freecoin
- java -cp target/uberjar/freecoin-<VERSION>-standalone.jar freecoin.main
+- To create the uberjar run:
+ `lein uberjar`
+ This will create an uberjar under the target dir.
+ 
+- To run using the created uberjar run:
+ java -cp target/freecoin-<VERSION>-standalone.jar freecoin.main
+
+- To point the app to the right URL please change the URL in the project.clj under :profiles :uberjar :env :base-url to the required one (like "http://localhost:8000)
 
 ## Running the app from a live repl (for developers)
 
