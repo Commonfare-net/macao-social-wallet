@@ -42,7 +42,7 @@
                  [org.clojars.dyne/freecoin-lib "0.8.0"]
 
                  ;; 2 step authentication
-                 [org.clojars.dyne/just-auth "0.1.0"]
+                 [org.clojars.dyne/just-auth "0.1.1"]
 
                  ;;error handling
                  [failjure "1.2.0"]
@@ -75,7 +75,7 @@
                                          [kerodon "0.8.0"]
                                          [ns-tracker ~ns-tracker-version]]
                           :repl-options {:init-ns freecoin.core}
-                          :env [[:base-url "http://localhost:8000"]
+                          :env [[:base-url "aspra-devuan.dyne.org:8000"]
                                 [:email-config "email-conf.edn"]
                                 [:secure "false"] 
                                 [:ttl-password-recovery "1800"]]

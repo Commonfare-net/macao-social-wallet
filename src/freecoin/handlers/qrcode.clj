@@ -44,7 +44,7 @@
   :handle-ok
   (fn [ctx]
     (if-let [email (get-in ctx [:request :params :email])]
-      (let [base-url (-> (config/create-config) config/base-url)]
+      (let [base-url (get-in ctx [:request :headers :host])]
         (qr/as-input-stream
          (qr/from (str base-url "/send/to/" email)
                   :charset "ISO-8859-1"))))))
