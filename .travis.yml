@@ -2,7 +2,7 @@ language: clojure
 script: lein midje
 jdk:
   - openjdk7
-  - oraclejdk7
   - oraclejdk8
+  - openjdk8
 services:
   - mongodb

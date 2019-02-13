@@ -1,4 +1,4 @@
-# Freecoin - digital social currency toolkit
+# MACAO Social Wallet - webapp crypto wallet built with the Freecoin toolkit
 
 [![software by Dyne.org](https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png)](http://www.dyne.org)
 
@@ -6,11 +6,12 @@ Freecoin aims to be a framework for remuneration and authentication supporting m
 
 [![Build Status](https://travis-ci.org/Commonfare-net/macao-social-wallet.svg?branch=master)](https://travis-ci.org/Commonfare-net/macao-social-wallet)
 
-[![Code Climate](https://codeclimate.com/github/PIENews/freecoin.png)](https://codeclimate.com/github/PIENews/freecoin)
+[![Code Climate](https://codeclimate.com/github/Commonfare-net/macao-social-wallet.png)](https://codeclimate.com/github/Commonfare-net/macao-social-wallet)
 
 ## Design
-https://freecoin.dyne.org/images/freecoin_logo.png
-[![Freecoin Cornucopia](
+
+<img src="https://freecoin.dyne.org/images/freecoin_logo.png" width="200" alt="Freecoin Cornucopia">
+
 The design of Freecoin is informed by an extensive economic and user-centered research conducted by the D-CENT project and documented in deliverables that are available to the public:
 
 - [Design of Social Digital Currency (D4.4)](http://dcentproject.eu/wp-content/uploads/2015/10/design_of_social_digital_currency_publication.pdf)
@@ -18,11 +19,16 @@ The design of Freecoin is informed by an extensive economic and user-centered re
 
 More resources can be found on the D-CENT webpage: http://dcentproject.eu/resource_category/publications/
 
-Furthermore, Freecoin's first social wallet pilots are informed by the research made in the [PIE Project](http://pieproject.eu).
+Furthermore, Freecoin's first social wallet pilots are informed by the research made in the [Commonfare project](http://pieproject.eu).
 
 ## Configuration
 
-- Freecoin: `profiles.clj`
+- The conf can be found in project.clj
+- Add an `email-conf.edn` file in the project root. It is needed for the system to be able to send emails when needed (e.g. when a user signs up). The file should be of the form:
+`{:email-server ""
+  :email-user ""
+  :email-pass ""
+  :email-address ""}`
 
 ## Running the app inside a Vagrant virtual machine
 
@@ -69,7 +75,7 @@ This command will open a browser on localhost port 8000
  This will create an uberjar under the target dir.
  
 - To run using the created uberjar run:
- java -cp target/freecoin-<VERSION>-standalone.jar freecoin.main
+ java -cp target/uberjar/macao-social-wallet-<VERSION>-standalone.jar freecoin.main
 
 - To point the app to the right URL please change the URL in the project.clj under :profiles :uberjar :env :base-url to the required one (like "http://localhost:8000)
 
@@ -79,9 +85,9 @@ The server can be started and stopped from the repl by doing the following
 
 ```
 $ lein repl
-freecoin.core=> (start) ;; starts the server
-freecoin.core=> (stop) ;; stops the server
-freecoin.core=> (use 'freecoin.handlers.debug :reload) (stop) (start) ;; refresh specific namespaces
+macao-social-wallet.core=> (start) ;; starts the server
+macao-social-wallet.core=> (stop) ;; stops the server
+macao-social-wallet.core=> (use macao-social-wallet.handlers.debug :reload) (stop) (start) ;; refresh specific namespaces
 ```
 
 ## Live reloading of .clj modules in the repl
@@ -92,7 +98,7 @@ running VM and show a message in the corner of your screen (using
 
 ```
 lein repl
-user=> (use 'freecoin.dev)
+user=> (use 'macao-social-wallet.dev)
 user=> (start-nstracker) ;; starts the file change tracker
 ```
 
@@ -134,7 +140,7 @@ Autotesting can be enabled, which will run all relevant tests when source code c
 
 This Free and Open Source research and development activity is funded by the European Commission in the context of Collective Awareness Platforms for Sustainability and Social Innovation (CAPSSI) grants nr.610349 and nr.687922.
 
-The Freecoin toolkit is Copyright (C) 2015-2017 by the Dyne.org Foundation, Amsterdam
+The Freecoin toolkit is Copyright (C) 2015-2018 by the Dyne.org Foundation, Amsterdam
 
 Freecoin development is lead by Aspasia Beneti <aspra@dyne.org>
 
