@@ -36,7 +36,9 @@ Install the **latest** version of Vagrant and VirtualboxISO (be warned, most dis
 
 Then go into the `ops/` directory in Freecoin and run `vagrant up`, this will create and provision a new virtual machine running Freecoin.
 
-## Running the app locally
+## Running the app locally with lein ring server
+
+**ATTENTION: There is a bug related with this approach https://github.com/Commonfare-net/macao-social-wallet/issues/38. Run instead using the repl or an uberjar.**
 
 Install all necessary dependencies, for instance using the following packages found on APT based systems:
 
@@ -68,8 +70,14 @@ This command will open a browser on localhost port 8000
 
 ### Running the app using the uberjar
 
-- For freecoin
+- To create the uberjar run:
+ `lein uberjar`
+ This will create an uberjar under the target dir.
+ 
+- To run using the created uberjar run:
  java -cp target/uberjar/macao-social-wallet-<VERSION>-standalone.jar freecoin.main
+
+- To point the app to the right URL please change the URL in the project.clj under :profiles :uberjar :env :base-url to the required one (like "http://localhost:8000)
 
 ## Running the app from a live repl (for developers)
 
