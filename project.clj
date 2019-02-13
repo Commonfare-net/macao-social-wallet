@@ -1,6 +1,6 @@
 (def ns-tracker-version "0.3.1")
 
-(defproject org.dyne/freecoin "0.4.0"
+(defproject org.dyne/freecoin "0.5.0-SNAPSHOT"
   :description "Freecoin digital currency toolkit"
   :url "https://freecoin.dyne.org"
 
