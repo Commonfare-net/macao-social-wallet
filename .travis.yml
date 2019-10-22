@@ -1,8 +1,9 @@
+dist: trusty
 language: clojure
 script: lein midje
 jdk:
-  - openjdk7
   - oraclejdk8
   - openjdk8
+  - oraclejdk9
 services:
   - mongodb
